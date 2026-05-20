@@ -40,7 +40,7 @@ All three bot types use the same auth mechanism: `appToken` is required for ever
 ## Quick Install
 
 ```bash
-go get lansenger-sdk-go
+go get github.com/lansenger-pm/lansenger-sdk-go
 ```
 
 ## 1. Authentication

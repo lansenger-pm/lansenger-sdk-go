@@ -40,7 +40,7 @@ Les trois types de bots utilisent le même mécanisme d'authentification : `appT
 ## Installation rapide
 
 ```bash
-go get lansenger-sdk-go
+go get github.com/lansenger-pm/lansenger-sdk-go
 ```
 
 ## 1. Authentification
