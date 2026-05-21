@@ -244,3 +244,28 @@ func (cs *CredentialStore) Clear() error {
 
 	return os.Remove(cs.path)
 }
+
+func (cs *CredentialStore) LoadState() (*storeData, error) {
+	return cs.load()
+}
+
+func (cs *CredentialStore) GetActiveProfile() string {
+	sd, err := cs.load()
+	if err != nil {
+		return DefaultProfile
+	}
+	return sd.ActiveProfile
+}
+
+func (cs *CredentialStore) SetActiveProfile(profile string) error {
+	sd, err := cs.load()
+	if err != nil {
+		return err
+	}
+	sd.ActiveProfile = profile
+	return cs.save(sd)
+}
+
+func (cs *CredentialStore) Path() string {
+	return cs.path
+}
