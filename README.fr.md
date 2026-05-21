@@ -39,8 +39,19 @@ Les trois types de bots utilisent le même mécanisme d'authentification : `appT
 
 ## Installation rapide
 
+**SDK (bibliothèque)**:
 ```bash
 go get github.com/lansenger-pm/lansenger-sdk-go
+```
+
+**CLI (pour agents IA & débogage)**:
+```bash
+go install github.com/lansenger-pm/lansenger-sdk-go/cmd/lansenger@latest
+```
+
+Le CLI partage les identifiants avec le SDK via `~/.lansenger/sdk_state.json`. Après l'installation, configurez les identifiants :
+```bash
+lansenger config set --app-id YOUR_APP_ID --app-secret YOUR_APP_SECRET
 ```
 
 ## 1. Authentification

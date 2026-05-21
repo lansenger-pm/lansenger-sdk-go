@@ -39,8 +39,19 @@ All three bot types use the same auth mechanism: `appToken` is required for ever
 
 ## Quick Install
 
+**SDK (library)**:
 ```bash
 go get github.com/lansenger-pm/lansenger-sdk-go
+```
+
+**CLI (for AI agents & debugging)**:
+```bash
+go install github.com/lansenger-pm/lansenger-sdk-go/cmd/lansenger@latest
+```
+
+The CLI shares credentials with the SDK via `~/.lansenger/sdk_state.json`. After installing, configure credentials:
+```bash
+lansenger config set --app-id YOUR_APP_ID --app-secret YOUR_APP_SECRET
 ```
 
 ## 1. Authentication
