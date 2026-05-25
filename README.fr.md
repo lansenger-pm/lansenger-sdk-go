@@ -6,7 +6,7 @@ SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les application
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-blue)](https://go.dev/)
-[![Tests: 115](https://img.shields.io/badge/Tests-115-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
 > Zéro dépendance externe — uniquement la bibliothèque standard Go. Fonctionne avec tout projet Go.
 
@@ -303,14 +303,21 @@ executors, err := client.FetchExecutorList(ctx, "taskId", "org1", "", nil, "")
 ## 8. Événements de callback
 
 ```go
-// Analyser le payload webhook
+// Analyser le payload webhook en clair (non chiffré) — chaîne de requête URL ou JSON
 events, err := lansenger.ParseCallbackPayload("eventType=staff_modify&staffId=s001&orgId=org1")
 
-// Vérifier la signature
-isValid := lansenger.VerifyCallbackSignature(queryString, "app_secret")
+// Analyser le callback JSON en clair
+events, err = lansenger.ParseCallbackPayload(`{"events":[{"eventType":"staff_modify","data":{"staffId":"s001"}}],"orgId":"org1","appId":"app1"}`)
 
-// Types d'événements disponibles
-types := lansenger.GetCallbackEventTypes() // 24 types d'événements dans 14 catégories
+// Déchiffrer le payload de callback chiffré (AES-256-CBC)
+result, err := lansenger.DecryptCallbackPayload(encryptedData, encodingKey, knownAppID)
+fmt.Println(result.OrgID, result.AppID, result.Events)
+
+// Vérifier la signature (SHA1, conforme au protocole Lansenger)
+valid := lansenger.VerifyCallbackSignature(timestamp, nonce, signature, encodingKey, dataEncrypt, callbackToken)
+
+// Types d'événements disponibles (24 types, mappage de champs structuré)
+types := lansenger.GetCallbackEventTypes()
 ```
 
 ## 9. Lecture de chats
@@ -349,6 +356,8 @@ msgs, err := client.FetchChatMessages(ctx, "ut", 10, "", "", "g001", "", "", "")
 | `LANSENGER_APP_SECRET` | ✓ | Secret Application/Bot | — |
 | `LANSENGER_API_GATEWAY_URL` | ✗ | URL Gateway API | `https://open.e.lanxin.cn/open/apigw` |
 | `LANSENGER_PASSPORT_URL` | ✗ | URL Passeport (pour OAuth2) | — |
+| `LANSENGER_ENCODING_KEY` | ✗ | Clé d'encodage pour déchiffrement de callback | — |
+| `LANSENGER_CALLBACK_TOKEN` | ✗ | Token de callback (défaut : encoding_key) | — |
 | `LANSENGER_HTTP_TIMEOUT` | ✗ | Timeout HTTP (secondes) | `30` |
 
 ### Depuis l'environnement
@@ -406,7 +415,7 @@ lansenger-sdk-go/
 ├── media.go             # Upload/download de fichiers & images
 ├── todos.go             # Todo unifié (4.33) — 12 endpoints
 ├── calendars.go         # Calendrier & planification (4.23) — 8 endpoints
-├── callbacks.go         # Analyse d'événements de callback + vérification de signature
+├── callbacks.go         # Analyse d'événements de callback + déchiffrement AES-256-CBC + vérification de signature SHA1
 ├── persistence.go       # CredentialStore — persistance dans fichier JSON
 ├── *_test.go            # 115 tests unitaires + 10 tests d'intégration
 ├── go.mod

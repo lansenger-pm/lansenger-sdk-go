@@ -42,6 +42,8 @@ type profileData struct {
 	AppSecret          string `json:"app_secret,omitempty"`
 	APIGatewayURL      string `json:"api_gateway_url,omitempty"`
 	PassportURL        string `json:"passport_url,omitempty"`
+	EncodingKey        string `json:"encoding_key,omitempty"`
+	CallbackToken      string `json:"callback_token,omitempty"`
 	AppToken           string `json:"app_token,omitempty"`
 	TokenExpiresAt     int64  `json:"token_expires_at,omitempty"`
 	UserToken          string `json:"user_token,omitempty"`
@@ -113,6 +115,8 @@ func (cs *CredentialStore) LoadCredentials() (map[string]string, error) {
 		"app_secret":      profile.AppSecret,
 		"api_gateway_url": profile.APIGatewayURL,
 		"passport_url":    profile.PassportURL,
+		"encoding_key":    profile.EncodingKey,
+		"callback_token":  profile.CallbackToken,
 	}, nil
 }
 
@@ -127,6 +131,21 @@ func (cs *CredentialStore) SaveCredentials(appID, appSecret, apiGatewayURL, pass
 	profile.AppSecret = appSecret
 	profile.APIGatewayURL = apiGatewayURL
 	profile.PassportURL = passportURL
+	sd.Profiles[cs.profile] = profile
+	sd.ActiveProfile = cs.profile
+
+	return cs.save(sd)
+}
+
+func (cs *CredentialStore) SaveCallbackConfig(encodingKey, callbackToken string) error {
+	sd, err := cs.load()
+	if err != nil {
+		sd = &storeData{Profiles: map[string]profileData{}, ActiveProfile: DefaultProfile}
+	}
+
+	profile := sd.Profiles[cs.profile]
+	profile.EncodingKey = encodingKey
+	profile.CallbackToken = callbackToken
 	sd.Profiles[cs.profile] = profile
 	sd.ActiveProfile = cs.profile
 

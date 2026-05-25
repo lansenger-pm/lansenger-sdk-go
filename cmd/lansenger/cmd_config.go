@@ -93,9 +93,11 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 		"app_secret":      true,
 		"api_gateway_url": true,
 		"passport_url":    true,
+		"encoding_key":    true,
+		"callback_token":  true,
 	}
 	if !validKeys[key] {
-		fmt.Fprintf(os.Stderr, "Error: Invalid config key '%s'. Valid keys: app_id, app_secret, api_gateway_url, passport_url\n", key)
+		fmt.Fprintf(os.Stderr, "Error: Invalid config key '%s'. Valid keys: app_id, app_secret, api_gateway_url, passport_url, encoding_key, callback_token\n", key)
 		os.Exit(1)
 	}
 
@@ -108,7 +110,13 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 
 	creds[key] = value
 
-	err = store.SaveCredentials(creds["app_id"], creds["app_secret"], creds["api_gateway_url"], creds["passport_url"])
+	if key == "encoding_key" || key == "callback_token" {
+		encKey := creds["encoding_key"]
+		cbToken := creds["callback_token"]
+		err = store.SaveCallbackConfig(encKey, cbToken)
+	} else {
+		err = store.SaveCredentials(creds["app_id"], creds["app_secret"], creds["api_gateway_url"], creds["passport_url"])
+	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error saving credentials: %v\n", err)
 		os.Exit(1)
@@ -124,7 +132,7 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 }
 
 func maskIfSecret(key, value string) string {
-	if key == "app_id" || key == "app_secret" {
+	if key == "app_id" || key == "app_secret" || key == "encoding_key" || key == "callback_token" {
 		return maskSecret(value)
 	}
 	return value
@@ -150,13 +158,15 @@ func runConfigShow(cmd *cobra.Command, args []string) {
 		"app_secret":         maskSecret(creds["app_secret"]),
 		"api_gateway_url":    creds["api_gateway_url"],
 		"passport_url":       creds["passport_url"],
+		"encoding_key":       maskSecret(creds["encoding_key"]),
+		"callback_token":     maskSecret(creds["callback_token"]),
 		"store_path":         storePath,
 	}
 
 	if !jsonOutput {
 		fmt.Printf("%-20s %s\n", "Field", "Value")
 		fmt.Printf("%-20s %s\n", strings.Repeat("━", 20), strings.Repeat("━", 60))
-		keys := []string{"profile", "has_credentials", "app_id", "app_secret", "api_gateway_url", "passport_url", "store_path"}
+		keys := []string{"profile", "has_credentials", "app_id", "app_secret", "api_gateway_url", "passport_url", "encoding_key", "callback_token", "store_path"}
 		for _, k := range keys {
 			v := result[k]
 			fmt.Printf("%-20s %s\n", k, fmtVal(v))

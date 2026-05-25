@@ -11,6 +11,8 @@ type Config struct {
 	APIGatewayURL string
 	PassportURL   string
 	HTTPTimeout   float64
+	EncodingKey   string
+	CallbackToken string
 }
 
 func NewConfig(appID, appSecret string) *Config {
@@ -34,6 +36,8 @@ func ConfigFromEnv() (*Config, error) {
 		APIGatewayURL: getEnvOrDefault("LANSENGER_API_GATEWAY_URL", DefaultAPIGatewayURL),
 		PassportURL:   os.Getenv("LANSENGER_PASSPORT_URL"),
 		HTTPTimeout:   30.0,
+		EncodingKey:   os.Getenv("LANSENGER_ENCODING_KEY"),
+		CallbackToken: os.Getenv("LANSENGER_CALLBACK_TOKEN"),
 	}
 	timeoutStr := os.Getenv("LANSENGER_HTTP_TIMEOUT")
 	if timeoutStr != "" {
