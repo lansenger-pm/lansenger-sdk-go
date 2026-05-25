@@ -24,7 +24,7 @@ var callbackParsePayloadCmd = &cobra.Command{
 }
 
 var callbackDecryptCmd = &cobra.Command{
-	Use:   "decrypt ENCRYPTED_DATA",
+	Use:   "decrypt-payload ENCRYPTED_DATA",
 	Short: "Decrypt encrypted callback payload",
 	Args:  cobra.ExactArgs(1),
 	Run:   runCallbackDecrypt,
