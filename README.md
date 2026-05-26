@@ -5,6 +5,7 @@
 Go SDK for the Lansenger (蓝信) platform — supports Lansenger apps, organization bots, and personal bots.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-blue)](https://go.dev/)
 [![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
@@ -47,6 +48,7 @@ go get github.com/lansenger-pm/lansenger-sdk-go
 **CLI (for AI agents & debugging)**:
 ```bash
 go install github.com/lansenger-pm/lansenger-sdk-go/cmd/lansenger@latest
+lansenger version
 ```
 
 The CLI shares credentials with the SDK via `~/.lansenger/sdk_state.json`. After installing, configure credentials:

@@ -5,6 +5,7 @@
 Lansenger（藍信）平台的 Go SDK — 支援藍信應用、組織機械人和個人機械人。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-blue)](https://go.dev/)
 [![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
@@ -47,6 +48,7 @@ go get github.com/lansenger-pm/lansenger-sdk-go
 **CLI（用於 AI 代理與除錯）**:
 ```bash
 go install github.com/lansenger-pm/lansenger-sdk-go/cmd/lansenger@latest
+lansenger version
 ```
 
 CLI 透過 `~/.lansenger/sdk_state.json` 與 SDK 共用憑證。安裝後設定憑證：

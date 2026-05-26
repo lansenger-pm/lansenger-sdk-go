@@ -17,6 +17,15 @@ var (
 	profileName string
 )
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print SDK/CLI version",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(lansenger.Version)
+	},
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "lansenger",
 	Short: "Lansenger (蓝信) CLI — interact with Lansenger APIs from the command line",
@@ -25,6 +34,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Output raw JSON instead of formatted tables")
 	rootCmd.PersistentFlags().StringVarP(&profileName, "profile", "P", "default", "Credential profile to use")
+	rootCmd.AddCommand(versionCmd)
 }
 
 func main() {

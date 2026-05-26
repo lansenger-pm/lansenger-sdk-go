@@ -5,6 +5,7 @@
 Lansenger（蓝信）平台的 Go SDK — 支持蓝信应用、组织机器人和个人机器人。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-blue)](https://go.dev/)
 [![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
@@ -47,6 +48,7 @@ go get github.com/lansenger-pm/lansenger-sdk-go
 **CLI（用于 AI 代理和调试）**:
 ```bash
 go install github.com/lansenger-pm/lansenger-sdk-go/cmd/lansenger@latest
+lansenger version
 ```
 
 CLI 通过 `~/.lansenger/sdk_state.json` 与 SDK 共享凭据。安装后配置凭据：
