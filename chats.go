@@ -3,7 +3,25 @@ package lansenger
 import (
 	"context"
 	"fmt"
+	"net/url"
 )
+
+func addQueryParam(baseURL, key, value string) string {
+	sep := "&"
+	if !containsChar(baseURL, '?') {
+		sep = "?"
+	}
+	return baseURL + sep + url.QueryEscape(key) + "=" + url.QueryEscape(value)
+}
+
+func containsChar(s string, c byte) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] == c {
+			return true
+		}
+	}
+	return false
+}
 
 func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, chatType string, keyword, startTime, endTime string) (*ChatListResult, error) {
 	if userToken == "" {
@@ -89,25 +107,20 @@ func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken strin
 		WithQueryParam("base_version", baseVersion),
 	)
 
-	params := map[string]string{}
 	if staffID != "" {
-		params["staffId"] = staffID
+		url = addQueryParam(url, "staffId", staffID)
 	}
 	if groupID != "" {
-		params["groupId"] = groupID
+		url = addQueryParam(url, "groupId", groupID)
 	}
 	if startTime != "" {
-		params["startTime"] = startTime
+		url = addQueryParam(url, "startTime", startTime)
 	}
 	if endTime != "" {
-		params["endTime"] = endTime
+		url = addQueryParam(url, "endTime", endTime)
 	}
 	if senderID != "" {
-		params["senderId"] = senderID
-	}
-
-	for k, v := range params {
-		url = url + "&" + k + "=" + v
+		url = addQueryParam(url, "senderId", senderID)
 	}
 
 	result, err := c.doGet(ctx, url)

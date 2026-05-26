@@ -25,18 +25,27 @@ func (c *LansengerClient) FetchStaffBasicInfo(ctx context.Context, staffID strin
 		return &StaffBasicInfoResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &StaffBasicInfoResult{
+	res := &StaffBasicInfoResult{
 		Success:     true,
 		OrgID:       strFromMap(data, "orgId"),
 		OrgName:     strFromMap(data, "orgName"),
 		Name:        strFromMap(data, "name"),
 		Gender:      strFromMap(data, "gender"),
 		Signature:   strFromMap(data, "signature"),
-		AvatarURL:   strFromMap(data, "avatarUrl"),
+		AvatarURL:   strFromMap(data, "avatar"),
 		AvatarID:    strFromMap(data, "avatarId"),
 		Status:      strFromMap(data, "status"),
 		RawResponse: result,
-	}, nil
+	}
+	if departments, ok := data["departments"].([]interface{}); ok {
+		res.Departments = make([]map[string]interface{}, 0, len(departments))
+		for _, item := range departments {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Departments = append(res.Departments, m)
+			}
+		}
+	}
+	return res, nil
 }
 
 func (c *LansengerClient) FetchStaffDetail(ctx context.Context, staffID string, userToken string) (*StaffDetailResult, error) {
@@ -60,7 +69,7 @@ func (c *LansengerClient) FetchStaffDetail(ctx context.Context, staffID string, 
 		return &StaffDetailResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &StaffDetailResult{
+	res := &StaffDetailResult{
 		Success:        true,
 		Name:           strFromMap(data, "name"),
 		Signature:      strFromMap(data, "signature"),
@@ -74,9 +83,50 @@ func (c *LansengerClient) FetchStaffDetail(ctx context.Context, staffID string, 
 		EmployeeNumber: strFromMap(data, "employeeNumber"),
 		Email:          strFromMap(data, "email"),
 		ExternalID:     strFromMap(data, "externalId"),
-		MobilePhone:    strFromMap(data, "mobilePhone"),
+		JoinDate:       strFromMap(data, "joinDate"),
 		RawResponse:    result,
-	}, nil
+	}
+
+	phoneObj := mapFromMap(data, "mobilePhone")
+	if phoneObj != nil {
+		res.MobilePhone = strFromMap(phoneObj, "number")
+		res.MobilePhoneCountryCode = strFromMap(phoneObj, "countryCode")
+	}
+
+	if departments, ok := data["departments"].([]interface{}); ok {
+		res.Departments = make([]map[string]interface{}, 0, len(departments))
+		for _, item := range departments {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Departments = append(res.Departments, m)
+			}
+		}
+	}
+	if duties, ok := data["duties"].([]interface{}); ok {
+		res.Duties = make([]map[string]interface{}, 0, len(duties))
+		for _, item := range duties {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Duties = append(res.Duties, m)
+			}
+		}
+	}
+	if parties, ok := data["parties"].([]interface{}); ok {
+		res.Parties = make([]map[string]interface{}, 0, len(parties))
+		for _, item := range parties {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Parties = append(res.Parties, m)
+			}
+		}
+	}
+	if tags, ok := data["tags"].([]interface{}); ok {
+		res.Tags = make([]map[string]interface{}, 0, len(tags))
+		for _, item := range tags {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Tags = append(res.Tags, m)
+			}
+		}
+	}
+
+	return res, nil
 }
 
 func (c *LansengerClient) FetchDepartmentAncestors(ctx context.Context, staffID string, userToken string) (*DepartmentAncestorsResult, error) {
@@ -100,10 +150,34 @@ func (c *LansengerClient) FetchDepartmentAncestors(ctx context.Context, staffID 
 		return &DepartmentAncestorsResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &DepartmentAncestorsResult{
+	res := &DepartmentAncestorsResult{
 		Success:     true,
 		RawResponse: result,
-	}, nil
+	}
+
+	if ancestorList, ok := data["ancestorDepartments"].([]interface{}); ok {
+		res.AncestorGroups = make([][]map[string]string, 0, len(ancestorList))
+		for _, group := range ancestorList {
+			if arr, ok := group.([]interface{}); ok {
+				ancestors := make([]map[string]string, 0, len(arr))
+				for _, item := range arr {
+					if m, ok := item.(map[string]interface{}); ok {
+						entry := map[string]string{
+							"id":   strFromMap(m, "id"),
+							"name": strFromMap(m, "name"),
+						}
+						if extID := strFromMap(m, "externalId"); extID != "" {
+							entry["externalId"] = extID
+						}
+						ancestors = append(ancestors, entry)
+					}
+				}
+				res.AncestorGroups = append(res.AncestorGroups, ancestors)
+			}
+		}
+	}
+
+	return res, nil
 }
 
 func (c *LansengerClient) FetchStaffIdMapping(ctx context.Context, orgID, idType, idValue, userToken string) (*StaffIdMappingResult, error) {
@@ -159,12 +233,14 @@ func (c *LansengerClient) FetchOrgExtraFieldIDs(ctx context.Context, orgID, user
 		return &ExtraFieldIdsResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &ExtraFieldIdsResult{
+	res := &ExtraFieldIdsResult{
 		Success:     true,
 		HasMore:     boolFromMap(data, "hasMore"),
 		Total:       intFromMap(data, "total"),
 		RawResponse: result,
-	}, nil
+	}
+	res.ExtraFieldIDs = stringArrayFromMap(data, "extraFieldIds")
+	return res, nil
 }
 
 func (c *LansengerClient) SearchStaff(ctx context.Context, keyword, userToken, userID string, recursive bool, sectorIDs []string, page, pageSize int) (*StaffSearchResult, error) {
@@ -205,12 +281,21 @@ func (c *LansengerClient) SearchStaff(ctx context.Context, keyword, userToken, u
 		return &StaffSearchResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &StaffSearchResult{
+	res := &StaffSearchResult{
 		Success:     true,
 		HasMore:     boolFromMap(data, "hasMore"),
 		Total:       intFromMap(data, "total"),
 		RawResponse: result,
-	}, nil
+	}
+	if staffInfo, ok := data["staffInfo"].([]interface{}); ok {
+		res.StaffInfo = make([]map[string]interface{}, 0, len(staffInfo))
+		for _, item := range staffInfo {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.StaffInfo = append(res.StaffInfo, m)
+			}
+		}
+	}
+	return res, nil
 }
 
 func (c *LansengerClient) FetchOrgInfo(ctx context.Context, orgID, userToken string) (*OrgInfoResult, error) {
@@ -235,10 +320,14 @@ func (c *LansengerClient) FetchOrgInfo(ctx context.Context, orgID, userToken str
 	}
 
 	return &OrgInfoResult{
-		Success:     true,
-		OrgID:       strFromMap(data, "orgId"),
-		OrgName:     strFromMap(data, "orgName"),
-		IconURL:     strFromMap(data, "iconUrl"),
-		RawResponse: result,
+		Success:           true,
+		OrgID:             strFromMap(data, "orgId"),
+		OrgName:           strFromMap(data, "orgName"),
+		IconURL:           strFromMap(data, "iconUrl"),
+		OrgMaxMemberLimit: intFromMap(data, "orgMaxMemberLimit"),
+		OrgOrderType:      strFromMap(data, "orgOrderType"),
+		OrgDaysLimit:      intFromMap(data, "orgDaysLimit"),
+		OrgBillingDate:    strFromMap(data, "orgBillingDate"),
+		RawResponse:       result,
 	}, nil
 }

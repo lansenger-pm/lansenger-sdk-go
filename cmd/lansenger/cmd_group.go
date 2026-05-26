@@ -63,6 +63,13 @@ var groupUpdateMembersCmd = &cobra.Command{
 	Run:   runGroupUpdateMembers,
 }
 
+var groupDissolveCmd = &cobra.Command{
+	Use:   "dissolve GROUP_ID",
+	Short: "Dissolve (delete) a group",
+	Args:  cobra.ExactArgs(1),
+	Run:   runGroupDissolve,
+}
+
 var (
 	groupCreateOwner      string
 	groupCreateDesc       string
@@ -93,6 +100,8 @@ var (
 	groupUpdateMembersRemove []string
 	groupUpdateMembersAddDept []string
 	groupUpdateMembersToken  string
+
+	groupDissolveUserToken string
 )
 
 func init() {
@@ -126,6 +135,8 @@ func init() {
 	groupUpdateMembersCmd.Flags().StringArrayVar(&groupUpdateMembersAddDept, "add-dept", nil, "Department IDs to add (repeatable)")
 	groupUpdateMembersCmd.Flags().StringVar(&groupUpdateMembersToken, "user-token", "", "User token")
 
+	groupDissolveCmd.Flags().StringVar(&groupDissolveUserToken, "user-token", "", "User token")
+
 	groupCmd.AddCommand(groupCreateCmd)
 	groupCmd.AddCommand(groupInfoCmd)
 	groupCmd.AddCommand(groupMembersCmd)
@@ -133,6 +144,7 @@ func init() {
 	groupCmd.AddCommand(groupCheckCmd)
 	groupCmd.AddCommand(groupUpdateCmd)
 	groupCmd.AddCommand(groupUpdateMembersCmd)
+	groupCmd.AddCommand(groupDissolveCmd)
 	rootCmd.AddCommand(groupCmd)
 }
 
@@ -220,6 +232,15 @@ func runGroupUpdate(cmd *cobra.Command, args []string) {
 	}
 
 	result, err := client.UpdateGroupInfo(ctx, args[0], params, groupUpdateUserToken)
+	checkError(err)
+	outputResult(result)
+}
+
+func runGroupDissolve(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	result, err := client.DissolveGroup(ctx, args[0], groupDissolveUserToken)
 	checkError(err)
 	outputResult(result)
 }

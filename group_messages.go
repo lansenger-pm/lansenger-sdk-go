@@ -2,7 +2,7 @@ package lansenger
 
 import "context"
 
-func (c *LansengerClient) SendGroupMessage(ctx context.Context, groupID, msgType string, msgData map[string]interface{}, userToken, senderID string, reminderAll bool, reminderUserIDs []string, outlines, uuid, entryID string) (*SendMessageResult, error) {
+func (c *LansengerClient) SendGroupMessage(ctx context.Context, groupID, msgType string, msgData map[string]interface{}, userToken, senderID string, outlines, uuid, entryID string) (*SendMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -19,12 +19,6 @@ func (c *LansengerClient) SendGroupMessage(ctx context.Context, groupID, msgType
 	}
 	if senderID != "" {
 		body["senderId"] = senderID
-	}
-	if reminderAll {
-		body["reminderAll"] = true
-	}
-	if len(reminderUserIDs) > 0 {
-		body["reminderUserIds"] = reminderUserIDs
 	}
 	if outlines != "" {
 		body["outlines"] = outlines

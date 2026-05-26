@@ -110,6 +110,7 @@ func (c *LansengerClient) RefreshUserToken(ctx context.Context, refreshToken str
 		RefreshExpiresIn: intFromMap(data, "refreshExpiresIn"),
 		StaffID:          strFromMap(data, "staffId"),
 		Scope:            strFromMap(data, "scope"),
+		State:            strFromMap(data, "state"),
 		RawResponse:      result,
 	}, nil
 }

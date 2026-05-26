@@ -164,7 +164,7 @@ func (c *LansengerClient) doPost(ctx context.Context, url string, body interface
 }
 
 func (c *LansengerClient) doPostMultipart(ctx context.Context, url string, filePath string, mediaType int) (map[string]interface{}, error) {
-	return uploadMediaInternal(ctx, c.httpClient, url, filePath, mediaType)
+	return uploadMediaInternal(ctx, c.httpClient, url, filePath)
 }
 
 func extractData(result map[string]interface{}) map[string]interface{} {
@@ -189,6 +189,11 @@ func strFromMap(m map[string]interface{}, key string) string {
 func intFromMap(m map[string]interface{}, key string) int {
 	v, _ := m[key].(float64)
 	return int(v)
+}
+
+func floatFromMap(m map[string]interface{}, key string) float64 {
+	v, _ := m[key].(float64)
+	return v
 }
 
 func boolFromMap(m map[string]interface{}, key string) bool {

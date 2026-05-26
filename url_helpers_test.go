@@ -75,3 +75,41 @@ func TestBuildAPIURLUnknownEndpoint(t *testing.T) {
 		t.Errorf("expected empty URL for unknown endpoint, got %s", u)
 	}
 }
+
+func TestBuildAPIURLWithMediaTypeString(t *testing.T) {
+	cfg := NewConfig("app1", "secret1")
+	u := BuildAPIURL(cfg, "app_medias", "create", "tok",
+		WithMediaTypeString(AppMediaTypeVideo),
+		WithIntParam("width", 680),
+		WithIntParam("height", 480),
+		WithIntParam("duration", 300),
+	)
+	parsed, _ := url.Parse(u)
+	if !strings.Contains(parsed.Path, "/v1/app/medias/create") {
+		t.Errorf("expected path /v1/app/medias/create, got %s", parsed.Path)
+	}
+	if parsed.Query().Get("type") != "video" {
+		t.Errorf("expected type=video, got %s", parsed.Query().Get("type"))
+	}
+	if parsed.Query().Get("width") != "680" {
+		t.Errorf("expected width=680, got %s", parsed.Query().Get("width"))
+	}
+	if parsed.Query().Get("height") != "480" {
+		t.Errorf("expected height=480, got %s", parsed.Query().Get("height"))
+	}
+	if parsed.Query().Get("duration") != "300" {
+		t.Errorf("expected duration=300, got %s", parsed.Query().Get("duration"))
+	}
+}
+
+func TestWithIntParamZero(t *testing.T) {
+	cfg := NewConfig("app1", "secret1")
+	u := BuildAPIURL(cfg, "app_medias", "create", "tok",
+		WithMediaTypeString(AppMediaTypeFile),
+		WithIntParam("width", 0),
+	)
+	parsed, _ := url.Parse(u)
+	if parsed.Query().Get("width") != "" {
+		t.Errorf("expected width to be omitted when 0, got %s", parsed.Query().Get("width"))
+	}
+}

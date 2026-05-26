@@ -45,8 +45,8 @@ func TestFetchGroupInfo(t *testing.T) {
 		handle("/v2/groups/grp001/info/fetch", 0, "ok", map[string]interface{}{
 			"name":         "TestGroup",
 			"description":  "A test group",
-			"owner":        "s001",
-			"creator":      "s002",
+			"owner":        map[string]interface{}{"staffId": "s001", "name": "Alice"},
+			"creator":      map[string]interface{}{"staffId": "s002", "name": "Bob"},
 			"state":        "normal",
 			"manageMode":   "owner_manage",
 			"totalMembers": 10,
@@ -66,8 +66,8 @@ func TestFetchGroupInfo(t *testing.T) {
 	if result.Name != "TestGroup" {
 		t.Errorf("expected Name=TestGroup, got %s", result.Name)
 	}
-	if result.Owner != "s001" {
-		t.Errorf("expected Owner=s001, got %s", result.Owner)
+	if result.OwnerStaffID != "s001" {
+		t.Errorf("expected OwnerStaffID=s001, got %s", result.OwnerStaffID)
 	}
 	if result.TotalMembers != 10 {
 		t.Errorf("expected TotalMembers=10, got %d", result.TotalMembers)

@@ -26,21 +26,52 @@ func (c *LansengerClient) FetchDepartmentDetail(ctx context.Context, departmentI
 		return &DepartmentDetailResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &DepartmentDetailResult{
-		Success:         true,
-		ID:              strFromMap(data, "id"),
-		Name:            strFromMap(data, "name"),
-		ExternalID:      strFromMap(data, "externalId"),
-		ParentID:        strFromMap(data, "parentId"),
-		Order:           intFromMap(data, "order"),
-		HasChildren:     boolFromMap(data, "hasChildren"),
-		NormalMembers:   intFromMap(data, "normalMembers"),
-		InactiveMembers: intFromMap(data, "inactiveMembers"),
-		FrozenMembers:   intFromMap(data, "frozenMembers"),
-		DeletedMembers:  intFromMap(data, "deletedMembers"),
-		DeptType:        strFromMap(data, "deptType"),
-		RawResponse:     result,
-	}, nil
+	res := &DepartmentDetailResult{
+		Success:                 true,
+		ID:                      strFromMap(data, "id"),
+		Name:                    strFromMap(data, "name"),
+		ExternalID:              strFromMap(data, "externalId"),
+		ParentID:                strFromMap(data, "parentId"),
+		Order:                   floatFromMap(data, "order"),
+		HasChildren:             boolFromMap(data, "hasChildren"),
+		NormalMembers:           intFromMap(data, "normalMembers"),
+		InactiveMembers:         intFromMap(data, "inactiveMembers"),
+		FrozenMembers:           intFromMap(data, "frozenMembers"),
+		DeletedMembers:          intFromMap(data, "deletedMembers"),
+		NormalMembersUnique:     intFromMap(data, "normalMembersUnique"),
+		InactiveMembersUnique:   intFromMap(data, "inactiveMembersUnique"),
+		FrozenMembersUnique:     intFromMap(data, "frozenMembersUnique"),
+		DeletedMembersUnique:    intFromMap(data, "deletedMembersUnique"),
+		DeptType:                intFromMap(data, "deptType"),
+		RawResponse:             result,
+	}
+
+	if tags, ok := data["tags"].([]interface{}); ok {
+		res.Tags = make([]map[string]interface{}, 0, len(tags))
+		for _, item := range tags {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Tags = append(res.Tags, m)
+			}
+		}
+	}
+	if ancestors, ok := data["ancestorDepartments"].([]interface{}); ok {
+		res.AncestorDepartments = make([]map[string]interface{}, 0, len(ancestors))
+		for _, item := range ancestors {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.AncestorDepartments = append(res.AncestorDepartments, m)
+			}
+		}
+	}
+	if leaders, ok := data["leaders"].([]interface{}); ok {
+		res.Leaders = make([]map[string]interface{}, 0, len(leaders))
+		for _, item := range leaders {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Leaders = append(res.Leaders, m)
+			}
+		}
+	}
+
+	return res, nil
 }
 
 func (c *LansengerClient) FetchDepartmentChildren(ctx context.Context, departmentID, userToken string) (*DepartmentChildrenResult, error) {
@@ -64,10 +95,19 @@ func (c *LansengerClient) FetchDepartmentChildren(ctx context.Context, departmen
 		return &DepartmentChildrenResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &DepartmentChildrenResult{
+	res := &DepartmentChildrenResult{
 		Success:     true,
 		RawResponse: result,
-	}, nil
+	}
+	if departments, ok := data["departments"].([]interface{}); ok {
+		res.Departments = make([]map[string]interface{}, 0, len(departments))
+		for _, item := range departments {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Departments = append(res.Departments, m)
+			}
+		}
+	}
+	return res, nil
 }
 
 func (c *LansengerClient) FetchDepartmentStaffs(ctx context.Context, departmentID, userToken string, page, pageSize int) (*DepartmentStaffsResult, error) {
@@ -93,10 +133,19 @@ func (c *LansengerClient) FetchDepartmentStaffs(ctx context.Context, departmentI
 		return &DepartmentStaffsResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &DepartmentStaffsResult{
+	res := &DepartmentStaffsResult{
 		Success:     true,
 		HasMore:     boolFromMap(data, "hasMore"),
 		Total:       intFromMap(data, "total"),
 		RawResponse: result,
-	}, nil
+	}
+	if staffs, ok := data["staffs"].([]interface{}); ok {
+		res.Staffs = make([]map[string]interface{}, 0, len(staffs))
+		for _, item := range staffs {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Staffs = append(res.Staffs, m)
+			}
+		}
+	}
+	return res, nil
 }

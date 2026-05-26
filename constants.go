@@ -7,9 +7,14 @@ const (
 	DefaultProfile       = "default"
 	TokenRefreshMargin   = 300
 
-	MediaTypeVideo = 1
+	MediaTypeVideo  = 1
 	MediaTypeImage = 2
-	MediaTypeFile  = 3
+	MediaTypeAudio = 3
+
+	AppMediaTypeFile  = "file"
+	AppMediaTypeVideo = "video"
+	AppMediaTypeImage = "image"
+	AppMediaTypeAudio = "audio"
 
 	MaxMessageLength = 4000
 
@@ -77,14 +82,17 @@ var APIEndpoints = map[string]map[string]string{
 		"is_in_group":    "/v2/groups/{group_id}/members/is_in_group",
 		"info_update":    "/v2/groups/{group_id}/info/update",
 		"members_update": "/v2/groups/{group_id}/members/update",
+		"delete":         "/v2/groups/{group_id}/delete",
+		"share_create":   "/v2/groups/{group_id}/share/create",
 	},
 	"messages": {
-		"create":         "/v1/messages/create",
-		"chat_create":    "/v1/messages/chat/create",
-		"group_create":   "/v1/messages/group/create",
-		"revoke":         "/v1/messages/revoke",
-		"dynamic_update": "/v1/messages/dynamic/update",
-		"fetch":          "/v1/messages/fetch",
+		"create":          "/v1/messages/create",
+		"chat_create":     "/v1/messages/chat/create",
+		"group_create":    "/v1/messages/group/create",
+		"revoke":          "/v1/messages/revoke",
+		"dynamic_update":  "/v1/messages/dynamic/update",
+		"reminder_create": "/v1/messages/reminder/create",
+		"fetch":           "/v1/messages/fetch",
 	},
 	"bot": {
 		"messages_create": "/v1/bot/messages/create",
@@ -94,21 +102,27 @@ var APIEndpoints = map[string]map[string]string{
 		"msg_fetch":  "/v1/sse/msg/fetch",
 	},
 	"medias": {
-		"create": "/v1/medias/create",
-		"fetch":  "/v1/medias/{media_id}/fetch",
+		"create":     "/v1/medias/create",
+		"fetch":      "/v1/medias/{media_id}/fetch",
+		"path_fetch": "/v1/medias/{media_id}/path/fetch",
+	},
+	"app_medias": {
+		"create": "/v1/app/medias/create",
 	},
 	"chats": {
 		"fetch": "/v1/chats/fetch",
 	},
 	"calendars": {
-		"primary_fetch":            "/v1/calendars/primary",
-		"schedules_create":         "/v1/calendars/{calendar_id}/schedules/create",
-		"schedules_fetch":          "/v1/calendars/{calendar_id}/schedules/{schedule_id}/fetch",
-		"schedules_delete":         "/v1/calendars/{calendar_id}/schedules/{schedule_id}/delete",
-		"schedules_list_fetch":     "/v1/calendars/{calendar_id}/schedules/fetch",
-		"schedules_members_fetch":  "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/fetch",
-		"schedules_members_create": "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/create",
-		"schedules_members_delete": "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/delete",
+		"primary_fetch":                   "/v1/calendars/primary",
+		"schedules_create":                "/v1/calendars/{calendar_id}/schedules/create",
+		"schedules_fetch":                 "/v1/calendars/{calendar_id}/schedules/{schedule_id}/fetch",
+		"schedules_update":                "/v1/calendars/{calendar_id}/schedules/{schedule_id}/update",
+		"schedules_delete":                "/v1/calendars/{calendar_id}/schedules/{schedule_id}/delete",
+		"schedules_list_fetch":            "/v1/calendars/{calendar_id}/schedules/fetch",
+		"schedules_members_fetch":         "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/fetch",
+		"schedules_members_create":        "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/create",
+		"schedules_members_delete":        "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/delete",
+		"schedules_members_meta_update":   "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/meta/update",
 	},
 	"todo": {
 		"create":                  "/xtra/task/unified/v1/todotask/create",
@@ -171,5 +185,5 @@ func GuessMediaType(filePath string) int {
 	if VideoExtensions[ext] {
 		return MediaTypeVideo
 	}
-	return MediaTypeFile
+	return MediaTypeAudio
 }

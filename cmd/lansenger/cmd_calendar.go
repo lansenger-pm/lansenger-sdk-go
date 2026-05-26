@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -67,35 +69,63 @@ var calendarDeleteAttendeesCmd = &cobra.Command{
 	Run:   runCalendarDeleteAttendees,
 }
 
+var calendarUpdateScheduleCmd = &cobra.Command{
+	Use:   "update-schedule CALENDAR_ID SCHEDULE_ID",
+	Short: "Update a schedule",
+	Args:  cobra.ExactArgs(2),
+	Run:   runCalendarUpdateSchedule,
+}
+
+var calendarUpdateAttendeeMetaCmd = &cobra.Command{
+	Use:   "update-attendee-meta CALENDAR_ID SCHEDULE_ID",
+	Short: "Update attendee metadata",
+	Args:  cobra.ExactArgs(2),
+	Run:   runCalendarUpdateAttendeeMeta,
+}
+
 var (
 	calPrimaryUserToken string
 	calPrimaryUserID    string
 
 	calCreateDesc              string
-	calCreateAllDay            bool
+	calCreateAllDay            string
 	calCreateRepeatType        string
-	calCreateReminderType      int
-	calCreateAttendeePerms     int
-	calCreateExpireDateType    int
+	calCreateReminderType      string
+	calCreateAttendeePerms     string
+	calCreateExpireDateType    string
 	calCreateRule               string
 	calCreateUserToken          string
+	calCreateUserID             string
 
 	calFetchUserToken string
 	calFetchUserID    string
 
 	calDeleteUserToken string
+	calDeleteUserID    string
 
 	calListUserToken string
+	calListUserID    string
 
 	calAttendeesUserToken string
+	calAttendeesUserID    string
 	calAttendeesPage      int
 	calAttendeesSize      int
 
-	calAddAttendeesReminderType int
+	calAddAttendeesReminderType string
 	calAddAttendeesUserToken    string
+	calAddAttendeesUserID       string
 
-	calDelAttendeesReminderType int
+	calDelAttendeesReminderType string
 	calDelAttendeesUserToken    string
+	calDelAttendeesUserID       string
+
+	calUpdateScheduleParamsJSON string
+	calUpdateScheduleUserToken  string
+	calUpdateScheduleUserID     string
+
+	calUpdateAttendeeMetaParamsJSON string
+	calUpdateAttendeeMetaUserToken  string
+	calUpdateAttendeeMetaUserID     string
 )
 
 func init() {
@@ -103,30 +133,44 @@ func init() {
 	calendarPrimaryCmd.Flags().StringVar(&calPrimaryUserID, "user-id", "", "User ID")
 
 	calendarCreateScheduleCmd.Flags().StringVarP(&calCreateDesc, "desc", "d", "", "Schedule description")
-	calendarCreateScheduleCmd.Flags().BoolVar(&calCreateAllDay, "all-day", false, "All-day event")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateAllDay, "all-day", "", "All-day event (yes/no)")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateRepeatType, "repeat", "", "Repeat type: no/daily/weekly/monthly/yearly/work_day/custom")
-	calendarCreateScheduleCmd.Flags().IntVar(&calCreateReminderType, "reminder", 0, "Reminder type")
-	calendarCreateScheduleCmd.Flags().IntVar(&calCreateAttendeePerms, "attendee-perms", 0, "Attendee permissions")
-	calendarCreateScheduleCmd.Flags().IntVar(&calCreateExpireDateType, "expire-date-type", 0, "Expire date type")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateReminderType, "reminder", "", "Reminder type (yes/no)")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateAttendeePerms, "attendee-perms", "", "Attendee permissions")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateExpireDateType, "expire-date-type", "", "Expire date type")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateRule, "rule", "", "Repeat rule (JSON)")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateUserToken, "user-token", "", "User token")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateUserID, "user-id", "", "User ID")
 
 	calendarFetchScheduleCmd.Flags().StringVar(&calFetchUserToken, "user-token", "", "User token")
 	calendarFetchScheduleCmd.Flags().StringVar(&calFetchUserID, "user-id", "", "User ID")
 
 	calendarDeleteScheduleCmd.Flags().StringVar(&calDeleteUserToken, "user-token", "", "User token")
+	calendarDeleteScheduleCmd.Flags().StringVar(&calDeleteUserID, "user-id", "", "User ID")
 
 	calendarListSchedulesCmd.Flags().StringVar(&calListUserToken, "user-token", "", "User token")
+	calendarListSchedulesCmd.Flags().StringVar(&calListUserID, "user-id", "", "User ID")
 
 	calendarAttendeesCmd.Flags().StringVar(&calAttendeesUserToken, "user-token", "", "User token")
+	calendarAttendeesCmd.Flags().StringVar(&calAttendeesUserID, "user-id", "", "User ID")
 	calendarAttendeesCmd.Flags().IntVarP(&calAttendeesPage, "page", "p", 1, "Page number")
 	calendarAttendeesCmd.Flags().IntVarP(&calAttendeesSize, "size", "s", 20, "Page size")
 
-	calendarAddAttendeesCmd.Flags().IntVar(&calAddAttendeesReminderType, "reminder", 0, "Reminder type")
+	calendarAddAttendeesCmd.Flags().StringVar(&calAddAttendeesReminderType, "reminder", "", "Reminder type (yes/no)")
 	calendarAddAttendeesCmd.Flags().StringVar(&calAddAttendeesUserToken, "user-token", "", "User token")
+	calendarAddAttendeesCmd.Flags().StringVar(&calAddAttendeesUserID, "user-id", "", "User ID")
 
-	calendarDeleteAttendeesCmd.Flags().IntVar(&calDelAttendeesReminderType, "reminder", 0, "Reminder type")
+	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesReminderType, "reminder", "", "Reminder type (yes/no)")
 	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesUserToken, "user-token", "", "User token")
+	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesUserID, "user-id", "", "User ID")
+
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleParamsJSON, "params", "{}", "Update fields as JSON object")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleUserToken, "user-token", "", "User token")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleUserID, "user-id", "", "User ID")
+
+	calendarUpdateAttendeeMetaCmd.Flags().StringVar(&calUpdateAttendeeMetaParamsJSON, "params", "{}", "Attendee meta fields as JSON object")
+	calendarUpdateAttendeeMetaCmd.Flags().StringVar(&calUpdateAttendeeMetaUserToken, "user-token", "", "User token")
+	calendarUpdateAttendeeMetaCmd.Flags().StringVar(&calUpdateAttendeeMetaUserID, "user-id", "", "User ID")
 
 	calendarCmd.AddCommand(calendarPrimaryCmd)
 	calendarCmd.AddCommand(calendarCreateScheduleCmd)
@@ -136,6 +180,8 @@ func init() {
 	calendarCmd.AddCommand(calendarAttendeesCmd)
 	calendarCmd.AddCommand(calendarAddAttendeesCmd)
 	calendarCmd.AddCommand(calendarDeleteAttendeesCmd)
+	calendarCmd.AddCommand(calendarUpdateScheduleCmd)
+	calendarCmd.AddCommand(calendarUpdateAttendeeMetaCmd)
 	rootCmd.AddCommand(calendarCmd)
 }
 
@@ -154,8 +200,9 @@ func runCalendarCreateSchedule(cmd *cobra.Command, args []string) {
 
 	calendarID := args[0]
 	summary := args[1]
-	startTime := args[2]
-	endTime := args[3]
+
+	startTime := map[string]interface{}{"time": args[2]}
+	endTime := map[string]interface{}{"time": args[3]}
 
 	attendeeMaps, err := parseJSONArray(args[4])
 	checkError(err)
@@ -178,7 +225,7 @@ func runCalendarCreateSchedule(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	result, err := client.CreateSchedule(ctx, calendarID, summary, startTime, endTime, attendees, calCreateDesc, calCreateAllDay, calCreateRepeatType, rule, calCreateExpireDateType, calCreateReminderType, calCreateAttendeePerms, calCreateUserToken)
+	result, err := client.CreateSchedule(ctx, calendarID, summary, startTime, endTime, attendees, calCreateDesc, calCreateAllDay, calCreateRepeatType, rule, calCreateExpireDateType, calCreateReminderType, calCreateAttendeePerms, calCreateUserToken, calCreateUserID)
 	checkError(err)
 	outputResultFields(result, []string{"schedule_id"})
 }
@@ -196,7 +243,7 @@ func runCalendarDeleteSchedule(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.DeleteSchedule(ctx, args[0], args[1], 0, "", "", calDeleteUserToken)
+	result, err := client.DeleteSchedule(ctx, args[0], args[1], "", "", "", calDeleteUserToken, calDeleteUserID)
 	checkError(err)
 	outputResult(result)
 }
@@ -205,7 +252,7 @@ func runCalendarListSchedules(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.FetchScheduleList(ctx, args[0], args[1], args[2], calListUserToken)
+	result, err := client.FetchScheduleList(ctx, args[0], map[string]interface{}{"time": args[1]}, map[string]interface{}{"time": args[2]}, calListUserToken, calListUserID)
 	checkError(err)
 	outputResultFields(result, []string{"schedule_list"})
 }
@@ -214,7 +261,7 @@ func runCalendarAttendees(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.FetchScheduleAttendees(ctx, args[0], args[1], calAttendeesPage, calAttendeesSize)
+	result, err := client.FetchScheduleAttendees(ctx, args[0], args[1], calAttendeesPage, calAttendeesSize, calAttendeesUserToken, calAttendeesUserID)
 	checkError(err)
 	outputResultFields(result, []string{"total"})
 }
@@ -223,19 +270,9 @@ func runCalendarAddAttendees(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	attendeeMaps, err := parseJSONArray(args[2])
-	checkError(err)
+	attendees := parseStringList(args[2])
 
-	var attendees []map[string]interface{}
-	for _, m := range attendeeMaps {
-		converted := make(map[string]interface{}, len(m))
-		for k, v := range m {
-			converted[k] = v
-		}
-		attendees = append(attendees, converted)
-	}
-
-	result, err := client.AddScheduleAttendees(ctx, args[0], args[1], attendees, calAddAttendeesReminderType)
+	result, err := client.AddScheduleAttendees(ctx, args[0], args[1], attendees, calAddAttendeesReminderType, "", "", calAddAttendeesUserToken, calAddAttendeesUserID)
 	checkError(err)
 	outputResult(result)
 }
@@ -244,19 +281,43 @@ func runCalendarDeleteAttendees(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	attendeeMaps, err := parseJSONArray(args[2])
-	checkError(err)
+	attendees := parseStringList(args[2])
 
-	var attendees []map[string]interface{}
-	for _, m := range attendeeMaps {
-		converted := make(map[string]interface{}, len(m))
-		for k, v := range m {
-			converted[k] = v
-		}
-		attendees = append(attendees, converted)
+	result, err := client.DeleteScheduleAttendees(ctx, args[0], args[1], attendees, calDelAttendeesReminderType, "", "", calDelAttendeesUserToken, calDelAttendeesUserID)
+	checkError(err)
+	outputResult(result)
+}
+
+func runCalendarUpdateSchedule(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	raw, err := parseJSONRaw(calUpdateScheduleParamsJSON)
+	checkError(err)
+	params, ok := raw.(map[string]interface{})
+	if !ok {
+		fmt.Fprintf(os.Stderr, "Error: params must be a JSON object\n")
+		return
 	}
 
-	result, err := client.DeleteScheduleAttendees(ctx, args[0], args[1], attendees, calDelAttendeesReminderType)
+	result, err := client.UpdateSchedule(ctx, args[0], args[1], params, calUpdateScheduleUserToken, calUpdateScheduleUserID)
+	checkError(err)
+	outputResult(result)
+}
+
+func runCalendarUpdateAttendeeMeta(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	raw, err := parseJSONRaw(calUpdateAttendeeMetaParamsJSON)
+	checkError(err)
+	params, ok := raw.(map[string]interface{})
+	if !ok {
+		fmt.Fprintf(os.Stderr, "Error: params must be a JSON object\n")
+		return
+	}
+
+	result, err := client.UpdateScheduleAttendeeMeta(ctx, args[0], args[1], params, calUpdateAttendeeMetaUserToken, calUpdateAttendeeMetaUserID)
 	checkError(err)
 	outputResult(result)
 }

@@ -9,12 +9,11 @@ func TestFetchUserInfo(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
 		handle("/v1/users/fetch", 0, "ok", map[string]interface{}{
-			"staffId":        "u001",
+			"staffid":        "u001",
 			"name":           "Bob",
-			"orgId":          "org1",
+			"orgid":          "org1",
 			"orgname":        "TestOrg",
-			"avatarUrl":      "https://avatar.example.com/bob.png",
-			"mobilePhone":    "13900139000",
+			"avatar":         "https://avatar.example.com/bob.png",
 			"email":          "bob@example.com",
 			"employeeNumber": "EMP001",
 		}).
@@ -35,8 +34,11 @@ func TestFetchUserInfo(t *testing.T) {
 	if result.Name != "Bob" {
 		t.Errorf("expected Name=Bob, got %s", result.Name)
 	}
-	if result.MobilePhone != "13900139000" {
-		t.Errorf("expected MobilePhone=13900139000, got %s", result.MobilePhone)
+	if result.OrgName != "TestOrg" {
+		t.Errorf("expected OrgName=TestOrg, got %s", result.OrgName)
+	}
+	if result.AvatarURL != "https://avatar.example.com/bob.png" {
+		t.Errorf("expected AvatarURL=https://avatar.example.com/bob.png, got %s", result.AvatarURL)
 	}
 }
 

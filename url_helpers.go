@@ -69,6 +69,22 @@ func WithMediaType(mediaType int) URLOption {
 	}}
 }
 
+func WithMediaTypeString(mediaType string) URLOption {
+	return URLOption{Apply: func(v url.Values) {
+		if mediaType != "" {
+			v.Set("type", mediaType)
+		}
+	}}
+}
+
+func WithIntParam(key string, value int) URLOption {
+	return URLOption{Apply: func(v url.Values) {
+		if value > 0 {
+			v.Set(key, fmt.Sprintf("%d", value))
+		}
+	}}
+}
+
 func WithPage(page int) URLOption {
 	return URLOption{Apply: func(v url.Values) {
 		v.Set("page", fmt.Sprintf("%d", page))

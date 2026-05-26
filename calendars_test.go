@@ -39,14 +39,6 @@ func TestFetchPrimaryCalendar(t *testing.T) {
 	}
 }
 
-func TestFetchPrimaryCalendarNoToken(t *testing.T) {
-	c := NewClient("id", "secret")
-	_, err := c.FetchPrimaryCalendar(context.Background(), "", "uid1")
-	if err == nil {
-		t.Error("expected error for missing userToken")
-	}
-}
-
 func TestCreateSchedule(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
@@ -58,8 +50,8 @@ func TestCreateSchedule(t *testing.T) {
 
 	c := newTestClient(server)
 	result, err := c.CreateSchedule(context.Background(), "cal001",
-		"Team Meeting", "2024-01-15T09:00", "2024-01-15T10:00",
-		nil, "", false, "", nil, 0, 0, 0, "utok1")
+		"Team Meeting", map[string]interface{}{"time": 1000}, map[string]interface{}{"time": 2000},
+		nil, "", "no", "", nil, "", "no", "", "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -71,16 +63,6 @@ func TestCreateSchedule(t *testing.T) {
 	}
 }
 
-func TestCreateScheduleNoToken(t *testing.T) {
-	c := NewClient("id", "secret")
-	_, err := c.CreateSchedule(context.Background(), "cal001",
-		"Meeting", "2024-01-15T09:00", "2024-01-15T10:00",
-		nil, "", false, "", nil, 0, 0, 0, "")
-	if err == nil {
-		t.Error("expected error for missing userToken")
-	}
-}
-
 func TestFetchSchedule(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
@@ -89,7 +71,7 @@ func TestFetchSchedule(t *testing.T) {
 			"summary":    "Team Meeting",
 			"startTime":  "2024-01-15T09:00",
 			"endTime":    "2024-01-15T10:00",
-			"allDay":     false,
+			"allDay":     "no",
 			"creator":    "s001",
 		}).
 		build()
@@ -109,8 +91,8 @@ func TestFetchSchedule(t *testing.T) {
 	if result.Summary != "Team Meeting" {
 		t.Errorf("expected Summary=Team Meeting, got %s", result.Summary)
 	}
-	if result.AllDay {
-		t.Error("expected AllDay=false")
+	if result.AllDay != "no" {
+		t.Errorf("expected AllDay=no, got %s", result.AllDay)
 	}
 }
 
@@ -122,7 +104,7 @@ func TestDeleteSchedule(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.DeleteSchedule(context.Background(), "cal001", "sch001", 1, "", "", "utok1")
+	result, err := c.DeleteSchedule(context.Background(), "cal001", "sch001", "no", "", "", "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -145,7 +127,7 @@ func TestFetchScheduleList(t *testing.T) {
 
 	c := newTestClient(server)
 	result, err := c.FetchScheduleList(context.Background(), "cal001",
-		"2024-01-15T00:00", "2024-01-15T23:59", "utok1")
+		map[string]interface{}{"time": 1000}, map[string]interface{}{"time": 2000}, "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -168,7 +150,7 @@ func TestFetchScheduleAttendees(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.FetchScheduleAttendees(context.Background(), "cal001", "sch001", 1, 10)
+	result, err := c.FetchScheduleAttendees(context.Background(), "cal001", "sch001", 1, 10, "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -188,10 +170,8 @@ func TestAddScheduleAttendees(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	attendees := []map[string]interface{}{
-		{"staffId": "s002"},
-	}
-	result, err := c.AddScheduleAttendees(context.Background(), "cal001", "sch001", attendees, 0)
+	attendees := []string{"s002"}
+	result, err := c.AddScheduleAttendees(context.Background(), "cal001", "sch001", attendees, "no", "", "", "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -208,10 +188,8 @@ func TestDeleteScheduleAttendees(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	attendees := []map[string]interface{}{
-		{"staffId": "s002"},
-	}
-	result, err := c.DeleteScheduleAttendees(context.Background(), "cal001", "sch001", attendees, 0)
+	attendees := []string{"s002"}
+	result, err := c.DeleteScheduleAttendees(context.Background(), "cal001", "sch001", attendees, "no", "", "", "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

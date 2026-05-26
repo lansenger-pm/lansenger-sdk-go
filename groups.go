@@ -43,6 +43,9 @@ func (c *LansengerClient) CreateGroup(ctx context.Context, info *GroupCreateInfo
 	if info.ApplySessionUniqueID != "" {
 		body["applySessionUniqueId"] = info.ApplySessionUniqueID
 	}
+	if info.I18nApplyNotes != nil {
+		body["i18nApplyNotes"] = info.I18nApplyNotes
+	}
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
@@ -54,12 +57,15 @@ func (c *LansengerClient) CreateGroup(ctx context.Context, info *GroupCreateInfo
 		return &CreateGroupResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &CreateGroupResult{
+	res := &CreateGroupResult{
 		Success:      true,
 		GroupID:      strFromMap(data, "groupId"),
 		TotalMembers: intFromMap(data, "totalMembers"),
 		RawResponse:  result,
-	}, nil
+	}
+	res.InvalidStaff = stringArrayFromMap(data, "invalidStaff")
+	res.InvalidDepartment = stringArrayFromMap(data, "invalidDepartment")
+	return res, nil
 }
 
 func (c *LansengerClient) FetchGroupInfo(ctx context.Context, groupID, userToken string) (*GroupInfoResult, error) {
@@ -83,19 +89,32 @@ func (c *LansengerClient) FetchGroupInfo(ctx context.Context, groupID, userToken
 		return &GroupInfoResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &GroupInfoResult{
-		Success:      true,
-		Name:         strFromMap(data, "name"),
-		Description:  strFromMap(data, "description"),
-		AvatarID:     strFromMap(data, "avatarId"),
-		AvatarURL:    strFromMap(data, "avatarUrl"),
-		Owner:        strFromMap(data, "owner"),
-		Creator:      strFromMap(data, "creator"),
-		State:        strFromMap(data, "state"),
-		ManageMode:   strFromMap(data, "manageMode"),
-		TotalMembers: intFromMap(data, "totalMembers"),
-		RawResponse:  result,
-	}, nil
+	ownerObj := mapFromMap(data, "owner")
+	creatorObj := mapFromMap(data, "creator")
+
+	res := &GroupInfoResult{
+		Success:            true,
+		Name:               strFromMap(data, "name"),
+		Description:        strFromMap(data, "description"),
+		AvatarID:           strFromMap(data, "avatarId"),
+		AvatarURL:          strFromMap(data, "avatarUrl"),
+		OwnerStaffID:       strFromMap(ownerObj, "staffId"),
+		OwnerName:          strFromMap(ownerObj, "name"),
+		CreatorStaffID:     strFromMap(creatorObj, "staffId"),
+		CreatorName:        strFromMap(creatorObj, "name"),
+		State:              strFromMap(data, "state"),
+		ManageMode:         strFromMap(data, "manageMode"),
+		LocationShare:      boolFromMap(data, "locationShare"),
+		NeedsConfirm:       boolFromMap(data, "needsConfirm"),
+		IsPublic:           boolFromMap(data, "isPublic"),
+		MaxMembers:         intFromMap(data, "maxMembers"),
+		MaxHistoryMsgCount: intFromMap(data, "maxHistoryMsgCount"),
+		TotalMembers:       intFromMap(data, "totalMembers"),
+		RemindAll:          boolFromMap(data, "remindAll"),
+		SendMsgStatus:      strFromMap(data, "sendMsgStatus"),
+		RawResponse:        result,
+	}
+	return res, nil
 }
 
 func (c *LansengerClient) FetchGroupMembers(ctx context.Context, groupID, userToken string, pageOffset, pageSize int) (*GroupMemberResult, error) {
@@ -121,11 +140,20 @@ func (c *LansengerClient) FetchGroupMembers(ctx context.Context, groupID, userTo
 		return &GroupMemberResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &GroupMemberResult{
+	res := &GroupMemberResult{
 		Success:      true,
 		TotalMembers: intFromMap(data, "totalMembers"),
 		RawResponse:  result,
-	}, nil
+	}
+	if members, ok := data["members"].([]interface{}); ok {
+		res.Members = make([]map[string]interface{}, 0, len(members))
+		for _, item := range members {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Members = append(res.Members, m)
+			}
+		}
+	}
+	return res, nil
 }
 
 func (c *LansengerClient) FetchGroupList(ctx context.Context, userToken string, pageOffset, pageSize int) (*GroupListResult, error) {
@@ -150,11 +178,13 @@ func (c *LansengerClient) FetchGroupList(ctx context.Context, userToken string, 
 		return &GroupListResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &GroupListResult{
+	res := &GroupListResult{
 		Success:       true,
 		TotalGroupIDs: intFromMap(data, "totalGroupIds"),
 		RawResponse:   result,
-	}, nil
+	}
+	res.GroupIDs = stringArrayFromMap(data, "groupIds")
+	return res, nil
 }
 
 func (c *LansengerClient) CheckIsInGroup(ctx context.Context, groupID, userToken, staffID string) (*IsInGroupResult, error) {
@@ -245,6 +275,60 @@ func (c *LansengerClient) UpdateGroupMembers(ctx context.Context, groupID string
 		res.TotalMembers = intFromMap(data, "totalMembers")
 		res.AddedStaffCount = intFromMap(data, "addedStaffCount")
 		res.DeletedStaffCount = intFromMap(data, "deletedStaffCount")
+res.InvalidStaff = stringArrayFromMap(data, "invalidStaff")
+	res.InvalidDepartment = stringArrayFromMap(data, "invalidDepartment")
+	}
+	return res, nil
+}
+
+func (c *LansengerClient) DissolveGroup(ctx context.Context, groupID, userToken string) (*UpdateGroupResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "groups_v2", "delete", token,
+		WithUserToken(userToken),
+		WithPathVar("group_id", groupID),
+	)
+
+	result, err := c.doPost(ctx, url, map[string]interface{}{})
+	if err != nil {
+		return &UpdateGroupResult{Success: false, Error: err.Error()}, nil
+	}
+
+	return &UpdateGroupResult{
+		Success:     true,
+		RawResponse: result,
+	}, nil
+}
+
+func (c *LansengerClient) CreateGroupShareID(ctx context.Context, groupID, userToken string) (*SendMessageResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "groups_v2", "share_create", token,
+		WithUserToken(userToken),
+		WithPathVar("group_id", groupID),
+	)
+
+	result, err := c.doPost(ctx, url, map[string]interface{}{})
+	if err != nil {
+		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+	}
+
+	data := extractData(result)
+
+	res := &SendMessageResult{
+		Success:     true,
+		Platform:    "lansenger",
+		Operation:   "create_group_share_id",
+		RawResponse: result,
+	}
+	if data != nil {
+		res.MessageID = strFromMap(data, "shareId")
 	}
 	return res, nil
 }

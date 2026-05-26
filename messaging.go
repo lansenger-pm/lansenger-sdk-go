@@ -22,6 +22,13 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 		}
 		textData["mediaIds"] = []string{uploadResult.MediaID}
 	}
+	if reminderAll || len(reminderUserIDs) > 0 {
+		reminder := map[string]interface{}{
+			"all":    reminderAll,
+			"userIds": reminderUserIDs,
+		}
+		textData["reminder"] = reminder
+	}
 
 	msgData := map[string]interface{}{
 		"text": textData,
@@ -29,16 +36,23 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 
 	msgType := "text"
 	if isGroup {
-		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, reminderAll, reminderUserIDs, "", "", "")
+		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData, reminderAll, reminderUserIDs)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
 }
 
 func (c *LansengerClient) SendMarkdown(ctx context.Context, chatID, content string, reminderAll bool, reminderUserIDs []string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
 	formatTextData := map[string]interface{}{
 		"formatType": 1,
 		"text":       content,
+	}
+	if reminderAll || len(reminderUserIDs) > 0 {
+		reminder := map[string]interface{}{
+			"all":    reminderAll,
+			"userIds": reminderUserIDs,
+		}
+		formatTextData["reminder"] = reminder
 	}
 
 	msgData := map[string]interface{}{
@@ -47,16 +61,10 @@ func (c *LansengerClient) SendMarkdown(ctx context.Context, chatID, content stri
 
 	msgType := "formatText"
 	if isGroup {
-		result, err := c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, reminderAll, reminderUserIDs, "", "", "")
-		if err != nil {
-			if reminderAll || len(reminderUserIDs) > 0 {
-				return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, false, nil, "", "", "")
-			}
-		}
-		return result, err
+		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData, reminderAll, reminderUserIDs)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
 }
 
 func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string, caption string, mediaType int, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
@@ -81,10 +89,10 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 
 	msgType := "text"
 	if isGroup {
-		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, false, nil, "", "", "")
+		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData, false, nil)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
 }
 
 func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, caption string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
@@ -155,10 +163,10 @@ func (c *LansengerClient) SendAppArticles(ctx context.Context, chatID string, ar
 
 	msgType := "appArticles"
 	if isGroup {
-		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, false, nil, "", "", "")
+		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData, false, nil)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
 }
 
 func (c *LansengerClient) SendLinkCardWithParams(ctx context.Context, params *LinkCardParams) (*SendMessageResult, error) {
@@ -179,10 +187,10 @@ func (c *LansengerClient) SendLinkCardWithParams(ctx context.Context, params *Li
 
 	msgType := "linkCard"
 	if params.IsGroup {
-		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, false, nil, "", "", "")
+		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, false, nil)
+	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData)
 }
 
 func (c *LansengerClient) SendAppCardWithParams(ctx context.Context, params *AppCardParams) (*SendMessageResult, error) {
@@ -215,10 +223,10 @@ func (c *LansengerClient) SendAppCardWithParams(ctx context.Context, params *App
 
 	msgType := "appCard"
 	if params.IsGroup {
-		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, false, nil, "", "", "")
+		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, false, nil)
+	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData)
 }
 
 func (c *LansengerClient) SendOaCardWithParams(ctx context.Context, params *OaCardParams) (*SendMessageResult, error) {
@@ -244,10 +252,10 @@ func (c *LansengerClient) SendOaCardWithParams(ctx context.Context, params *OaCa
 
 	msgType := "oacard"
 	if params.IsGroup {
-		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, false, nil, "", "", "")
+		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, false, nil)
+	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData)
 }
 
 func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *DynamicCardUpdateParams) (*SendMessageResult, error) {
@@ -275,6 +283,9 @@ func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *Dynamic
 			"appCardUpdateMsg": msgData,
 		},
 	}
+	if params.UserId != "" {
+		body["userId"] = params.UserId
+	}
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
@@ -295,7 +306,7 @@ func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *Dynamic
 	return res, nil
 }
 
-func (c *LansengerClient) RevokeMessage(ctx context.Context, messageIDs []string, chatType string, senderID string) (*SendMessageResult, error) {
+func (c *LansengerClient) RevokeMessage(ctx context.Context, messageIDs []string, chatType string, senderID string, sysMsg *SysMsgParams) (*SendMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -309,6 +320,16 @@ func (c *LansengerClient) RevokeMessage(ctx context.Context, messageIDs []string
 	}
 	if senderID != "" {
 		body["senderId"] = senderID
+	}
+	if sysMsg != nil {
+		sysMsgData := map[string]interface{}{}
+		if sysMsg.Content != "" {
+			sysMsgData["content"] = sysMsg.Content
+		}
+		if sysMsg.MediaID != "" {
+			sysMsgData["mediaId"] = sysMsg.MediaID
+		}
+		body["sysMsg"] = sysMsgData
 	}
 
 	result, err := c.doPost(ctx, url, body)
@@ -354,7 +375,34 @@ func (c *LansengerClient) QueryGroups(ctx context.Context, pageOffset, pageSize 
 	}, nil
 }
 
-func (c *LansengerClient) sendBotPrivate(ctx context.Context, chatID, msgType string, msgData map[string]interface{}, reminderAll bool, reminderUserIDs []string) (*SendMessageResult, error) {
+func (c *LansengerClient) SendReminder(ctx context.Context, msgID string, reminderTypes []int, userIDList []string) (*SendMessageResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "messages", "reminder_create", token)
+
+	body := map[string]interface{}{
+		"msgId":          msgID,
+		"reminderTypes":  reminderTypes,
+		"userIdList":     userIDList,
+	}
+
+	result, err := c.doPost(ctx, url, body)
+	if err != nil {
+		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+	}
+
+	return &SendMessageResult{
+		Success:     true,
+		Platform:    "lansenger",
+		Operation:   "send_reminder",
+		RawResponse: result,
+	}, nil
+}
+
+func (c *LansengerClient) sendBotPrivate(ctx context.Context, chatID, msgType string, msgData map[string]interface{}) (*SendMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -367,29 +415,9 @@ func (c *LansengerClient) sendBotPrivate(ctx context.Context, chatID, msgType st
 		"msgType":    msgType,
 		"msgData":    msgData,
 	}
-	if reminderAll {
-		body["reminderAll"] = reminderAll
-	}
-	if len(reminderUserIDs) > 0 {
-		body["reminderUserIds"] = reminderUserIDs
-	}
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		if reminderAll || len(reminderUserIDs) > 0 {
-			body["reminderAll"] = false
-			body["reminderUserIds"] = nil
-			result2, err2 := c.doPost(ctx, url, body)
-			if err2 != nil {
-				return &SendMessageResult{Success: false, Error: err2.Error(), Platform: "lansenger"}, nil
-			}
-			data2 := extractData(result2)
-			res2 := &SendMessageResult{Success: true, Platform: "lansenger", MsgType: msgType, RawResponse: result2}
-			if data2 != nil {
-				res2.MessageID = strFromMap(data2, "msgId")
-			}
-			return res2, nil
-		}
 		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
 	}
 

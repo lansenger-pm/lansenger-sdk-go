@@ -30,10 +30,10 @@ Les trois types de bots utilisent le même mécanisme d'authentification : `appT
 - **Messagerie** — 3 canaux de chat privé (bot, compte officiel, impersonnation utilisateur) + chat de groupe, tous types de messages, @mention, identité d'émetteur humain/bot
 - **Cartes enrichies** — appCard (avec mises à jour dynamiques), oacard, linkCard, appArticles
 - **Messages en streaming** — diffusion temps réel basée sur SSE pour agents IA
-- **Upload/download de médias** — fichiers, images, vidéos avec détection automatique du type
-- **Gestion des messages** — révoquer, mise à jour dynamique de carte
-- **Groupes V2** — créer, infos, membres, liste, vérification de membership, mise à jour des paramètres & membres
-- **Calendrier & planification** — calendrier principal, CRUD de planification, gestion des participants
+- **Upload/download de médias** — fichiers, images, vidéos avec détection automatique du type, récupération du chemin de téléchargement, upload app/bot
+- **Gestion des messages** — révoquer, mise à jour dynamique de carte, rappel urgent
+- **Groupes V2** — créer, infos, membres, liste, vérification de membership, mise à jour des paramètres & membres, dissoudre
+- **Calendrier & planification** — calendrier principal, CRUD de planification, gestion des participants, mise à jour des métadonnées des participants
 - **Todo unifié** — créer, mettre à jour, supprimer, interroger, gestion des exécutants, comptes de statut
 - **Événements de callback** — 24 types d'événements, analyse de données structurées, vérification de signature
 
@@ -209,8 +209,12 @@ result, err := client.FetchStreamMessage(ctx, "msg123")
 #### Médias
 
 ```go
-// Upload
-upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeFile)
+// Upload (service principal — type numérique)
+upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeAudio)
+
+// Upload (app/bot — type chaîne, supporte width/height/duration)
+upload, err := client.UploadAppMedia(ctx, "/path/to/video.mp4",
+    lansenger.AppMediaTypeVideo, 680, 480, 300)
 
 // Download
 download, err := client.DownloadMedia(ctx, "media123")
@@ -218,8 +222,14 @@ download, err := client.DownloadMedia(ctx, "media123")
 // Télécharger et sauvegarder dans un fichier
 path, err := client.DownloadMediaToFile(ctx, "media123", "/path/to/save.pdf")
 
+// Récupérer les infos du chemin de téléchargement
+pathInfo, err := client.FetchMediaPath(ctx, "media123", "ut")
+
 // Révoquer des messages
 result, err := client.RevokeMessage(ctx, []string{"msg1", "msg2"}, "bot", "")
+
+// Envoyer un rappel urgent
+result, err := client.SendReminder(ctx, "msg123", []int{1, 2}, []string{"staff1", "staff2"})
 ```
 
 ## 5. Groupes
@@ -245,6 +255,9 @@ result, err := client.UpdateGroupInfo(ctx, "groupId", map[string]interface{}{"na
 // Ajouter/supprimer des membres
 result, err := client.UpdateGroupMembers(ctx, "groupId",
     []string{"staff4"}, []string{"staff3"}, nil, "")
+
+// Dissoudre un groupe
+result, err := client.DissolveGroup(ctx, "groupId", "ut")
 ```
 
 ## 6. Calendrier & Planification
@@ -253,23 +266,35 @@ result, err := client.UpdateGroupMembers(ctx, "groupId",
 // Obtenir le calendrier principal (requiert userToken ou userID)
 cal, err := client.FetchPrimaryCalendar(ctx, "ut", "uid1")
 
-// Créer une planification
+// Créer une planification (startTime/endTime sont des objets map, allDay est "yes"/"no")
 schedule, err := client.CreateSchedule(ctx, cal.CalendarID, "Réunion d'équipe",
-    "2024-01-15T09:00", "2024-01-15T10:00", nil, "", false, "", nil, 0, 0, 0, "ut")
+    map[string]interface{}{"time": "2024-01-15T09:00"},
+    map[string]interface{}{"time": "2024-01-15T10:00"},
+    nil, "", "no", "", nil, "", "", "", "ut", "")
 
 // Obtenir/supprimer une planification
 info, err := client.FetchSchedule(ctx, "cal1", "sch1", "ut", "")
-result, err := client.DeleteSchedule(ctx, "cal1", "sch1", 1, "", "", "ut")
+result, err := client.DeleteSchedule(ctx, "cal1", "sch1", "", "", "", "ut", "")
+
+// Mettre à jour une planification
+result, err := client.UpdateSchedule(ctx, "cal1", "sch1",
+    map[string]interface{}{"summary": "Réunion mise à jour"}, "ut", "")
 
 // Liste des planifications dans un intervalle de temps
-schedules, err := client.FetchScheduleList(ctx, "cal1", "2024-01-15T00:00", "2024-01-15T23:59", "ut")
+schedules, err := client.FetchScheduleList(ctx, "cal1",
+    map[string]interface{}{"time": "2024-01-15T00:00"},
+    map[string]interface{}{"time": "2024-01-15T23:59"}, "ut", "")
 
-// Gestion des participants
-attendees, err := client.FetchScheduleAttendees(ctx, "cal1", "sch1", 1, 10)
+// Gestion des participants (participants sont []string)
+attendees, err := client.FetchScheduleAttendees(ctx, "cal1", "sch1", 1, 10, "ut", "")
 result, err := client.AddScheduleAttendees(ctx, "cal1", "sch1",
-    []map[string]interface{}{{"staffId": "staff2"}}, 0)
+    []string{"staff2"}, "", "", "", "ut", "")
 result, err := client.DeleteScheduleAttendees(ctx, "cal1", "sch1",
-    []map[string]interface{}{{"staffId": "staff2"}}, 0)
+    []string{"staff2"}, "", "", "", "ut", "")
+
+// Mettre à jour les métadonnées des participants
+result, err := client.UpdateScheduleAttendeeMeta(ctx, "cal1", "sch1",
+    map[string]interface{}{"rsvpStatus": "accepted"}, "ut", "")
 ```
 
 ## 7. Todo unifié

@@ -194,6 +194,14 @@ func sortedKeys(m map[string]interface{}) []string {
 	return keys
 }
 
+func parseStringList(s string) []string {
+	var arr []string
+	if err := json.Unmarshal([]byte(s), &arr); err != nil {
+		return []string{s}
+	}
+	return arr
+}
+
 func parseJSONArray(s string) ([]map[string]string, error) {
 	var arr []map[string]string
 	if err := json.Unmarshal([]byte(s), &arr); err != nil {

@@ -2,14 +2,9 @@ package lansenger
 
 import (
 	"context"
-	"fmt"
 )
 
 func (c *LansengerClient) FetchPrimaryCalendar(ctx context.Context, userToken, userID string) (*CalendarPrimaryResult, error) {
-	if userToken == "" {
-		return nil, fmt.Errorf("userToken is required for fetch_primary_calendar")
-	}
-
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -43,11 +38,7 @@ func (c *LansengerClient) FetchPrimaryCalendar(ctx context.Context, userToken, u
 	}, nil
 }
 
-func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summary, startTime, endTime string, attendees []map[string]interface{}, description string, allDay bool, repeatType string, rule map[string]interface{}, expireDateType, reminderType, attendeePermissions int, userToken string) (*ScheduleCreateResult, error) {
-	if userToken == "" {
-		return nil, fmt.Errorf("userToken is required for create_schedule")
-	}
-
+func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summary string, startTime, endTime map[string]interface{}, attendees []map[string]interface{}, description string, allDay string, repeatType string, rule map[string]interface{}, expireDateType, reminderType, attendeePermissions string, userToken, userID string) (*ScheduleCreateResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -55,6 +46,7 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 
 	url := BuildAPIURL(c.config, "calendars", "schedules_create", token,
 		WithUserToken(userToken),
+		WithUserID(userID),
 		WithPathVar("calendar_id", calendarID),
 	)
 
@@ -69,8 +61,8 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 	if description != "" {
 		body["description"] = description
 	}
-	if allDay {
-		body["allDay"] = true
+	if allDay != "" {
+		body["allDay"] = allDay
 	}
 	if repeatType != "" {
 		body["repeatType"] = repeatType
@@ -78,13 +70,13 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 	if rule != nil {
 		body["rule"] = rule
 	}
-	if expireDateType != 0 {
+	if expireDateType != "" {
 		body["expireDateType"] = expireDateType
 	}
-	if reminderType != 0 {
+	if reminderType != "" {
 		body["reminderType"] = reminderType
 	}
-	if attendeePermissions != 0 {
+	if attendeePermissions != "" {
 		body["attendeePermissions"] = attendeePermissions
 	}
 
@@ -106,10 +98,6 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 }
 
 func (c *LansengerClient) FetchSchedule(ctx context.Context, calendarID, scheduleID, userToken, userID string) (*ScheduleInfoResult, error) {
-	if userToken == "" {
-		return nil, fmt.Errorf("userToken is required for fetch_schedule")
-	}
-
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -133,25 +121,25 @@ func (c *LansengerClient) FetchSchedule(ctx context.Context, calendarID, schedul
 	}
 
 	return &ScheduleInfoResult{
-		Success:     true,
-		ScheduleID:  strFromMap(data, "scheduleId"),
-		Summary:     strFromMap(data, "summary"),
-		Description: strFromMap(data, "description"),
-		RepeatType:  strFromMap(data, "repeatType"),
-		AllDay:      boolFromMap(data, "allDay"),
-		StartTime:   strFromMap(data, "startTime"),
-		EndTime:     strFromMap(data, "endTime"),
-		Creator:     strFromMap(data, "creator"),
-		RsvpStatus:  strFromMap(data, "rsvpStatus"),
-		RawResponse: result,
+		Success:          true,
+		ScheduleID:       strFromMap(data, "scheduleId"),
+		Summary:          strFromMap(data, "summary"),
+		Description:      strFromMap(data, "description"),
+		RepeatType:       strFromMap(data, "repeatType"),
+		AllDay:           strFromMap(data, "allDay"),
+		StartTime:        strFromMap(data, "startTime"),
+		EndTime:          strFromMap(data, "endTime"),
+		Creator:          strFromMap(data, "creator"),
+		RsvpStatus:       strFromMap(data, "rsvpStatus"),
+		PrimaryScheduleID: strFromMap(data, "primaryScheduleId"),
+		ExpireDateType:   strFromMap(data, "expireDateType"),
+		AttendeePermissions: strFromMap(data, "attendeePermissions"),
+		Color:            strFromMap(data, "color"),
+		RawResponse:      result,
 	}, nil
 }
 
-func (c *LansengerClient) DeleteSchedule(ctx context.Context, calendarID, scheduleID string, reminderType int, operationType string, currentTime string, userToken string) (*ScheduleCreateResult, error) {
-	if userToken == "" {
-		return nil, fmt.Errorf("userToken is required for delete_schedule")
-	}
-
+func (c *LansengerClient) DeleteSchedule(ctx context.Context, calendarID, scheduleID string, reminderType string, operationType string, currentTime string, userToken, userID string) (*ScheduleDeleteResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -159,12 +147,13 @@ func (c *LansengerClient) DeleteSchedule(ctx context.Context, calendarID, schedu
 
 	url := BuildAPIURL(c.config, "calendars", "schedules_delete", token,
 		WithUserToken(userToken),
+		WithUserID(userID),
 		WithPathVar("calendar_id", calendarID),
 		WithPathVar("schedule_id", scheduleID),
 	)
 
 	body := map[string]interface{}{
-		"reminder_type": reminderType,
+		"reminderType": reminderType,
 	}
 	if operationType != "" {
 		body["operationType"] = operationType
@@ -175,20 +164,22 @@ func (c *LansengerClient) DeleteSchedule(ctx context.Context, calendarID, schedu
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleCreateResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleDeleteResult{Success: false, Error: err.Error()}, nil
 	}
 
-	return &ScheduleCreateResult{
+	data := extractData(result)
+
+	res := &ScheduleDeleteResult{
 		Success:     true,
 		RawResponse: result,
-	}, nil
+	}
+	if data != nil {
+		res.ScheduleIDs = stringArrayFromMap(data, "scheduleIds")
+	}
+	return res, nil
 }
 
-func (c *LansengerClient) FetchScheduleList(ctx context.Context, calendarID, startTime, endTime string, userToken string) (*ScheduleListResult, error) {
-	if userToken == "" {
-		return nil, fmt.Errorf("userToken is required for fetch_schedule_list")
-	}
-
+func (c *LansengerClient) FetchScheduleList(ctx context.Context, calendarID string, startTime, endTime map[string]interface{}, userToken, userID string) (*ScheduleListResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -196,6 +187,7 @@ func (c *LansengerClient) FetchScheduleList(ctx context.Context, calendarID, sta
 
 	url := BuildAPIURL(c.config, "calendars", "schedules_list_fetch", token,
 		WithUserToken(userToken),
+		WithUserID(userID),
 		WithPathVar("calendar_id", calendarID),
 	)
 
@@ -228,13 +220,15 @@ func (c *LansengerClient) FetchScheduleList(ctx context.Context, calendarID, sta
 	return res, nil
 }
 
-func (c *LansengerClient) FetchScheduleAttendees(ctx context.Context, calendarID, scheduleID string, page, pageSize int) (*ScheduleAttendeesResult, error) {
+func (c *LansengerClient) FetchScheduleAttendees(ctx context.Context, calendarID, scheduleID string, page, pageSize int, userToken, userID string) (*ScheduleAttendeesResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	url := BuildAPIURL(c.config, "calendars", "schedules_members_fetch", token,
+		WithUserToken(userToken),
+		WithUserID(userID),
 		WithPathVar("calendar_id", calendarID),
 		WithPathVar("schedule_id", scheduleID),
 		WithPage(page),
@@ -254,17 +248,27 @@ func (c *LansengerClient) FetchScheduleAttendees(ctx context.Context, calendarID
 	}
 	if data != nil {
 		res.Total = intFromMap(data, "total")
+		if attendees, ok := data["attendees"].([]interface{}); ok {
+			res.Attendees = make([]map[string]interface{}, 0, len(attendees))
+			for _, item := range attendees {
+				if m, ok := item.(map[string]interface{}); ok {
+					res.Attendees = append(res.Attendees, m)
+				}
+			}
+		}
 	}
 	return res, nil
 }
 
-func (c *LansengerClient) AddScheduleAttendees(ctx context.Context, calendarID, scheduleID string, attendees []map[string]interface{}, reminderType int) (*ScheduleCreateResult, error) {
+func (c *LansengerClient) AddScheduleAttendees(ctx context.Context, calendarID, scheduleID string, attendees []string, reminderType string, operationType, currentTime string, userToken, userID string) (*ScheduleCreateResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	url := BuildAPIURL(c.config, "calendars", "schedules_members_create", token,
+		WithUserToken(userToken),
+		WithUserID(userID),
 		WithPathVar("calendar_id", calendarID),
 		WithPathVar("schedule_id", scheduleID),
 	)
@@ -272,8 +276,14 @@ func (c *LansengerClient) AddScheduleAttendees(ctx context.Context, calendarID, 
 	body := map[string]interface{}{
 		"attendees": attendees,
 	}
-	if reminderType != 0 {
+	if reminderType != "" {
 		body["reminderType"] = reminderType
+	}
+	if operationType != "" {
+		body["operationType"] = operationType
+	}
+	if currentTime != "" {
+		body["currentTime"] = currentTime
 	}
 
 	result, err := c.doPost(ctx, url, body)
@@ -287,13 +297,15 @@ func (c *LansengerClient) AddScheduleAttendees(ctx context.Context, calendarID, 
 	}, nil
 }
 
-func (c *LansengerClient) DeleteScheduleAttendees(ctx context.Context, calendarID, scheduleID string, attendees []map[string]interface{}, reminderType int) (*ScheduleCreateResult, error) {
+func (c *LansengerClient) DeleteScheduleAttendees(ctx context.Context, calendarID, scheduleID string, attendees []string, reminderType string, operationType, currentTime string, userToken, userID string) (*ScheduleAttendeesDeleteResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	url := BuildAPIURL(c.config, "calendars", "schedules_members_delete", token,
+		WithUserToken(userToken),
+		WithUserID(userID),
 		WithPathVar("calendar_id", calendarID),
 		WithPathVar("schedule_id", scheduleID),
 	)
@@ -301,17 +313,85 @@ func (c *LansengerClient) DeleteScheduleAttendees(ctx context.Context, calendarI
 	body := map[string]interface{}{
 		"attendees": attendees,
 	}
-	if reminderType != 0 {
+	if reminderType != "" {
 		body["reminderType"] = reminderType
+	}
+	if operationType != "" {
+		body["operationType"] = operationType
+	}
+	if currentTime != "" {
+		body["currentTime"] = currentTime
 	}
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleCreateResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleAttendeesDeleteResult{Success: false, Error: err.Error()}, nil
 	}
 
-	return &ScheduleCreateResult{
+	data := extractData(result)
+
+	res := &ScheduleAttendeesDeleteResult{
 		Success:     true,
+		RawResponse: result,
+	}
+	if data != nil {
+		res.ScheduleIDs = stringArrayFromMap(data, "scheduleIds")
+	}
+	return res, nil
+}
+
+func (c *LansengerClient) UpdateSchedule(ctx context.Context, calendarID, scheduleID string, params map[string]interface{}, userToken, userID string) (*ScheduleDeleteResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "calendars", "schedules_update", token,
+		WithUserToken(userToken),
+		WithUserID(userID),
+		WithPathVar("calendar_id", calendarID),
+		WithPathVar("schedule_id", scheduleID),
+	)
+
+	result, err := c.doPost(ctx, url, params)
+	if err != nil {
+		return &ScheduleDeleteResult{Success: false, Error: err.Error()}, nil
+	}
+
+	data := extractData(result)
+
+	res := &ScheduleDeleteResult{
+		Success:     true,
+		RawResponse: result,
+	}
+	if data != nil {
+		res.ScheduleIDs = stringArrayFromMap(data, "scheduleIds")
+	}
+	return res, nil
+}
+
+func (c *LansengerClient) UpdateScheduleAttendeeMeta(ctx context.Context, calendarID, scheduleID string, params map[string]interface{}, userToken, userID string) (*SendMessageResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "calendars", "schedules_members_meta_update", token,
+		WithUserToken(userToken),
+		WithUserID(userID),
+		WithPathVar("calendar_id", calendarID),
+		WithPathVar("schedule_id", scheduleID),
+	)
+
+	result, err := c.doPost(ctx, url, params)
+	if err != nil {
+		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+	}
+
+	return &SendMessageResult{
+		Success:     true,
+		Platform:    "lansenger",
+		Operation:   "update_schedule_attendee_meta",
 		RawResponse: result,
 	}, nil
 }

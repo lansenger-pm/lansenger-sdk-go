@@ -27,39 +27,40 @@ type StaffBasicInfoResult struct {
 }
 
 type StaffDetailResult struct {
-	Success        bool
-	Name           string
-	Signature      string
-	AvatarID       string
-	AvatarURL      string
-	Status         string
-	Departments    []map[string]interface{}
-	Gender         string
-	OrgID          string
-	OrgName        string
-	LoginName      string
-	EmployeeNumber string
-	Email          string
-	ExternalID     string
-	Nationality    string
-	Birthdate      string
-	IDNumber       string
-	NativePlace    string
-	Duties         []map[string]interface{}
-	Parties        []map[string]interface{}
-	Address        string
-	MobilePhone    string
-	ExtraPhones    []string
-	Introduction   string
-	Education      []map[string]interface{}
-	Career         []map[string]interface{}
-	LoginWays      []map[string]interface{}
-	Tags           []map[string]interface{}
-	ExtraFieldSet  []map[string]interface{}
-	Leaders        []map[string]interface{}
-	JoinDate       string
-	Error          string
-	RawResponse    map[string]interface{}
+	Success              bool
+	Name                 string
+	Signature            string
+	AvatarID             string
+	AvatarURL            string
+	Status               string
+	Departments          []map[string]interface{}
+	Gender               string
+	OrgID                string
+	OrgName              string
+	LoginName            string
+	EmployeeNumber       string
+	Email                string
+	ExternalID           string
+	Nationality          string
+	Birthdate            string
+	IDNumber             string
+	NativePlace          string
+	Duties               []map[string]interface{}
+	Parties              []map[string]interface{}
+	Address              string
+	MobilePhone          string
+	MobilePhoneCountryCode string
+	ExtraPhones          []string
+	Introduction         string
+	Education            []map[string]interface{}
+	Career               []map[string]interface{}
+	LoginWays            []map[string]interface{}
+	Tags                 []map[string]interface{}
+	ExtraFieldSet        []map[string]interface{}
+	Leaders              []map[string]interface{}
+	JoinDate             string
+	Error                string
+	RawResponse          map[string]interface{}
 }
 
 type DepartmentAncestorsResult struct {
@@ -118,15 +119,32 @@ type QueryGroupsResult struct {
 }
 
 type UploadMediaResult struct {
-	Success bool
-	MediaID string
-	Error   string
+	Success     bool
+	MediaID     string
+	CreatedTime string
+	Error       string
+}
+
+type UploadAppMediaResult struct {
+	Success     bool
+	MediaID     string
+	Error       string
 }
 
 type DownloadMediaResult struct {
 	Success bool
 	Data    []byte
 	Error   string
+}
+
+type MediaPathResult struct {
+	Success     bool
+	MediaPath   string
+	Name        string
+	Type        string
+	Size        string
+	Error       string
+	RawResponse map[string]interface{}
 }
 
 type AppCardParams struct {
@@ -183,9 +201,15 @@ type OaCardParams struct {
 
 type DynamicCardUpdateParams struct {
 	MsgID          string
+	UserId         string
 	HeadStatusInfo map[string]interface{}
 	Links          []map[string]interface{}
 	IsLastUpdate   bool
+}
+
+type SysMsgParams struct {
+	Content string
+	MediaID string
 }
 
 type UserTokenResult struct {
@@ -209,12 +233,11 @@ type UserInfoResult struct {
 	OrgName        string
 	AvatarID       string
 	AvatarURL      string
-	MobilePhone    string
 	Email          string
 	EmployeeNumber string
 	LoginName      string
 	ExternalID     string
-	Department     map[string]interface{}
+	Departments    []map[string]interface{}
 	Error          string
 	RawResponse    map[string]interface{}
 }
@@ -263,6 +286,7 @@ type GroupCreateInfo struct {
 	ApplyNotes           string
 	ApplyGlobalUniqueID  string
 	ApplySessionUniqueID string
+	I18nApplyNotes       map[string]interface{}
 }
 
 type CreateGroupResult struct {
@@ -281,8 +305,10 @@ type GroupInfoResult struct {
 	Description        string
 	AvatarID           string
 	AvatarURL          string
-	Owner              string
-	Creator            string
+	OwnerStaffID       string
+	OwnerName          string
+	CreatorStaffID     string
+	CreatorName        string
 	State              string
 	ManageMode         string
 	LocationShare      bool
@@ -338,27 +364,31 @@ type IsInGroupResult struct {
 }
 
 type DepartmentDetailResult struct {
-	Success             bool
-	ID                  string
-	Name                string
-	ExternalID          string
-	ParentID            string
-	Order               int
-	HasChildren         bool
-	NormalMembers       int
-	InactiveMembers     int
-	FrozenMembers       int
-	DeletedMembers      int
-	Tags                []map[string]interface{}
-	AncestorDepartments []map[string]interface{}
-	Leaders             []map[string]interface{}
-	Emails              []string
-	Phones              []string
-	Addresses           []string
-	Introductions       []string
-	DeptType            string
-	Error               string
-	RawResponse         map[string]interface{}
+	Success               bool
+	ID                    string
+	Name                  string
+	ExternalID            string
+	ParentID              string
+	Order                 float64
+	HasChildren           bool
+	NormalMembers         int
+	InactiveMembers       int
+	FrozenMembers         int
+	DeletedMembers        int
+	NormalMembersUnique   int
+	InactiveMembersUnique int
+	FrozenMembersUnique   int
+	DeletedMembersUnique  int
+	Tags                  []map[string]interface{}
+	AncestorDepartments   []map[string]interface{}
+	Leaders               []map[string]interface{}
+	Emails                []string
+	Phones                []string
+	Addresses             []string
+	Introductions        []string
+	DeptType              int
+	Error                 string
+	RawResponse           map[string]interface{}
 }
 
 type DepartmentChildrenResult struct {
@@ -445,19 +475,37 @@ type ScheduleCreateResult struct {
 	RawResponse map[string]interface{}
 }
 
+type ScheduleDeleteResult struct {
+	Success      bool
+	ScheduleIDs  []string
+	Error        string
+	RawResponse  map[string]interface{}
+}
+
+type ScheduleAttendeesDeleteResult struct {
+	Success      bool
+	ScheduleIDs  []string
+	Error        string
+	RawResponse  map[string]interface{}
+}
+
 type ScheduleInfoResult struct {
-	Success     bool
-	ScheduleID  string
-	Summary     string
-	Description string
-	RepeatType  string
-	AllDay      bool
-	StartTime   string
-	EndTime     string
-	Creator     string
-	RsvpStatus  string
-	Error       string
-	RawResponse map[string]interface{}
+	Success            bool
+	ScheduleID         string
+	Summary            string
+	Description        string
+	RepeatType         string
+	AllDay             string
+	StartTime          string
+	EndTime            string
+	Creator            string
+	RsvpStatus         string
+	PrimaryScheduleID  string
+	ExpireDateType     string
+	AttendeePermissions string
+	Color              string
+	Error              string
+	RawResponse        map[string]interface{}
 }
 
 type ScheduleListResult struct {

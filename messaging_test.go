@@ -75,7 +75,7 @@ func TestSendGroupMessage(t *testing.T) {
 	c := newTestClient(server)
 	result, err := c.SendGroupMessage(context.Background(), "grp001", "text",
 		map[string]interface{}{"content": "hello"}, "utok1", "s001",
-		false, nil, "", "", "")
+		"", "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestSendGroupMessageAPIError(t *testing.T) {
 	c := newTestClient(server)
 	result, err := c.SendGroupMessage(context.Background(), "grp001", "text",
 		map[string]interface{}{"content": "hello"}, "", "",
-		false, nil, "", "", "")
+		"", "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

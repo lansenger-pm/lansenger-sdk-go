@@ -85,6 +85,13 @@ var revokeCmd = &cobra.Command{
 	Run:   runRevoke,
 }
 
+var sendReminderCmd = &cobra.Command{
+	Use:   "send-reminder MSG_ID",
+	Short: "Send urgent reminder for a message",
+	Args:  cobra.ExactArgs(1),
+	Run:   runSendReminder,
+}
+
 var sendBotMessageCmd = &cobra.Command{
 	Use:   "send-bot-message MSG_TYPE MSG_DATA",
 	Short: "Send a bot channel message",
@@ -121,6 +128,9 @@ var queryGroupsCmd = &cobra.Command{
 }
 
 var (
+	sendReminderTypes    []int
+	sendReminderUserIDs  []string
+
 	sendTextFile           string
 	sendTextIsGroup        bool
 	sendTextReminderAll    bool
@@ -240,7 +250,7 @@ func init() {
 	sendMarkdownCmd.Flags().StringVar(&sendMarkdownSenderID, "sender-id", "", "Sender staff ID for group message")
 
 	sendFileCmd.Flags().StringVarP(&sendFileCaption, "caption", "c", "", "Caption text")
-	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=file")
+	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=audio")
 	sendFileCmd.Flags().BoolVarP(&sendFileIsGroup, "group", "g", false, "Send as group message")
 	sendFileCmd.Flags().StringVar(&sendFileUserToken, "user-token", "", "User token for private channel")
 	sendFileCmd.Flags().StringVar(&sendFileSenderID, "sender-id", "", "Sender staff ID for group message")
@@ -299,6 +309,9 @@ func init() {
 	updateDynamicCardCmd.Flags().StringVar(&updateDynamicCardStatusColour, "status-colour", "", "New status DOT colour (hex)")
 	updateDynamicCardCmd.Flags().StringArrayVar(&updateDynamicCardLinks, "link", nil, "Updated link as JSON title=url")
 
+	sendReminderCmd.Flags().IntSliceVar(&sendReminderTypes, "type", nil, "Reminder types (e.g. 1=app, 2=sms)")
+	sendReminderCmd.Flags().StringArrayVar(&sendReminderUserIDs, "user-id", nil, "User IDs to remind")
+
 	revokeCmd.Flags().StringVar(&revokeChatType, "chat-type", "bot", "staff, group, notification, account, or bot")
 	revokeCmd.Flags().StringVar(&revokeSenderID, "sender-id", "", "Sender staff ID (required for staff/group)")
 
@@ -338,6 +351,7 @@ func init() {
 	messageCmd.AddCommand(sendAppCardCmd)
 	messageCmd.AddCommand(sendOaCardCmd)
 	messageCmd.AddCommand(updateDynamicCardCmd)
+	messageCmd.AddCommand(sendReminderCmd)
 	messageCmd.AddCommand(revokeCmd)
 	messageCmd.AddCommand(sendBotMessageCmd)
 	messageCmd.AddCommand(sendGroupMessageCmd)
@@ -590,7 +604,7 @@ func runRevoke(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.RevokeMessage(ctx, args, revokeChatType, revokeSenderID)
+	result, err := client.RevokeMessage(ctx, args, revokeChatType, revokeSenderID, nil)
 	checkError(err)
 	outputResultFields(result, []string{"message_id", "operation"})
 }
@@ -626,12 +640,7 @@ func runSendGroupMessage(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var reminderUserIDs []string
-	if len(sendGroupMessageReminderUserIDs) > 0 {
-		reminderUserIDs = sendGroupMessageReminderUserIDs
-	}
-
-	result, err := client.SendGroupMessage(ctx, args[0], args[1], msgDataMap, sendGroupMessageUserToken, sendGroupMessageSenderID, sendGroupMessageReminderAll, reminderUserIDs, sendGroupMessageOutlines, "", sendGroupMessageEntryID)
+	result, err := client.SendGroupMessage(ctx, args[0], args[1], msgDataMap, sendGroupMessageUserToken, sendGroupMessageSenderID, sendGroupMessageOutlines, "", sendGroupMessageEntryID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id"})
 }
@@ -686,6 +695,15 @@ func runSendUserMessage(cmd *cobra.Command, args []string) {
 	}
 
 	outputResultFields(result, []string{"message_id"})
+}
+
+func runSendReminder(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	result, err := client.SendReminder(ctx, args[0], sendReminderTypes, sendReminderUserIDs)
+	checkError(err)
+	outputResultFields(result, []string{"message_id", "operation"})
 }
 
 func runQueryGroups(cmd *cobra.Command, args []string) {

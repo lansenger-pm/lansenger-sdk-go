@@ -65,7 +65,7 @@ func TestRevokeMessage(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.RevokeMessage(context.Background(), []string{"msg1", "msg2"}, "bot", "sender1")
+	result, err := c.RevokeMessage(context.Background(), []string{"msg1", "msg2"}, "bot", "sender1", nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestRevokeMessageAPIError(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.RevokeMessage(context.Background(), []string{"msg1"}, "bot", "")
+	result, err := c.RevokeMessage(context.Background(), []string{"msg1"}, "bot", "", nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

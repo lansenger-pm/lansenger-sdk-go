@@ -34,21 +34,50 @@ var mediaDownloadToFileCmd = &cobra.Command{
 	Run:   runMediaDownloadToFile,
 }
 
+var mediaFetchPathCmd = &cobra.Command{
+	Use:   "fetch-path MEDIA_ID",
+	Short: "Fetch media file download path info",
+	Args:  cobra.ExactArgs(1),
+	Run:   runMediaFetchPath,
+}
+
+var mediaUploadAppCmd = &cobra.Command{
+	Use:   "upload-app FILE_PATH",
+	Short: "Upload app/bot media (4.5.4 endpoint)",
+	Args:  cobra.ExactArgs(1),
+	Run:   runMediaUploadApp,
+}
+
 var (
-	mediaUploadType      int
-	mediaDownloadOutput  string
-	mediaDownloadTypeStr string
+	mediaUploadType         int
+	mediaDownloadOutput     string
+	mediaDownloadTypeStr    string
+	mediaFetchPathUserToken string
+
+	mediaUploadAppType     string
+	mediaUploadAppWidth    int
+	mediaUploadAppHeight   int
+	mediaUploadAppDuration int
 )
 
 func init() {
-	mediaUploadCmd.Flags().IntVarP(&mediaUploadType, "media-type", "t", 3, "Media type: 1=video, 2=image, 3=file")
+	mediaUploadCmd.Flags().IntVarP(&mediaUploadType, "media-type", "t", 3, "Media type: 1=video, 2=image, 3=audio")
 
 	mediaDownloadToFileCmd.Flags().StringVarP(&mediaDownloadOutput, "output", "o", "", "Target file path (defaults to media ID)")
 	mediaDownloadToFileCmd.Flags().StringVar(&mediaDownloadTypeStr, "media-type", "file", "Media type hint: file, image, video")
 
+	mediaFetchPathCmd.Flags().StringVar(&mediaFetchPathUserToken, "user-token", "", "User token")
+
+	mediaUploadAppCmd.Flags().StringVarP(&mediaUploadAppType, "media-type", "t", "file", "Media type: file, video, image, audio")
+	mediaUploadAppCmd.Flags().IntVar(&mediaUploadAppWidth, "width", 0, "Width (for video/image)")
+	mediaUploadAppCmd.Flags().IntVar(&mediaUploadAppHeight, "height", 0, "Height (for video/image)")
+	mediaUploadAppCmd.Flags().IntVar(&mediaUploadAppDuration, "duration", 0, "Duration in seconds (for video/audio)")
+
 	mediaCmd.AddCommand(mediaUploadCmd)
 	mediaCmd.AddCommand(mediaDownloadCmd)
 	mediaCmd.AddCommand(mediaDownloadToFileCmd)
+	mediaCmd.AddCommand(mediaFetchPathCmd)
+	mediaCmd.AddCommand(mediaUploadAppCmd)
 	rootCmd.AddCommand(mediaCmd)
 }
 
@@ -119,4 +148,22 @@ func mediaTypeFromString(s string) int {
 		}
 		return 3
 	}
+}
+
+func runMediaFetchPath(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	result, err := client.FetchMediaPath(ctx, args[0], mediaFetchPathUserToken)
+	checkError(err)
+	outputResultFields(result, []string{"media_path", "name", "type", "size"})
+}
+
+func runMediaUploadApp(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	result, err := client.UploadAppMedia(ctx, args[0], mediaUploadAppType, mediaUploadAppWidth, mediaUploadAppHeight, mediaUploadAppDuration)
+	checkError(err)
+	outputResultFields(result, []string{"media_id"})
 }

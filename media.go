@@ -22,7 +22,7 @@ func (c *LansengerClient) UploadMedia(ctx context.Context, filePath string, medi
 		WithMediaType(mediaType),
 	)
 
-	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath, mediaType)
+	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath)
 	if err != nil {
 		return &UploadMediaResult{Success: false, Error: err.Error()}, nil
 	}
@@ -30,6 +30,34 @@ func (c *LansengerClient) UploadMedia(ctx context.Context, filePath string, medi
 	data := extractData(result)
 
 	res := &UploadMediaResult{Success: true}
+	if data != nil {
+		res.MediaID = strFromMap(data, "mediaId")
+		res.CreatedTime = strFromMap(data, "createdTime")
+	}
+	return res, nil
+}
+
+func (c *LansengerClient) UploadAppMedia(ctx context.Context, filePath string, mediaType string, width, height, duration int) (*UploadAppMediaResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "app_medias", "create", token,
+		WithMediaTypeString(mediaType),
+		WithIntParam("width", width),
+		WithIntParam("height", height),
+		WithIntParam("duration", duration),
+	)
+
+	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath)
+	if err != nil {
+		return &UploadAppMediaResult{Success: false, Error: err.Error()}, nil
+	}
+
+	data := extractData(result)
+
+	res := &UploadAppMediaResult{Success: true}
 	if data != nil {
 		res.MediaID = strFromMap(data, "mediaId")
 	}
@@ -77,7 +105,38 @@ func (c *LansengerClient) DownloadMediaToFile(ctx context.Context, mediaID strin
 	return targetPath, nil
 }
 
-func uploadMediaInternal(ctx context.Context, httpClient *http.Client, url string, filePath string, mediaType int) (map[string]interface{}, error) {
+func (c *LansengerClient) FetchMediaPath(ctx context.Context, mediaID string, userToken string) (*MediaPathResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "medias", "path_fetch", token,
+		WithUserToken(userToken),
+		WithPathVar("media_id", mediaID),
+	)
+
+	result, err := c.doGet(ctx, url)
+	if err != nil {
+		return &MediaPathResult{Success: false, Error: err.Error()}, nil
+	}
+
+	data := extractData(result)
+	if data == nil {
+		return &MediaPathResult{Success: false, Error: "no data in response", RawResponse: result}, nil
+	}
+
+	return &MediaPathResult{
+		Success:     true,
+		MediaPath:   strFromMap(data, "mediaPath"),
+		Name:        strFromMap(data, "name"),
+		Type:        strFromMap(data, "type"),
+		Size:        strFromMap(data, "size"),
+		RawResponse: result,
+	}, nil
+}
+
+func uploadMediaInternal(ctx context.Context, httpClient *http.Client, url string, filePath string) (map[string]interface{}, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, NewFileError("cannot open file: " + err.Error())
@@ -87,7 +146,7 @@ func uploadMediaInternal(ctx context.Context, httpClient *http.Client, url strin
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
-	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+	part, err := writer.CreateFormFile("media", filepath.Base(filePath))
 	if err != nil {
 		return nil, fmt.Errorf("creating multipart form file: %w", err)
 	}
