@@ -132,6 +132,8 @@ var (
 	sendReminderUserIDs  []string
 
 	sendTextFile           string
+	sendTextMediaType      int
+	sendTextCoverImage     string
 	sendTextIsGroup        bool
 	sendTextReminderAll    bool
 	sendTextReminderUserIDs []string
@@ -144,13 +146,14 @@ var (
 	sendMarkdownUserToken      string
 	sendMarkdownSenderID       string
 
-	sendFileCaption   string
-	sendFileMediaType int
-	sendFileIsGroup   bool
-	sendFileUserToken string
-	sendFileSenderID  string
+	sendFileContent     string
+	sendFileMediaType  int
+	sendFileCoverImage string
+	sendFileIsGroup    bool
+	sendFileUserToken  string
+	sendFileSenderID   string
 
-	sendImageURLCaption   string
+	sendImageURLContent   string
 	sendImageURLIsGroup   bool
 	sendImageURLUserToken string
 	sendImageURLSenderID  string
@@ -237,6 +240,8 @@ var (
 
 func init() {
 	sendTextCmd.Flags().StringVarP(&sendTextFile, "file", "f", "", "File path to attach")
+	sendTextCmd.Flags().IntVar(&sendTextMediaType, "media-type", 0, "Media type: 1=video, 2=image, 3=file, 4=audio")
+	sendTextCmd.Flags().StringVar(&sendTextCoverImage, "cover-image", "", "Cover image path (required for video)")
 	sendTextCmd.Flags().BoolVarP(&sendTextIsGroup, "group", "g", false, "Send as group message")
 	sendTextCmd.Flags().BoolVar(&sendTextReminderAll, "mention-all", false, "@all in group")
 	sendTextCmd.Flags().StringArrayVar(&sendTextReminderUserIDs, "mention", nil, "User IDs to @mention")
@@ -249,13 +254,14 @@ func init() {
 	sendMarkdownCmd.Flags().StringVar(&sendMarkdownUserToken, "user-token", "", "User token for private channel")
 	sendMarkdownCmd.Flags().StringVar(&sendMarkdownSenderID, "sender-id", "", "Sender staff ID for group message")
 
-	sendFileCmd.Flags().StringVarP(&sendFileCaption, "caption", "c", "", "Caption text")
-	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=audio")
+	sendFileCmd.Flags().StringVarP(&sendFileContent, "content", "c", "", "Content/caption text")
+	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=file, 4=audio")
+	sendFileCmd.Flags().StringVar(&sendFileCoverImage, "cover-image", "", "Cover image path (required for video)")
 	sendFileCmd.Flags().BoolVarP(&sendFileIsGroup, "group", "g", false, "Send as group message")
 	sendFileCmd.Flags().StringVar(&sendFileUserToken, "user-token", "", "User token for private channel")
 	sendFileCmd.Flags().StringVar(&sendFileSenderID, "sender-id", "", "Sender staff ID for group message")
 
-	sendImageURLCmd.Flags().StringVarP(&sendImageURLCaption, "caption", "c", "", "Caption text")
+	sendImageURLCmd.Flags().StringVarP(&sendImageURLContent, "content", "c", "", "Content/caption text")
 	sendImageURLCmd.Flags().BoolVarP(&sendImageURLIsGroup, "group", "g", false, "Send as group message")
 	sendImageURLCmd.Flags().StringVar(&sendImageURLUserToken, "user-token", "", "User token for private channel")
 	sendImageURLCmd.Flags().StringVar(&sendImageURLSenderID, "sender-id", "", "Sender staff ID for group message")
@@ -370,7 +376,7 @@ func runSendText(cmd *cobra.Command, args []string) {
 		reminderUserIDs = sendTextReminderUserIDs
 	}
 
-	result, err := client.SendText(ctx, args[0], args[1], sendTextFile, 0, sendTextReminderAll, reminderUserIDs, sendTextIsGroup, sendTextUserToken, sendTextSenderID)
+	result, err := client.SendText(ctx, args[0], args[1], sendTextFile, sendTextMediaType, sendTextCoverImage, sendTextReminderAll, reminderUserIDs, sendTextIsGroup, sendTextUserToken, sendTextSenderID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id", "msg_type", "operation"})
 }
@@ -393,7 +399,7 @@ func runSendFile(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.SendFile(ctx, args[0], args[1], sendFileCaption, sendFileMediaType, sendFileIsGroup, sendFileUserToken, sendFileSenderID)
+	result, err := client.SendFile(ctx, args[0], args[1], sendFileContent, sendFileMediaType, sendFileCoverImage, sendFileIsGroup, sendFileUserToken, sendFileSenderID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id", "msg_type", "operation"})
 }
@@ -402,7 +408,7 @@ func runSendImageURL(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.SendImageURL(ctx, args[0], args[1], sendImageURLCaption, sendImageURLIsGroup, sendImageURLUserToken, sendImageURLSenderID)
+	result, err := client.SendImageURL(ctx, args[0], args[1], sendImageURLContent, sendImageURLIsGroup, sendImageURLUserToken, sendImageURLSenderID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id", "msg_type", "operation"})
 }

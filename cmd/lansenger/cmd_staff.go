@@ -71,6 +71,7 @@ var (
 	staffSearchUserToken     string
 	staffSearchUserID        string
 	staffSearchRecursive     bool
+	staffSearchNoRecursive  bool
 	staffSearchSectorIDs     []string
 	staffSearchPage          int
 	staffSearchSize          int
@@ -84,10 +85,11 @@ func init() {
 	staffIdMappingCmd.Flags().StringVar(&staffIdMappingUserToken, "user-token", "", "User token")
 	staffOrgExtraFieldsCmd.Flags().StringVar(&staffOrgExtraFieldsToken, "user-token", "", "User token")
 	staffOrgExtraFieldsCmd.Flags().IntVarP(&staffOrgExtraFieldsPage, "page", "p", 1, "Page number")
-	staffOrgExtraFieldsCmd.Flags().IntVarP(&staffOrgExtraFieldsSize, "size", "s", 20, "Page size")
+	staffOrgExtraFieldsCmd.Flags().IntVarP(&staffOrgExtraFieldsSize, "size", "s", 1000, "Page size")
 	staffSearchCmd.Flags().StringVar(&staffSearchUserToken, "user-token", "", "User token")
 	staffSearchCmd.Flags().StringVar(&staffSearchUserID, "user-id", "", "User ID")
 	staffSearchCmd.Flags().BoolVar(&staffSearchRecursive, "recursive", true, "Recursive search")
+	staffSearchCmd.Flags().BoolVar(&staffSearchNoRecursive, "no-recursive", false, "Disable recursive search")
 	staffSearchCmd.Flags().StringArrayVar(&staffSearchSectorIDs, "sector", nil, "Sector IDs")
 	staffSearchCmd.Flags().IntVarP(&staffSearchPage, "page", "p", 1, "Page number")
 	staffSearchCmd.Flags().IntVarP(&staffSearchSize, "size", "s", 20, "Page size")
@@ -157,7 +159,7 @@ func runStaffSearch(cmd *cobra.Command, args []string) {
 		sectorIDs = staffSearchSectorIDs
 	}
 
-	result, err := client.SearchStaff(ctx, args[0], staffSearchUserToken, staffSearchUserID, staffSearchRecursive, sectorIDs, staffSearchPage, staffSearchSize)
+	result, err := client.SearchStaff(ctx, args[0], staffSearchUserToken, staffSearchUserID, staffSearchRecursive && !staffSearchNoRecursive, sectorIDs, staffSearchPage, staffSearchSize)
 	checkError(err)
 	outputResultFields(result, []string{"has_more", "total", "staff_info"})
 }

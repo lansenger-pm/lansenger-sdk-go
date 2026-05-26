@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-func (c *LansengerClient) UploadMedia(ctx context.Context, filePath string, mediaType int) (*UploadMediaResult, error) {
+func (c *LansengerClient) UploadMedia(ctx context.Context, filePath string, mediaType int, userToken string) (*UploadMediaResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -20,6 +20,7 @@ func (c *LansengerClient) UploadMedia(ctx context.Context, filePath string, medi
 
 	url := BuildAPIURL(c.config, "medias", "create", token,
 		WithMediaType(mediaType),
+		WithUserToken(userToken),
 	)
 
 	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath)

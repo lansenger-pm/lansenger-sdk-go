@@ -94,6 +94,8 @@ var (
 	calCreateAttendeePerms     string
 	calCreateExpireDateType    string
 	calCreateRule               string
+	calCreateTz                 string
+	calCreateDate               string
 	calCreateUserToken          string
 	calCreateUserID             string
 
@@ -139,6 +141,8 @@ func init() {
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateAttendeePerms, "attendee-perms", "", "Attendee permissions")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateExpireDateType, "expire-date-type", "", "Expire date type")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateRule, "rule", "", "Repeat rule (JSON)")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateTz, "tz", "", "Time zone (e.g. Asia/Shanghai)")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateDate, "date", "", "Date (for all-day events)")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateUserToken, "user-token", "", "User token")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateUserID, "user-id", "", "User ID")
 
@@ -154,7 +158,7 @@ func init() {
 	calendarAttendeesCmd.Flags().StringVar(&calAttendeesUserToken, "user-token", "", "User token")
 	calendarAttendeesCmd.Flags().StringVar(&calAttendeesUserID, "user-id", "", "User ID")
 	calendarAttendeesCmd.Flags().IntVarP(&calAttendeesPage, "page", "p", 1, "Page number")
-	calendarAttendeesCmd.Flags().IntVarP(&calAttendeesSize, "size", "s", 20, "Page size")
+	calendarAttendeesCmd.Flags().IntVarP(&calAttendeesSize, "size", "s", 500, "Page size")
 
 	calendarAddAttendeesCmd.Flags().StringVar(&calAddAttendeesReminderType, "reminder", "", "Reminder type (yes/no)")
 	calendarAddAttendeesCmd.Flags().StringVar(&calAddAttendeesUserToken, "user-token", "", "User token")
@@ -202,7 +206,17 @@ func runCalendarCreateSchedule(cmd *cobra.Command, args []string) {
 	summary := args[1]
 
 	startTime := map[string]interface{}{"time": args[2]}
+	if calCreateTz != "" {
+		startTime["timeZone"] = calCreateTz
+	}
+	if calCreateDate != "" {
+		startTime["date"] = calCreateDate
+	}
+
 	endTime := map[string]interface{}{"time": args[3]}
+	if calCreateTz != "" {
+		endTime["timeZone"] = calCreateTz
+	}
 
 	attendeeMaps, err := parseJSONArray(args[4])
 	checkError(err)

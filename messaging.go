@@ -8,19 +8,30 @@ import (
 	"strings"
 )
 
-func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, filePath string, mediaType int, reminderAll bool, reminderUserIDs []string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
+func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, filePath string, mediaType int, coverImagePath string, reminderAll bool, reminderUserIDs []string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
 	textData := map[string]interface{}{
 		"content": content,
 	}
 	if filePath != "" {
-		uploadResult, err := c.UploadMedia(ctx, filePath, mediaType)
-		if err != nil {
+uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, "")
+	if err != nil {
 			return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
 		}
 		if !uploadResult.Success {
 			return &SendMessageResult{Success: false, Error: "upload failed: " + uploadResult.Error, Platform: "lansenger"}, nil
 		}
 		textData["mediaIds"] = []string{uploadResult.MediaID}
+		textData["mediaType"] = mediaType
+		if coverImagePath != "" {
+			coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, "")
+			if err != nil {
+				return &SendMessageResult{Success: false, Error: "cover upload failed: " + err.Error(), Platform: "lansenger"}, nil
+			}
+			if !coverResult.Success {
+				return &SendMessageResult{Success: false, Error: "cover upload failed: " + coverResult.Error, Platform: "lansenger"}, nil
+			}
+			textData["mediaIds"] = []string{uploadResult.MediaID, coverResult.MediaID}
+		}
 	}
 	if reminderAll || len(reminderUserIDs) > 0 {
 		reminder := map[string]interface{}{
@@ -67,8 +78,8 @@ func (c *LansengerClient) SendMarkdown(ctx context.Context, chatID, content stri
 	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
 }
 
-func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string, caption string, mediaType int, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
-	uploadResult, err := c.UploadMedia(ctx, filePath, mediaType)
+func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string, content string, mediaType int, coverImagePath string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
+	uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, "")
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
 	}
@@ -77,10 +88,21 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 	}
 
 	textData := map[string]interface{}{
-		"mediaIds": []string{uploadResult.MediaID},
+		"mediaIds":  []string{uploadResult.MediaID},
+		"mediaType": mediaType,
 	}
-	if caption != "" {
-		textData["caption"] = caption
+	if content != "" {
+		textData["content"] = content
+	}
+	if coverImagePath != "" {
+		coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, "")
+		if err != nil {
+			return &SendMessageResult{Success: false, Error: "cover upload failed: " + err.Error(), Platform: "lansenger"}, nil
+		}
+		if !coverResult.Success {
+			return &SendMessageResult{Success: false, Error: "cover upload failed: " + coverResult.Error, Platform: "lansenger"}, nil
+		}
+		textData["mediaIds"] = []string{uploadResult.MediaID, coverResult.MediaID}
 	}
 
 	msgData := map[string]interface{}{
@@ -95,7 +117,7 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
 }
 
-func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, caption string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
+func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, content string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
 	if chatID == "" {
 		return &SendMessageResult{Success: false, Error: "chat_id is required", Platform: "lansenger"}, nil
 	}
@@ -141,7 +163,7 @@ func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, ca
 	}
 	tmpFile.Close()
 
-	result, err := c.SendFile(ctx, chatID, tmpPath, caption, MediaTypeImage, isGroup, userToken, senderID)
+	result, err := c.SendFile(ctx, chatID, tmpPath, content, MediaTypeImage, "", isGroup, userToken, senderID)
 	os.Remove(tmpPath)
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil

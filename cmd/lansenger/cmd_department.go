@@ -47,7 +47,7 @@ func init() {
 	departmentChildrenCmd.Flags().StringVar(&departmentChildrenToken, "user-token", "", "User token")
 	departmentStaffsCmd.Flags().StringVar(&departmentStaffsToken, "user-token", "", "User token")
 	departmentStaffsCmd.Flags().IntVarP(&departmentStaffsPage, "page", "p", 1, "Page number")
-	departmentStaffsCmd.Flags().IntVarP(&departmentStaffsSize, "size", "s", 20, "Page size")
+	departmentStaffsCmd.Flags().IntVarP(&departmentStaffsSize, "size", "s", 100, "Page size")
 
 	departmentCmd.AddCommand(departmentDetailCmd)
 	departmentCmd.AddCommand(departmentChildrenCmd)

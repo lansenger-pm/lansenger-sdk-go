@@ -31,9 +31,9 @@ var callbackDecryptCmd = &cobra.Command{
 }
 
 var callbackVerifySignatureCmd = &cobra.Command{
-	Use:   "verify-signature TIMESTAMP NONCE SIGNATURE ENCODING_KEY",
+	Use:   "verify-signature TIMESTAMP NONCE SIGNATURE",
 	Short: "Verify callback signature",
-	Args:  cobra.ExactArgs(4),
+	Args:  cobra.ExactArgs(3),
 	Run:   runCallbackVerifySignature,
 }
 
@@ -74,6 +74,7 @@ func init() {
 	callbackDecryptCmd.Flags().StringVar(&callbackSignature, "signature", "", "Signature for verification")
 	callbackDecryptCmd.Flags().StringVar(&callbackDataEncrypt, "data-encrypt", "", "dataEncrypt value for signature verification")
 
+	callbackVerifySignatureCmd.Flags().StringVar(&callbackEncodingKey, "encoding-key", "", "Encoding key (required)")
 	callbackVerifySignatureCmd.Flags().StringVar(&callbackDataEncrypt, "data-encrypt", "", "dataEncrypt value")
 	callbackVerifySignatureCmd.Flags().StringVar(&callbackCallbackToken, "callback-token", "", "Callback token (defaults to encoding-key)")
 
@@ -232,14 +233,19 @@ func runCallbackDecrypt(cmd *cobra.Command, args []string) {
 }
 
 func runCallbackVerifySignature(cmd *cobra.Command, args []string) {
+	encKey := resolveEncodingKey()
+	if encKey == "" {
+		fmt.Fprintf(os.Stderr, "Error: encoding-key required. Use --encoding-key or set encoding_key in config.\n")
+		os.Exit(1)
+	}
+
 	timestamp := args[0]
 	nonce := args[1]
 	signature := args[2]
-	encodingKey := args[3]
 	dataEncrypt := callbackDataEncrypt
 	token := resolveCallbackToken()
 
-	valid := lansenger.VerifyCallbackSignature(timestamp, nonce, signature, encodingKey, dataEncrypt, token)
+	valid := lansenger.VerifyCallbackSignature(timestamp, nonce, signature, encKey, dataEncrypt, token)
 	if valid {
 		fmt.Println("valid")
 	} else {

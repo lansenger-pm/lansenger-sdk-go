@@ -143,9 +143,9 @@ fields, err := client.FetchOrgExtraFieldIDs(ctx, "orgId", "", 1, 1000)
 #### 機器人私聊 —最常用
 
 ```go
-result, err := client.SendText(ctx, "staff123", "你好！", "", 0, false, nil, false, "", "")
-result, err := client.SendMarkdown(ctx, "staff123", "**粗體**", false, nil, false, "", "")
-result, err := client.SendFile(ctx, "staff123", "/path/to/report.pdf", "", 0, false, "", "")
+result, err := client.SendText(ctx, "staff123", "你好！", "", 0, "", false, nil, false, "", "")
+result, err := client.SendMarkdown(ctx, "staff123", "**加粗**", false, nil, false, "", "")
+result, err := client.SendFile(ctx, "staff123", "/path/to/report.pdf", "", 0, "", false, "", "")
 ```
 
 #### 公共帳號通道
@@ -167,14 +167,14 @@ result, err := client.SendUserMessage(ctx, "staff456", "text",
 
 ```go
 // 機器人 → 群組
-result, err := client.SendText(ctx, "group123", "通知", "", 0, false, nil, true, "", "")
+result, err := client.SendText(ctx, "group123", "通知", "", 0, "", false, nil, true, "", "")
 
 // 人類 → 群組（使用 userToken）
 result, err := client.SendGroupMessage(ctx, "group123", "text",
     map[string]interface{}{"content": "我來處理"}, "ut", "", false, nil, "", "", "")
 
 // 群聊 @提及
-result, err := client.SendText(ctx, "group123", "重要！", "", 0, true, nil, true, "", "")
+result, err := client.SendText(ctx, "group123", "重要！", "", 0, "", true, nil, true, "", "")
 ```
 
 #### 富卡片
@@ -210,7 +210,7 @@ result, err := client.FetchStreamMessage(ctx, "msg123")
 
 ```go
 // 上傳（核心服務 — 數字類型）
-upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeAudio)
+upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeFile)
 
 // 上傳（應用/機械人 — 字串類型，支援 width/height/duration）
 upload, err := client.UploadAppMedia(ctx, "/path/to/video.mp4",

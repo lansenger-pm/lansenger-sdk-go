@@ -50,6 +50,7 @@ var mediaUploadAppCmd = &cobra.Command{
 
 var (
 	mediaUploadType         int
+	mediaUploadUserToken    string
 	mediaDownloadOutput     string
 	mediaDownloadTypeStr    string
 	mediaFetchPathUserToken string
@@ -61,7 +62,8 @@ var (
 )
 
 func init() {
-	mediaUploadCmd.Flags().IntVarP(&mediaUploadType, "media-type", "t", 3, "Media type: 1=video, 2=image, 3=audio")
+	mediaUploadCmd.Flags().IntVarP(&mediaUploadType, "media-type", "t", 3, "Media type: 1=video, 2=image, 3=file, 4=audio")
+	mediaUploadCmd.Flags().StringVar(&mediaUploadUserToken, "user-token", "", "User token")
 
 	mediaDownloadToFileCmd.Flags().StringVarP(&mediaDownloadOutput, "output", "o", "", "Target file path (defaults to media ID)")
 	mediaDownloadToFileCmd.Flags().StringVar(&mediaDownloadTypeStr, "media-type", "file", "Media type hint: file, image, video")
@@ -85,7 +87,7 @@ func runMediaUpload(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.UploadMedia(ctx, args[0], mediaUploadType)
+	result, err := client.UploadMedia(ctx, args[0], mediaUploadType, mediaUploadUserToken)
 	checkError(err)
 	outputResultFields(result, []string{"media_id"})
 }

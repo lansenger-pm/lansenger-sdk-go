@@ -143,9 +143,9 @@ fields, err := client.FetchOrgExtraFieldIDs(ctx, "orgId", "", 1, 1000)
 #### Bot private chat — most common
 
 ```go
-result, err := client.SendText(ctx, "staff123", "Hello!", "", 0, false, nil, false, "", "")
+result, err := client.SendText(ctx, "staff123", "Hello!", "", 0, "", false, nil, false, "", "")
 result, err := client.SendMarkdown(ctx, "staff123", "**Bold**", false, nil, false, "", "")
-result, err := client.SendFile(ctx, "staff123", "/path/to/report.pdf", "", 0, false, "", "")
+result, err := client.SendFile(ctx, "staff123", "/path/to/report.pdf", "", 0, "", false, "", "")
 ```
 
 #### Public account channel
@@ -167,14 +167,14 @@ result, err := client.SendUserMessage(ctx, "staff456", "text",
 
 ```go
 // Bot → group
-result, err := client.SendText(ctx, "group123", "Notice", "", 0, false, nil, true, "", "")
+result, err := client.SendText(ctx, "group123", "Notice", "", 0, "", false, nil, true, "", "")
 
 // Human → group (with userToken)
 result, err := client.SendGroupMessage(ctx, "group123", "text",
     map[string]interface{}{"content": "I'll handle it"}, "ut", "", false, nil, "", "", "")
 
 // @mention in group
-result, err := client.SendText(ctx, "group123", "Important!", "", 0, true, nil, true, "", "")
+result, err := client.SendText(ctx, "group123", "Important!", "", 0, "", true, nil, true, "", "")
 ```
 
 #### Rich cards
@@ -210,7 +210,7 @@ result, err := client.FetchStreamMessage(ctx, "msg123")
 
 ```go
 // Upload (core service — numeric type)
-upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeAudio)
+upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeFile)
 
 // Upload (app/bot — string type, supports width/height/duration)
 upload, err := client.UploadAppMedia(ctx, "/path/to/video.mp4",

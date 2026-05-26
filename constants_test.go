@@ -11,8 +11,11 @@ func TestMediaTypeConstants(t *testing.T) {
 	if MediaTypeImage != 2 {
 		t.Errorf("expected MediaTypeImage=2, got %d", MediaTypeImage)
 	}
-	if MediaTypeAudio != 3 {
-		t.Errorf("expected MediaTypeAudio=3, got %d", MediaTypeAudio)
+	if MediaTypeFile != 3 {
+		t.Errorf("expected MediaTypeFile=3, got %d", MediaTypeFile)
+	}
+	if MediaTypeAudio != 4 {
+		t.Errorf("expected MediaTypeAudio=4, got %d", MediaTypeAudio)
 	}
 }
 
@@ -34,14 +37,14 @@ func TestGuessMediaTypeVideo(t *testing.T) {
 	}
 }
 
-func TestGuessMediaTypeAudio(t *testing.T) {
+func TestGuessMediaTypeFile(t *testing.T) {
 	result := GuessMediaType("document.pdf")
-	if result != MediaTypeAudio {
-		t.Errorf("expected MediaTypeAudio for .pdf, got %d", result)
+	if result != MediaTypeFile {
+		t.Errorf("expected MediaTypeFile for .pdf, got %d", result)
 	}
 	result = GuessMediaType("data.xlsx")
-	if result != MediaTypeAudio {
-		t.Errorf("expected MediaTypeAudio for .xlsx, got %d", result)
+	if result != MediaTypeFile {
+		t.Errorf("expected MediaTypeFile for .xlsx, got %d", result)
 	}
 }
 

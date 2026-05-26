@@ -115,11 +115,11 @@ func init() {
 	groupInfoCmd.Flags().StringVar(&groupInfoUserToken, "user-token", "", "User token")
 
 	groupMembersCmd.Flags().StringVar(&groupMembersUserToken, "user-token", "", "User token")
-	groupMembersCmd.Flags().IntVarP(&groupMembersPage, "page", "p", 1, "Page offset")
+	groupMembersCmd.Flags().IntVarP(&groupMembersPage, "page", "p", 0, "Page offset")
 	groupMembersCmd.Flags().IntVarP(&groupMembersSize, "size", "s", 100, "Page size")
 
 	groupListCmd.Flags().StringVar(&groupListUserToken, "user-token", "", "User token")
-	groupListCmd.Flags().IntVarP(&groupListPage, "page", "p", 1, "Page offset")
+	groupListCmd.Flags().IntVarP(&groupListPage, "page", "p", 0, "Page offset")
 	groupListCmd.Flags().IntVarP(&groupListSize, "size", "s", 100, "Page size")
 
 	groupCheckCmd.Flags().StringVar(&groupCheckUserToken, "user-token", "", "User token")

@@ -8,8 +8,9 @@ const (
 	TokenRefreshMargin   = 300
 
 	MediaTypeVideo  = 1
-	MediaTypeImage = 2
-	MediaTypeAudio = 3
+	MediaTypeImage  = 2
+	MediaTypeFile   = 3
+	MediaTypeAudio  = 4
 
 	AppMediaTypeFile  = "file"
 	AppMediaTypeVideo = "video"
@@ -185,5 +186,5 @@ func GuessMediaType(filePath string) int {
 	if VideoExtensions[ext] {
 		return MediaTypeVideo
 	}
-	return MediaTypeAudio
+	return MediaTypeFile
 }

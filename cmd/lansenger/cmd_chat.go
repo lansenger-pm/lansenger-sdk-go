@@ -50,7 +50,7 @@ func init() {
 	chatListCmd.Flags().StringVarP(&chatListKeyword, "keyword", "k", "", "Search keyword (only for type 1 or 2)")
 	chatListCmd.Flags().Int64Var(&chatListStartTime, "start", 0, "Start time in microseconds")
 	chatListCmd.Flags().Int64Var(&chatListEndTime, "end", 0, "End time in microseconds")
-	chatListCmd.Flags().StringVar(&chatListUserToken, "user-token", "", "User token (required)")
+	chatListCmd.Flags().StringVar(&chatListUserToken, "user-token", "", "User token")
 
 	chatMessagesCmd.Flags().StringVar(&chatMsgStaffID, "staff-id", "", "Private chat partner staffId")
 	chatMessagesCmd.Flags().StringVar(&chatMsgGroupID, "group-id", "", "Group openId")
@@ -59,7 +59,7 @@ func init() {
 	chatMessagesCmd.Flags().Int64Var(&chatMsgStartTime, "start", 0, "Start time in microseconds")
 	chatMessagesCmd.Flags().Int64Var(&chatMsgEndTime, "end", 0, "End time in microseconds")
 	chatMessagesCmd.Flags().StringVar(&chatMsgSenderID, "sender-id", "", "Filter by sender staffId")
-	chatMessagesCmd.Flags().StringVar(&chatMsgUserToken, "user-token", "", "User token (required)")
+	chatMessagesCmd.Flags().StringVar(&chatMsgUserToken, "user-token", "", "User token")
 
 	chatCmd.AddCommand(chatListCmd)
 	chatCmd.AddCommand(chatMessagesCmd)
