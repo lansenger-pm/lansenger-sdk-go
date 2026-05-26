@@ -76,11 +76,11 @@ var calendarUpdateScheduleCmd = &cobra.Command{
 	Run:   runCalendarUpdateSchedule,
 }
 
-var calendarUpdateAttendeeMetaCmd = &cobra.Command{
-	Use:   "update-attendee-meta CALENDAR_ID SCHEDULE_ID",
+var calendarAttendeeMetaCmd = &cobra.Command{
+	Use:   "attendee-meta CALENDAR_ID SCHEDULE_ID",
 	Short: "Update attendee metadata",
 	Args:  cobra.ExactArgs(2),
-	Run:   runCalendarUpdateAttendeeMeta,
+	Run:   runCalendarAttendeeMeta,
 }
 
 var (
@@ -125,9 +125,9 @@ var (
 	calUpdateScheduleUserToken  string
 	calUpdateScheduleUserID     string
 
-	calUpdateAttendeeMetaParamsJSON string
-	calUpdateAttendeeMetaUserToken  string
-	calUpdateAttendeeMetaUserID     string
+	calAttendeeMetaParamsJSON string
+	calAttendeeMetaUserToken  string
+	calAttendeeMetaUserID     string
 )
 
 func init() {
@@ -172,9 +172,9 @@ func init() {
 	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleUserToken, "user-token", "", "User token")
 	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleUserID, "user-id", "", "User ID")
 
-	calendarUpdateAttendeeMetaCmd.Flags().StringVar(&calUpdateAttendeeMetaParamsJSON, "params", "{}", "Attendee meta fields as JSON object")
-	calendarUpdateAttendeeMetaCmd.Flags().StringVar(&calUpdateAttendeeMetaUserToken, "user-token", "", "User token")
-	calendarUpdateAttendeeMetaCmd.Flags().StringVar(&calUpdateAttendeeMetaUserID, "user-id", "", "User ID")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaParamsJSON, "params", "{}", "Attendee meta fields as JSON object")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaUserToken, "user-token", "", "User token")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaUserID, "user-id", "", "User ID")
 
 	calendarCmd.AddCommand(calendarPrimaryCmd)
 	calendarCmd.AddCommand(calendarCreateScheduleCmd)
@@ -185,7 +185,7 @@ func init() {
 	calendarCmd.AddCommand(calendarAddAttendeesCmd)
 	calendarCmd.AddCommand(calendarDeleteAttendeesCmd)
 	calendarCmd.AddCommand(calendarUpdateScheduleCmd)
-	calendarCmd.AddCommand(calendarUpdateAttendeeMetaCmd)
+	calendarCmd.AddCommand(calendarAttendeeMetaCmd)
 	rootCmd.AddCommand(calendarCmd)
 }
 
@@ -319,11 +319,11 @@ func runCalendarUpdateSchedule(cmd *cobra.Command, args []string) {
 	outputResult(result)
 }
 
-func runCalendarUpdateAttendeeMeta(cmd *cobra.Command, args []string) {
+func runCalendarAttendeeMeta(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	raw, err := parseJSONRaw(calUpdateAttendeeMetaParamsJSON)
+	raw, err := parseJSONRaw(calAttendeeMetaParamsJSON)
 	checkError(err)
 	params, ok := raw.(map[string]interface{})
 	if !ok {
@@ -331,7 +331,7 @@ func runCalendarUpdateAttendeeMeta(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	result, err := client.UpdateScheduleAttendeeMeta(ctx, args[0], args[1], params, calUpdateAttendeeMetaUserToken, calUpdateAttendeeMetaUserID)
+	result, err := client.UpdateScheduleAttendeeMeta(ctx, args[0], args[1], params, calAttendeeMetaUserToken, calAttendeeMetaUserID)
 	checkError(err)
 	outputResult(result)
 }

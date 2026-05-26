@@ -34,11 +34,11 @@ var mediaDownloadToFileCmd = &cobra.Command{
 	Run:   runMediaDownloadToFile,
 }
 
-var mediaFetchPathCmd = &cobra.Command{
-	Use:   "fetch-path MEDIA_ID",
+var mediaPathCmd = &cobra.Command{
+	Use:   "path MEDIA_ID",
 	Short: "Fetch media file download path info",
 	Args:  cobra.ExactArgs(1),
-	Run:   runMediaFetchPath,
+	Run:   runMediaPath,
 }
 
 var mediaUploadAppCmd = &cobra.Command{
@@ -53,7 +53,7 @@ var (
 	mediaUploadUserToken    string
 	mediaDownloadOutput     string
 	mediaDownloadTypeStr    string
-	mediaFetchPathUserToken string
+	mediaPathUserToken string
 
 	mediaUploadAppType     string
 	mediaUploadAppWidth    int
@@ -68,7 +68,7 @@ func init() {
 	mediaDownloadToFileCmd.Flags().StringVarP(&mediaDownloadOutput, "output", "o", "", "Target file path (defaults to media ID)")
 	mediaDownloadToFileCmd.Flags().StringVar(&mediaDownloadTypeStr, "media-type", "file", "Media type hint: file, image, video")
 
-	mediaFetchPathCmd.Flags().StringVar(&mediaFetchPathUserToken, "user-token", "", "User token")
+	mediaPathCmd.Flags().StringVar(&mediaPathUserToken, "user-token", "", "User token")
 
 	mediaUploadAppCmd.Flags().StringVarP(&mediaUploadAppType, "media-type", "t", "file", "Media type: file, video, image, audio")
 	mediaUploadAppCmd.Flags().IntVar(&mediaUploadAppWidth, "width", 0, "Width (for video/image)")
@@ -78,7 +78,7 @@ func init() {
 	mediaCmd.AddCommand(mediaUploadCmd)
 	mediaCmd.AddCommand(mediaDownloadCmd)
 	mediaCmd.AddCommand(mediaDownloadToFileCmd)
-	mediaCmd.AddCommand(mediaFetchPathCmd)
+	mediaCmd.AddCommand(mediaPathCmd)
 	mediaCmd.AddCommand(mediaUploadAppCmd)
 	rootCmd.AddCommand(mediaCmd)
 }
@@ -152,11 +152,11 @@ func mediaTypeFromString(s string) int {
 	}
 }
 
-func runMediaFetchPath(cmd *cobra.Command, args []string) {
+func runMediaPath(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.FetchMediaPath(ctx, args[0], mediaFetchPathUserToken)
+	result, err := client.FetchMediaPath(ctx, args[0], mediaPathUserToken)
 	checkError(err)
 	outputResultFields(result, []string{"media_path", "name", "type", "size"})
 }
