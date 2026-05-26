@@ -40,6 +40,30 @@ func NewClientFromEnv() (*LansengerClient, error) {
 	return NewClientWithConfig(cfg), nil
 }
 
+func NewClientFromStore(store *CredentialStore) (*LansengerClient, error) {
+	creds, err := store.LoadCredentials()
+	if err != nil {
+		return nil, fmt.Errorf("loading credentials from store: %w", err)
+	}
+	if creds["app_id"] == "" || creds["app_secret"] == "" {
+		return nil, NewConfigError("no credentials found in store for profile '" + store.profile + "'")
+	}
+	cfg := NewConfig(creds["app_id"], creds["app_secret"])
+	if creds["api_gateway_url"] != "" {
+		cfg.APIGatewayURL = creds["api_gateway_url"]
+	}
+	if creds["passport_url"] != "" {
+		cfg.PassportURL = creds["passport_url"]
+	}
+	if creds["encoding_key"] != "" {
+		cfg.EncodingKey = creds["encoding_key"]
+	}
+	if creds["callback_token"] != "" {
+		cfg.CallbackToken = creds["callback_token"]
+	}
+	return NewClientWithConfig(cfg), nil
+}
+
 func (c *LansengerClient) GetToken(ctx context.Context) (string, error) {
 	return c.tokenMgr.GetToken(ctx)
 }
@@ -61,7 +85,6 @@ func (c *LansengerClient) doGet(ctx context.Context, url string) (map[string]int
 	if err != nil {
 		return nil, fmt.Errorf("creating GET request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -82,7 +105,7 @@ func (c *LansengerClient) doGet(ctx context.Context, url string) (map[string]int
 	errCode, _ := result["errCode"].(float64)
 	if errCode != 0 {
 		errMsg, _ := result["errMsg"].(string)
-		return result, NewAPIError(errMsg, int(errCode))
+		return nil, NewAPIError(errMsg, int(errCode))
 	}
 
 	return result, nil
@@ -134,7 +157,7 @@ func (c *LansengerClient) doPost(ctx context.Context, url string, body interface
 	errCode, _ := result["errCode"].(float64)
 	if errCode != 0 {
 		errMsg, _ := result["errMsg"].(string)
-		return result, NewAPIError(errMsg, int(errCode))
+		return nil, NewAPIError(errMsg, int(errCode))
 	}
 
 	return result, nil

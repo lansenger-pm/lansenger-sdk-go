@@ -14,7 +14,7 @@ type TokenManager struct {
 	httpClient *http.Client
 	token      string
 	expiresAt  time.Time
-	mu         sync.RWMutex
+	mu         sync.Mutex
 }
 
 func NewTokenManager(cfg *Config, httpClient *http.Client) *TokenManager {
@@ -25,13 +25,13 @@ func NewTokenManager(cfg *Config, httpClient *http.Client) *TokenManager {
 }
 
 func (tm *TokenManager) GetToken(ctx context.Context) (string, error) {
-	tm.mu.RLock()
+	tm.mu.Lock()
 	if tm.token != "" && time.Now().Before(tm.expiresAt) {
 		token := tm.token
-		tm.mu.RUnlock()
+		tm.mu.Unlock()
 		return token, nil
 	}
-	tm.mu.RUnlock()
+	tm.mu.Unlock()
 
 	return tm.refreshToken(ctx)
 }

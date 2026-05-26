@@ -214,7 +214,6 @@ func runCallbackDecrypt(cmd *cobra.Command, args []string) {
 		fmt.Printf("  Category: %s\n", event.Category)
 		if event.EventID != "" {
 			fmt.Printf("  EventID:  %s\n", event.EventID)
-			continue
 		}
 		if event.AppID != "" {
 			fmt.Printf("  AppID:    %s\n", event.AppID)

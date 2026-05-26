@@ -13,10 +13,14 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 		"content": content,
 	}
 	if filePath != "" {
-		textData["filePath"] = filePath
-	}
-	if mediaType != 0 {
-		textData["mediaType"] = mediaType
+		uploadResult, err := c.UploadMedia(ctx, filePath, mediaType)
+		if err != nil {
+			return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
+		}
+		if !uploadResult.Success {
+			return &SendMessageResult{Success: false, Error: "upload failed: " + uploadResult.Error, Platform: "lansenger"}, nil
+		}
+		textData["mediaIds"] = []string{uploadResult.MediaID}
 	}
 
 	msgData := map[string]interface{}{
@@ -65,7 +69,7 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 	}
 
 	textData := map[string]interface{}{
-		"filePath": uploadResult.MediaID,
+		"mediaIds": []string{uploadResult.MediaID},
 	}
 	if caption != "" {
 		textData["caption"] = caption

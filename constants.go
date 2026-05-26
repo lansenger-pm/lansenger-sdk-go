@@ -132,6 +132,7 @@ var APIEndpoints = map[string]map[string]string{
 var CallbackEventTypes = map[string]string{
 	"account_subscribe":    "public_account",
 	"account_unsubscribe":  "public_account",
+	"account_message":      "public_account",
 	"staff_info":           "staff",
 	"staff_modify":         "staff",
 	"staff_create":         "staff",

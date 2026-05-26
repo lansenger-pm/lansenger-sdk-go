@@ -89,24 +89,28 @@ func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken strin
 		WithQueryParam("base_version", baseVersion),
 	)
 
-	body := map[string]interface{}{}
+	params := map[string]string{}
 	if staffID != "" {
-		body["staffId"] = staffID
+		params["staffId"] = staffID
 	}
 	if groupID != "" {
-		body["groupId"] = groupID
+		params["groupId"] = groupID
 	}
 	if startTime != "" {
-		body["startTime"] = startTime
+		params["startTime"] = startTime
 	}
 	if endTime != "" {
-		body["endTime"] = endTime
+		params["endTime"] = endTime
 	}
 	if senderID != "" {
-		body["senderId"] = senderID
+		params["senderId"] = senderID
 	}
 
-	result, err := c.doPost(ctx, url, body)
+	for k, v := range params {
+		url = url + "&" + k + "=" + v
+	}
+
+	result, err := c.doGet(ctx, url)
 	if err != nil {
 		return &ChatMessagesResult{Success: false, Error: err.Error()}, nil
 	}

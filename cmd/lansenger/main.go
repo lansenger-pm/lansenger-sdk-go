@@ -54,6 +54,12 @@ func getClient() *lansenger.LansengerClient {
 	if creds["passport_url"] != "" {
 		cfg.PassportURL = creds["passport_url"]
 	}
+	if creds["encoding_key"] != "" {
+		cfg.EncodingKey = creds["encoding_key"]
+	}
+	if creds["callback_token"] != "" {
+		cfg.CallbackToken = creds["callback_token"]
+	}
 	return lansenger.NewClientWithConfig(cfg)
 }
 
@@ -121,7 +127,9 @@ func snakeToGo(s string) string {
 	parts := strings.Split(s, "_")
 	result := ""
 	for _, p := range parts {
-		result += strings.Title(p)
+		if len(p) > 0 {
+			result += strings.ToUpper(p[:1]) + p[1:]
+		}
 	}
 	return result
 }
