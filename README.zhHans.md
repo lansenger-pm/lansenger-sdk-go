@@ -53,7 +53,8 @@ lansenger version
 
 CLI 通过 `~/.lansenger/sdk_state.json` 与 SDK 共享凭据。安装后配置凭据：
 ```bash
-lansenger config set --app-id YOUR_APP_ID --app-secret YOUR_APP_SECRET
+lansenger config set app_id YOUR_APP_ID
+lansenger config set app_secret YOUR_APP_SECRET
 ```
 
 ## 1. 认证
@@ -375,47 +376,97 @@ msgs, err := client.FetchChatMessages(ctx, "ut", 10, "", "", "g001", "", "", "")
 
 ## 配置
 
-### 环境变量
+### 凭证概览
 
-| 变量 | 必填 | 描述 | 默认值 |
+所有凭证按 profile 持久化存储在 `~/.lansenger/sdk_state.json`（0600 权限）：
+
+| 凭证 | 必填 | CLI 键名 | 说明 |
+|------|------|----------|------|
+| App ID | ✓ | `app_id` | 蓝信应用/机器人 ID |
+| App Secret | ✓ | `app_secret` | 蓝信应用/机器人密钥 |
+| API Gateway URL | ✓ | `api_gateway_url` | API 网关地址（默认：`https://open.e.lanxin.cn/open/apigw`） |
+| Passport URL | 仅 OAuth2 | `passport_url` | OAuth2 授权页地址 |
+| Encoding Key | 仅回调 | `encoding_key` | AES-256-CBC 解密密钥 |
+| Callback Token | 仅回调 | `callback_token` | 回调签名验证令牌 |
+
+### CLI 配置
+
+```bash
+# 第1步：设置必填凭证
+lansenger config set app_id YOUR_APP_ID
+lansenger config set app_secret YOUR_APP_SECRET
+lansenger config set api_gateway_url https://open.e.lanxin.cn/open/apigw
+
+# 第2步（可选）：设置 OAuth2 授权页地址（获取 userToken 需要）
+lansenger config set passport_url https://passport.lx.qianxin.com
+
+# 第3步（可选）：设置回调凭证（接收 Webhook 回调需要）
+lansenger config set encoding_key YOUR_ENCODING_KEY
+lansenger config set callback_token YOUR_CALLBACK_TOKEN
+
+# 验证配置
+lansenger config show
+
+# 多 profile 支持（如不同组织/应用）
+lansenger config set app_id APP2_ID --profile org2
+lansenger config set app_secret APP2_SECRET --profile org2
+lansenger --profile org2 staff basic-info STAFF_ID
+```
+
+### SDK 配置
+
+**代码方式**（直接传入）：
+```go
+client := lansenger.NewClient("app_id", "app_secret")
+// 如需自定义网关地址
+cfg := lansenger.NewConfig("app_id", "app_secret")
+cfg.APIGatewayURL = "https://custom-gateway.example.com"
+cfg.PassportURL = "https://passport.example.com"
+cfg.EncodingKey = "your_encoding_key"
+cfg.CallbackToken = "your_callback_token"
+client := lansenger.NewClientWithConfig(cfg)
+```
+
+**环境变量方式**（自动检测）：
+
+| 变量 | 必填 | 说明 | 默认值 |
 |------|------|------|--------|
 | `LANSENGER_APP_ID` | ✓ | 应用/机器人 ID | — |
 | `LANSENGER_APP_SECRET` | ✓ | 应用/机器人密钥 | — |
-| `LANSENGER_API_GATEWAY_URL` | ✗ | API 网关 URL | `https://open.e.lanxin.cn/open/apigw` |
-| `LANSENGER_PASSPORT_URL` | ✗ | 通行证 URL（用于 OAuth2） | — |
-| `LANSENGER_ENCODING_KEY` | ✗ | 回调解密编码密钥 | — |
-| `LANSENGER_CALLBACK_TOKEN` | ✗ | 回调令牌（默认使用 encoding_key） | — |
+| `LANSENGER_API_GATEWAY_URL` | ✗ | API 网关地址 | `https://open.e.lanxin.cn/open/apigw` |
+| `LANSENGER_PASSPORT_URL` | ✗ | 授权页地址（OAuth2） | — |
+| `LANSENGER_ENCODING_KEY` | ✗ | 回调解密密钥 | — |
+| `LANSENGER_CALLBACK_TOKEN` | ✗ | 回调验证令牌（默认同 encoding_key） | — |
 | `LANSENGER_HTTP_TIMEOUT` | ✗ | HTTP 超时（秒） | `30` |
-
-### 从环境变量创建
 
 ```go
 client, err := lansenger.NewClientFromEnv()
 ```
 
-### 凭据与令牌持久化
+### 凭证与令牌持久化
 
-默认情况下，凭据和令牌仅保存在内存中（进程退出后丢失）。使用 `CredentialStore` 启用文件持久化：
+默认情况下，凭证和令牌仅在内存中保留（进程退出后丢失）。使用 `CredentialStore` 启用文件持久化：
 
 ```go
 // 自动持久化到 ~/.lansenger/sdk_state.json（0600 权限）
 store := lansenger.NewCredentialStore("", "default")
 store.SaveCredentials("app_id", "app_secret", "https://apigw.lx.qianxin.com", "https://passport.lx.qianxin.com")
+store.SaveCallbackConfig("encoding_key", "callback_token")
 
 // 保存令牌
 store.SaveAppToken("token123", 7200)
 store.SaveUserToken("ut123", "rt123", 7200)
 
-// 加载令牌（过期则返回空字符串）
+// 加载令牌（过期时返回空字符串）
 token, err := store.LoadAppToken()
 
-// 凭据与 Python SDK 共享（相同的 ~/.lansenger/sdk_state.json 格式）
+// 凭证与 Python SDK 共享（相同 ~/.lansenger/sdk_state.json 格式）
 ```
 
 启用持久化后：
-- **appToken** 可以在重启后保存和恢复（跳过冗余 API 调用）
-- **userToken + refreshToken** 可以在 OAuth2 交换后保存
-- **凭据 + URL** 一同保存，实现完整配置恢复
+- **appToken** 可在重启后保存与恢复（跳过冗余 API 请求）
+- **userToken + refreshToken** 可在 OAuth2 交换后保存
+- **凭证 + URL** 一并保存，完整恢复配置
 
 ## 项目结构
 

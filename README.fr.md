@@ -53,7 +53,8 @@ lansenger version
 
 Le CLI partage les identifiants avec le SDK via `~/.lansenger/sdk_state.json`. Après l'installation, configurez les identifiants :
 ```bash
-lansenger config set --app-id YOUR_APP_ID --app-secret YOUR_APP_SECRET
+lansenger config set app_id YOUR_APP_ID
+lansenger config set app_secret YOUR_APP_SECRET
 ```
 
 ## 1. Authentification
@@ -375,19 +376,68 @@ msgs, err := client.FetchChatMessages(ctx, "ut", 10, "", "", "g001", "", "", "")
 
 ## Configuration
 
-### Variables d'environnement
+### Vue d'ensemble des identifiants
+
+Tous les identifiants sont persistés par profil dans `~/.lansenger/sdk_state.json` (permissions 0600) :
+
+| Identifiant | Requis | Clé CLI | Description |
+|-------------|--------|---------|-------------|
+| App ID | ✓ | `app_id` | ID application/bot Lansenger |
+| App Secret | ✓ | `app_secret` | Secret application/bot Lansenger |
+| API Gateway URL | ✓ | `api_gateway_url` | Point d'accès API (défaut : `https://open.e.lanxin.cn/open/apigw`) |
+| Passport URL | OAuth2 uniquement | `passport_url` | URL page d'autorisation OAuth2 |
+| Encoding Key | Callbacks uniquement | `encoding_key` | Clé de déchiffrement AES-256-CBC |
+| Callback Token | Callbacks uniquement | `callback_token` | Token de vérification de signature callback |
+
+### Configuration CLI
+
+```bash
+# Étape 1 : Configurer les identifiants requis
+lansenger config set app_id YOUR_APP_ID
+lansenger config set app_secret YOUR_APP_SECRET
+lansenger config set api_gateway_url https://open.e.lanxin.cn/open/apigw
+
+# Étape 2 (optionnel) : URL Passport pour OAuth2 (nécessaire pour userToken)
+lansenger config set passport_url https://passport.lx.qianxin.com
+
+# Étape 3 (optionnel) : Identifiants callback (nécessaire pour Webhook)
+lansenger config set encoding_key YOUR_ENCODING_KEY
+lansenger config set callback_token YOUR_CALLBACK_TOKEN
+
+# Vérifier la configuration
+lansenger config show
+
+# Support multi-profil (ex. organisations/applications séparées)
+lansenger config set app_id APP2_ID --profile org2
+lansenger config set app_secret APP2_SECRET --profile org2
+lansenger --profile org2 staff basic-info STAFF_ID
+```
+
+### Configuration SDK
+
+**Depuis le code** (direct) :
+```go
+client := lansenger.NewClient("app_id", "app_secret")
+// URL gateway personnalisée si nécessaire
+cfg := lansenger.NewConfig("app_id", "app_secret")
+cfg.APIGatewayURL = "https://custom-gateway.example.com"
+cfg.PassportURL = "https://passport.example.com"
+cfg.EncodingKey = "your_encoding_key"
+cfg.CallbackToken = "your_callback_token"
+client := lansenger.NewClientWithConfig(cfg)
+```
+
+**Depuis l'environnement** (auto-détection) :
 
 | Variable | Requis | Description | Défaut |
-|----------|----------|-------------|---------|
-| `LANSENGER_APP_ID` | ✓ | ID Application/Bot | — |
-| `LANSENGER_APP_SECRET` | ✓ | Secret Application/Bot | — |
+|----------|--------|-------------|--------|
+| `LANSENGER_APP_ID` | ✓ | ID App/Bot | — |
+| `LANSENGER_APP_SECRET` | ✓ | Secret App/Bot | — |
 | `LANSENGER_API_GATEWAY_URL` | ✗ | URL Gateway API | `https://open.e.lanxin.cn/open/apigw` |
-| `LANSENGER_PASSPORT_URL` | ✗ | URL Passeport (pour OAuth2) | — |
-| `LANSENGER_ENCODING_KEY` | ✗ | Clé d'encodage pour déchiffrement de callback | — |
-| `LANSENGER_CALLBACK_TOKEN` | ✗ | Token de callback (défaut : encoding_key) | — |
+| `LANSENGER_PASSPORT_URL` | ✗ | URL Passport (OAuth2) | — |
+| `LANSENGER_ENCODING_KEY` | ✗ | Clé de déchiffrement callback | — |
+| `LANSENGER_CALLBACK_TOKEN` | ✗ | Token callback (défaut = encoding_key) | — |
 | `LANSENGER_HTTP_TIMEOUT` | ✗ | Timeout HTTP (secondes) | `30` |
-
-### Depuis l'environnement
 
 ```go
 client, err := lansenger.NewClientFromEnv()
@@ -395,25 +445,26 @@ client, err := lansenger.NewClientFromEnv()
 
 ### Persistance des identifiants et tokens
 
-Par défaut, les identifiants et tokens restent uniquement en mémoire (perdus à la fin du processus). Activez la persistance dans un fichier avec `CredentialStore` :
+Par défaut, les identifiants et tokens restent uniquement en mémoire (perdus à la fin du processus). Activez la persistance fichier avec `CredentialStore` :
 
 ```go
-// Persistance automatique vers ~/.lansenger/sdk_state.json (permissions 0600)
+// Auto-persist vers ~/.lansenger/sdk_state.json (permissions 0600)
 store := lansenger.NewCredentialStore("", "default")
 store.SaveCredentials("app_id", "app_secret", "https://apigw.lx.qianxin.com", "https://passport.lx.qianxin.com")
+store.SaveCallbackConfig("encoding_key", "callback_token")
 
 // Sauvegarder les tokens
 store.SaveAppToken("token123", 7200)
 store.SaveUserToken("ut123", "rt123", 7200)
 
-// Charger les tokens (retourne une chaîne vide si expiré)
+// Charger les tokens (retourne chaîne vide si expiré)
 token, err := store.LoadAppToken()
 
-// Les identifiants sont partagés avec le SDK Python (même format ~/.lansenger/sdk_state.json)
+// Identifiants partagés avec le SDK Python (même format ~/.lansenger/sdk_state.json)
 ```
 
 Avec la persistance activée :
-- **appToken** peut être sauvegardé et restauré après redémarrage (évite les appels API redondants)
+- **appToken** peut être sauvegardé et restauré au redémarrage (évite les appels API redondants)
 - **userToken + refreshToken** peuvent être sauvegardés après l'échange OAuth2
 - **Identifiants + URLs** sont sauvegardés ensemble pour une récupération complète de la configuration
 
