@@ -45,14 +45,14 @@ var callbackEventTypesCmd = &cobra.Command{
 }
 
 var (
-	callbackEncodingKey string
+	callbackEncodingKey   string
 	callbackCallbackToken string
-	callbackKnownAppID  string
-	callbackVerifySig   bool
-	callbackTimestamp   string
-	callbackNonce       string
-	callbackSignature   string
-	callbackDataEncrypt string
+	callbackKnownAppID    string
+	callbackVerifySig     bool
+	callbackTimestamp     string
+	callbackNonce         string
+	callbackSignature     string
+	callbackDataEncrypt   string
 )
 
 func init() {
@@ -67,12 +67,6 @@ func init() {
 
 	callbackDecryptCmd.Flags().StringVar(&callbackEncodingKey, "encoding-key", "", "Encoding key for decryption")
 	callbackDecryptCmd.Flags().StringVar(&callbackKnownAppID, "known-app-id", "", "Known app ID for org/app splitting")
-	callbackDecryptCmd.Flags().BoolVar(&callbackVerifySig, "verify-sig", false, "Verify signature before decryption")
-	callbackDecryptCmd.Flags().StringVar(&callbackCallbackToken, "callback-token", "", "Callback token (defaults to encoding-key)")
-	callbackDecryptCmd.Flags().StringVar(&callbackTimestamp, "timestamp", "", "Timestamp for signature verification")
-	callbackDecryptCmd.Flags().StringVar(&callbackNonce, "nonce", "", "Nonce for signature verification")
-	callbackDecryptCmd.Flags().StringVar(&callbackSignature, "signature", "", "Signature for verification")
-	callbackDecryptCmd.Flags().StringVar(&callbackDataEncrypt, "data-encrypt", "", "dataEncrypt value for signature verification")
 
 	callbackVerifySignatureCmd.Flags().StringVar(&callbackEncodingKey, "encoding-key", "", "Encoding key (required)")
 	callbackVerifySignatureCmd.Flags().StringVar(&callbackDataEncrypt, "data-encrypt", "", "dataEncrypt value")
@@ -177,20 +171,6 @@ func runCallbackDecrypt(cmd *cobra.Command, args []string) {
 	if encKey == "" {
 		fmt.Fprintf(os.Stderr, "Error: encoding-key required for decryption. Use --encoding-key or set encoding_key in config.\n")
 		os.Exit(1)
-	}
-
-	if callbackVerifySig && callbackTimestamp != "" && callbackSignature != "" {
-		sigDataEncrypt := callbackDataEncrypt
-		if sigDataEncrypt == "" {
-			sigDataEncrypt = args[0]
-		}
-		token := resolveCallbackToken()
-		valid := lansenger.VerifyCallbackSignature(callbackTimestamp, callbackNonce, callbackSignature, encKey, sigDataEncrypt, token)
-		if !valid {
-			fmt.Fprintf(os.Stderr, "Error: callback signature verification failed\n")
-			os.Exit(1)
-		}
-		fmt.Printf("Signature valid: true\n\n")
 	}
 
 	result, err := lansenger.DecryptCallbackPayload(args[0], encKey, callbackKnownAppID)

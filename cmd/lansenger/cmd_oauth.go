@@ -66,7 +66,7 @@ var (
 )
 
 func init() {
-	oauthAuthorizeURLCmd.Flags().StringVarP(&oauthAuthorizeScope, "scope", "s", "", "OAuth2 scope")
+	oauthAuthorizeURLCmd.Flags().StringVarP(&oauthAuthorizeScope, "scope", "s", "basic_userinfor", "OAuth2 scope")
 	oauthAuthorizeURLCmd.Flags().StringVar(&oauthAuthorizeState, "state", "", "State parameter")
 
 	oauthExchangeCodeCmd.Flags().StringVar(&oauthExchangeRedirectURI, "redirect-uri", "", "Redirect URI")

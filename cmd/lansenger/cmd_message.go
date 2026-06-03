@@ -240,7 +240,7 @@ var (
 
 func init() {
 	sendTextCmd.Flags().StringVarP(&sendTextFile, "file", "f", "", "File path to attach")
-	sendTextCmd.Flags().IntVar(&sendTextMediaType, "media-type", 0, "Media type: 1=video, 2=image, 3=file, 4=audio")
+	sendTextCmd.Flags().IntVarP(&sendTextMediaType, "media-type", "t", 0, "Media type: 1=video, 2=image, 3=file, 4=audio")
 	sendTextCmd.Flags().StringVar(&sendTextCoverImage, "cover-image", "", "Cover image path (required for video)")
 	sendTextCmd.Flags().BoolVarP(&sendTextIsGroup, "group", "g", false, "Send as group message")
 	sendTextCmd.Flags().BoolVar(&sendTextReminderAll, "mention-all", false, "@all in group")
@@ -315,8 +315,8 @@ func init() {
 	updateDynamicCardCmd.Flags().StringVar(&updateDynamicCardStatusColour, "status-colour", "", "New status DOT colour (hex)")
 	updateDynamicCardCmd.Flags().StringArrayVar(&updateDynamicCardLinks, "link", nil, "Updated link as JSON title=url")
 
-	sendReminderCmd.Flags().IntSliceVar(&sendReminderTypes, "type", nil, "Reminder types (e.g. 1=app, 2=sms)")
-	sendReminderCmd.Flags().StringArrayVar(&sendReminderUserIDs, "user-id", nil, "User IDs to remind")
+	sendReminderCmd.Flags().IntSliceVarP(&sendReminderTypes, "type", "t", nil, "Reminder types (1=app, 2=sms)")
+	sendReminderCmd.Flags().StringArrayVarP(&sendReminderUserIDs, "user", "u", nil, "User IDs (staff openIds) to remind")
 
 	revokeCmd.Flags().StringVar(&revokeChatType, "chat-type", "bot", "staff, group, notification, account, or bot")
 	revokeCmd.Flags().StringVar(&revokeSenderID, "sender-id", "", "Sender staff ID (required for staff/group)")

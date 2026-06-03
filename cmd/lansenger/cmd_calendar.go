@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -27,6 +25,13 @@ var calendarCreateScheduleCmd = &cobra.Command{
 	Run:   runCalendarCreateSchedule,
 }
 
+var calendarListSchedulesCmd = &cobra.Command{
+	Use:   "list-schedules CALENDAR_ID START_TIME END_TIME",
+	Short: "List schedules in a time range",
+	Args:  cobra.ExactArgs(3),
+	Run:   runCalendarListSchedules,
+}
+
 var calendarFetchScheduleCmd = &cobra.Command{
 	Use:   "fetch-schedule CALENDAR_ID SCHEDULE_ID",
 	Short: "Fetch schedule info",
@@ -39,13 +44,6 @@ var calendarDeleteScheduleCmd = &cobra.Command{
 	Short: "Delete a schedule",
 	Args:  cobra.ExactArgs(2),
 	Run:   runCalendarDeleteSchedule,
-}
-
-var calendarListSchedulesCmd = &cobra.Command{
-	Use:   "list-schedules CALENDAR_ID START_TIME END_TIME",
-	Short: "List schedules in a time range",
-	Args:  cobra.ExactArgs(3),
-	Run:   runCalendarListSchedules,
 }
 
 var calendarAttendeesCmd = &cobra.Command{
@@ -93,11 +91,11 @@ var (
 	calCreateReminderType      string
 	calCreateAttendeePerms     string
 	calCreateExpireDateType    string
-	calCreateRule               string
-	calCreateTz                 string
-	calCreateDate               string
-	calCreateUserToken          string
-	calCreateUserID             string
+	calCreateRule              string
+	calCreateTz                string
+	calCreateDate              string
+	calCreateUserToken         string
+	calCreateUserID            string
 
 	calFetchUserToken string
 	calFetchUserID    string
@@ -121,13 +119,28 @@ var (
 	calDelAttendeesUserToken    string
 	calDelAttendeesUserID       string
 
-	calUpdateScheduleParamsJSON string
-	calUpdateScheduleUserToken  string
-	calUpdateScheduleUserID     string
+	calUpdateSummary       string
+	calUpdateDesc          string
+	calUpdateOp            string
+	calUpdateCurrentTime   int
+	calUpdateReminder      string
+	calUpdateRepeat        string
+	calUpdateRule          string
+	calUpdateExpire        string
+	calUpdateAllDay        string
+	calUpdatePermissions   string
+	calUpdateStartTime     string
+	calUpdateEndTime       string
+	calUpdateScheduleUserToken string
+	calUpdateScheduleUserID    string
 
-	calAttendeeMetaParamsJSON string
-	calAttendeeMetaUserToken  string
-	calAttendeeMetaUserID     string
+	calAttendeeMetaRsvp        string
+	calAttendeeMetaColor       string
+	calAttendeeMetaPermissions string
+	calAttendeeMetaBusyFree    string
+	calAttendeeMetaRemindTimes string
+	calAttendeeMetaUserToken   string
+	calAttendeeMetaUserID      string
 )
 
 func init() {
@@ -135,13 +148,13 @@ func init() {
 	calendarPrimaryCmd.Flags().StringVar(&calPrimaryUserID, "user-id", "", "User ID")
 
 	calendarCreateScheduleCmd.Flags().StringVarP(&calCreateDesc, "desc", "d", "", "Schedule description")
-	calendarCreateScheduleCmd.Flags().StringVar(&calCreateAllDay, "all-day", "", "All-day event (yes/no)")
-	calendarCreateScheduleCmd.Flags().StringVar(&calCreateRepeatType, "repeat", "", "Repeat type: no/daily/weekly/monthly/yearly/work_day/custom")
-	calendarCreateScheduleCmd.Flags().StringVar(&calCreateReminderType, "reminder", "", "Reminder type (yes/no)")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateAllDay, "all-day", "no", "All-day event (yes/no)")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateRepeatType, "repeat", "no", "Repeat type: no/daily/weekly/monthly/yearly/work_day/custom")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateReminderType, "reminder", "yes", "Reminder type (yes/no)")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateAttendeePerms, "attendee-perms", "", "Attendee permissions")
-	calendarCreateScheduleCmd.Flags().StringVar(&calCreateExpireDateType, "expire-date-type", "", "Expire date type")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateExpireDateType, "expire", "", "Expire date type: yes or no")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateRule, "rule", "", "Repeat rule (JSON)")
-	calendarCreateScheduleCmd.Flags().StringVar(&calCreateTz, "tz", "", "Time zone (e.g. Asia/Shanghai)")
+	calendarCreateScheduleCmd.Flags().StringVar(&calCreateTz, "tz", "Asia/Shanghai", "Time zone")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateDate, "date", "", "Date (for all-day events)")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateUserToken, "user-token", "", "User token")
 	calendarCreateScheduleCmd.Flags().StringVar(&calCreateUserID, "user-id", "", "User ID")
@@ -168,11 +181,26 @@ func init() {
 	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesUserToken, "user-token", "", "User token")
 	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesUserID, "user-id", "", "User ID")
 
-	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleParamsJSON, "params", "{}", "Update fields as JSON object")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateSummary, "summary", "", "New schedule summary")
+	calendarUpdateScheduleCmd.Flags().StringVarP(&calUpdateDesc, "desc", "d", "", "New description")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateOp, "op", "modify_all", "Operation type: modify_all, modify_current, modify_current_after")
+	calendarUpdateScheduleCmd.Flags().IntVar(&calUpdateCurrentTime, "current-time", 0, "Required when op != modify_all")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateReminder, "reminder", "", "Reminder type: yes or no")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateRepeat, "repeat", "", "Repeat type: no/daily/weekly/monthly/yearly/work_day/custom")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateRule, "rule", "", "RFC 5545 repeat rule")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateExpire, "expire", "", "Expire date type: yes or no")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateAllDay, "all-day", "", "All day: yes or no")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdatePermissions, "permissions", "", "Attendee permissions")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateStartTime, "start-time", "", "Start time as JSON dict")
+	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateEndTime, "end-time", "", "End time as JSON dict")
 	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleUserToken, "user-token", "", "User token")
 	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateScheduleUserID, "user-id", "", "User ID")
 
-	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaParamsJSON, "params", "{}", "Attendee meta fields as JSON object")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaRsvp, "rsvp", "", "RSVP status: accept, tentative, decline")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaColor, "color", "", "Hex color (e.g. #FF347AFC)")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaPermissions, "permissions", "", "Visibility: private, public, default")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaBusyFree, "busy-free", "", "Busy/free state: busy, free")
+	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaRemindTimes, "remind-times", "", "Reminder offsets in minutes as JSON list")
 	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaUserToken, "user-token", "", "User token")
 	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaUserID, "user-id", "", "User ID")
 
@@ -205,18 +233,12 @@ func runCalendarCreateSchedule(cmd *cobra.Command, args []string) {
 	calendarID := args[0]
 	summary := args[1]
 
-	startTime := map[string]interface{}{"time": args[2]}
-	if calCreateTz != "" {
-		startTime["timeZone"] = calCreateTz
-	}
+	startTime := map[string]interface{}{"time": args[2], "timeZone": calCreateTz}
 	if calCreateDate != "" {
 		startTime["date"] = calCreateDate
 	}
 
-	endTime := map[string]interface{}{"time": args[3]}
-	if calCreateTz != "" {
-		endTime["timeZone"] = calCreateTz
-	}
+	endTime := map[string]interface{}{"time": args[3], "timeZone": calCreateTz}
 
 	attendeeMaps, err := parseJSONArray(args[4])
 	checkError(err)
@@ -306,12 +328,55 @@ func runCalendarUpdateSchedule(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	raw, err := parseJSONRaw(calUpdateScheduleParamsJSON)
-	checkError(err)
-	params, ok := raw.(map[string]interface{})
-	if !ok {
-		fmt.Fprintf(os.Stderr, "Error: params must be a JSON object\n")
-		return
+	params := map[string]interface{}{}
+
+	if calUpdateSummary != "" {
+		params["summary"] = calUpdateSummary
+	}
+	if calUpdateDesc != "" {
+		params["description"] = calUpdateDesc
+	}
+	if calUpdateOp != "" {
+		params["operationType"] = calUpdateOp
+	}
+	if calUpdateCurrentTime != 0 {
+		params["currentTime"] = calUpdateCurrentTime
+	}
+	if calUpdateReminder != "" {
+		params["reminderType"] = calUpdateReminder
+	}
+	if calUpdateRepeat != "" {
+		params["repeatType"] = calUpdateRepeat
+	}
+	if calUpdateRule != "" {
+		rule, rErr := parseJSONRaw(calUpdateRule)
+		checkError(rErr)
+		if m, ok := rule.(map[string]interface{}); ok {
+			params["rule"] = m
+		}
+	}
+	if calUpdateExpire != "" {
+		params["expireDateType"] = calUpdateExpire
+	}
+	if calUpdateAllDay != "" {
+		params["allDay"] = calUpdateAllDay
+	}
+	if calUpdatePermissions != "" {
+		params["attendeePermissions"] = calUpdatePermissions
+	}
+	if calUpdateStartTime != "" {
+		st, sErr := parseJSONRaw(calUpdateStartTime)
+		checkError(sErr)
+		if m, ok := st.(map[string]interface{}); ok {
+			params["startTime"] = m
+		}
+	}
+	if calUpdateEndTime != "" {
+		et, eErr := parseJSONRaw(calUpdateEndTime)
+		checkError(eErr)
+		if m, ok := et.(map[string]interface{}); ok {
+			params["endTime"] = m
+		}
 	}
 
 	result, err := client.UpdateSchedule(ctx, args[0], args[1], params, calUpdateScheduleUserToken, calUpdateScheduleUserID)
@@ -323,12 +388,24 @@ func runCalendarAttendeeMeta(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	raw, err := parseJSONRaw(calAttendeeMetaParamsJSON)
-	checkError(err)
-	params, ok := raw.(map[string]interface{})
-	if !ok {
-		fmt.Fprintf(os.Stderr, "Error: params must be a JSON object\n")
-		return
+	params := map[string]interface{}{}
+
+	if calAttendeeMetaRsvp != "" {
+		params["rsvpStatus"] = calAttendeeMetaRsvp
+	}
+	if calAttendeeMetaColor != "" {
+		params["color"] = calAttendeeMetaColor
+	}
+	if calAttendeeMetaPermissions != "" {
+		params["permissions"] = calAttendeeMetaPermissions
+	}
+	if calAttendeeMetaBusyFree != "" {
+		params["busyFreeState"] = calAttendeeMetaBusyFree
+	}
+	if calAttendeeMetaRemindTimes != "" {
+		rt, rtErr := parseJSONRaw(calAttendeeMetaRemindTimes)
+		checkError(rtErr)
+		params["remindTimes"] = rt
 	}
 
 	result, err := client.UpdateScheduleAttendeeMeta(ctx, args[0], args[1], params, calAttendeeMetaUserToken, calAttendeeMetaUserID)
