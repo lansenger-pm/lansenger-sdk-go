@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -38,17 +39,18 @@ type storeData struct {
 }
 
 type profileData struct {
-	AppID              string `json:"app_id"`
-	AppSecret          string `json:"app_secret"`
-	APIGatewayURL      string `json:"api_gateway_url"`
-	PassportURL        string `json:"passport_url"`
-	EncodingKey        string `json:"encoding_key"`
-	CallbackToken      string `json:"callback_token"`
-	AppToken           string `json:"app_token"`
-	TokenExpiresAt     int64  `json:"token_expires_at"`
-	UserToken          string `json:"user_token"`
-	RefreshToken       string `json:"refresh_token"`
-	UserTokenExpiresAt int64  `json:"user_token_expires_at"`
+	AppID                 string `json:"app_id"`
+	AppSecret             string `json:"app_secret"`
+	APIGatewayURL         string `json:"api_gateway_url"`
+	PassportURL           string `json:"passport_url"`
+	EncodingKey           string `json:"encoding_key"`
+	CallbackToken         string `json:"callback_token"`
+	AppToken              string `json:"app_token"`
+	TokenExpiresAt        int64  `json:"token_expires_at"`
+	UserToken             string `json:"user_token"`
+	RefreshToken          string `json:"refresh_token"`
+	UserTokenExpiresAt    int64  `json:"user_token_expires_at"`
+	RefreshTokenExpiresAt int64  `json:"refresh_token_expires_at"`
 }
 
 func (cs *CredentialStore) loadUnlocked() (*storeData, error) {
@@ -216,12 +218,14 @@ func (cs *CredentialStore) LoadUserToken() (map[string]string, error) {
 	}
 
 	return map[string]string{
-		"user_token":    profile.UserToken,
-		"refresh_token": profile.RefreshToken,
+		"user_token":          profile.UserToken,
+		"refresh_token":       profile.RefreshToken,
+		"user_token_expires_at": strconv.FormatInt(profile.UserTokenExpiresAt, 10),
+		"refresh_token_expires_at": strconv.FormatInt(profile.RefreshTokenExpiresAt, 10),
 	}, nil
 }
 
-func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expiresIn int) error {
+func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expiresIn int, refreshExpiresIn int) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
@@ -235,6 +239,9 @@ func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expires
 	profile.RefreshToken = refreshToken
 	if expiresIn > 0 {
 		profile.UserTokenExpiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second).Unix()
+	}
+	if refreshExpiresIn > 0 {
+		profile.RefreshTokenExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second).Unix()
 	}
 	sd.Profiles[cs.profile] = profile
 
@@ -376,6 +383,9 @@ func (cs *CredentialStore) migrateLegacyFormat() {
 			}
 			if v, ok := flat["user_token_expires_at"].(float64); ok {
 				profile.UserTokenExpiresAt = int64(v)
+			}
+			if v, ok := flat["refresh_token_expires_at"].(float64); ok {
+				profile.RefreshTokenExpiresAt = int64(v)
 			}
 
 			newSD := &storeData{

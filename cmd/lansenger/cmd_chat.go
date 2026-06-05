@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
+
+	lansenger "github.com/lansenger-pm/lansenger-sdk-go"
 
 	"github.com/spf13/cobra"
 )
@@ -35,14 +38,16 @@ var (
 	chatListEndTime   int64
 	chatListUserToken string
 
-	chatMsgStaffID   string
-	chatMsgGroupID   string
-	chatMsgPageSize  int
-	chatMsgVersion   string
-	chatMsgStartTime int64
-	chatMsgEndTime   int64
-	chatMsgSenderID  string
-	chatMsgUserToken string
+	chatMsgStaffID    string
+	chatMsgGroupID    string
+	chatMsgPageSize   int
+	chatMsgVersion    string
+	chatMsgStartTime  int64
+	chatMsgEndTime    int64
+	chatMsgSenderID   string
+	chatMsgUserToken  string
+	chatMsgSplitMonth bool
+	chatMsgProgress   bool
 )
 
 func init() {
@@ -60,6 +65,8 @@ func init() {
 	chatMessagesCmd.Flags().Int64Var(&chatMsgEndTime, "end", 0, "End time in microseconds")
 	chatMessagesCmd.Flags().StringVar(&chatMsgSenderID, "sender-id", "", "Filter by sender staffId")
 	chatMessagesCmd.Flags().StringVar(&chatMsgUserToken, "user-token", "", "User token")
+	chatMessagesCmd.Flags().BoolVar(&chatMsgSplitMonth, "split-month", false, "Auto-split query by month when time range exceeds 1 month")
+	chatMessagesCmd.Flags().BoolVar(&chatMsgProgress, "progress", false, "Show pagination progress")
 
 	chatCmd.AddCommand(chatListCmd)
 	chatCmd.AddCommand(chatMessagesCmd)
@@ -122,6 +129,11 @@ func runChatMessages(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
+	if chatMsgSplitMonth && chatMsgStartTime != 0 && chatMsgEndTime != 0 {
+		runChatMessagesSplitMonth(client, ctx)
+		return
+	}
+
 	startTimeStr := ""
 	if chatMsgStartTime != 0 {
 		startTimeStr = strconv.FormatInt(chatMsgStartTime, 10)
@@ -133,6 +145,10 @@ func runChatMessages(cmd *cobra.Command, args []string) {
 
 	result, err := client.FetchChatMessages(ctx, chatMsgUserToken, chatMsgPageSize, chatMsgVersion, chatMsgStaffID, chatMsgGroupID, startTimeStr, endTimeStr, chatMsgSenderID)
 	checkError(err)
+
+	if chatMsgProgress && !jsonOutput {
+		fmt.Printf("Fetched %d messages (has_more=%v, last_version=%s)\n", len(result.Messages), result.HasMore, result.LastVersion)
+	}
 
 	if jsonOutput {
 		outputJSON(result)
@@ -147,6 +163,107 @@ func runChatMessages(cmd *cobra.Command, args []string) {
 		fmt.Printf("  %-20s %-30s %s\n", "Time", "Sender", "Type")
 		fmt.Printf("  %-20s %-30s %s\n", strings.Repeat("─", 20), strings.Repeat("─", 30), strings.Repeat("─", 20))
 		for _, m := range result.Messages {
+			fmt.Printf("  %-20s %-30s %s\n", m.SendTime, m.Sender, m.MessageType)
+		}
+	}
+}
+
+func splitMonths(startUs, endUs int64) [][2]int64 {
+	startTime := time.Unix(startUs/1_000_000, (startUs%1_000_000)*1000)
+	if startUs == 0 {
+		startTime = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	var intervals [][2]int64
+	y := startTime.Year()
+	m := startTime.Month()
+	for {
+		monthStart := time.Date(y, m, 1, 0, 0, 0, 0, time.UTC)
+		nextMonth := m + 1
+		nextY := y
+		if nextMonth > 12 {
+			nextMonth = 1
+			nextY++
+		}
+		monthEndLastDay := time.Date(nextY, nextMonth, 1, 0, 0, 0, 0, time.UTC).Add(-time.Second)
+
+		msUs := monthStart.Unix() * 1_000_000
+		meUs := monthEndLastDay.Unix() * 1_000_000
+
+		if msUs > endUs {
+			break
+		}
+		if meUs > endUs {
+			meUs = endUs
+		}
+		if msUs < startUs {
+			msUs = startUs
+		}
+
+		intervals = append(intervals, [2]int64{msUs, meUs})
+
+		y = nextY
+		m = nextMonth
+	}
+	return intervals
+}
+
+func runChatMessagesSplitMonth(client *lansenger.LansengerClient, ctx context.Context) {
+	intervals := splitMonths(chatMsgStartTime, chatMsgEndTime)
+
+	var allMessages []lansenger.ChatMessageInfo
+	totalPages := 0
+
+	for i, interval := range intervals {
+		monthNum := i + 1
+		startStr := strconv.FormatInt(interval[0], 10)
+		endStr := strconv.FormatInt(interval[1], 10)
+		cursor := "0"
+		monthMsgCount := 0
+		pages := 0
+
+		for {
+			result, err := client.FetchChatMessages(ctx, chatMsgUserToken, chatMsgPageSize, cursor, chatMsgStaffID, chatMsgGroupID, startStr, endStr, chatMsgSenderID)
+			checkError(err)
+
+			allMessages = append(allMessages, result.Messages...)
+			monthMsgCount += len(result.Messages)
+			pages++
+
+			if chatMsgProgress && !jsonOutput {
+				fmt.Printf("Month %d/%d | Page %d | %d messages total\n", monthNum, len(intervals), pages, monthMsgCount)
+			}
+
+			if !result.HasMore {
+				break
+			}
+			cursor = result.LastVersion
+		}
+		totalPages += pages
+	}
+
+	if chatMsgProgress && !jsonOutput {
+		fmt.Printf("Done: %d pages, %d messages across %d months\n", totalPages, len(allMessages), len(intervals))
+	}
+
+	if jsonOutput {
+		outputJSON(map[string]interface{}{
+			"success":     true,
+			"messages":    allMessages,
+			"total":       len(allMessages),
+			"months":      len(intervals),
+			"pages":       totalPages,
+		})
+		return
+	}
+
+	fmt.Printf("Total: %d messages across %d months (%d pages)\n", len(allMessages), len(intervals), totalPages)
+	if allMessages != nil {
+		fmt.Println()
+		fmt.Println("Messages:")
+		fmt.Printf("  %-20s %-30s %s\n", "Time", "Sender", "Type")
+		fmt.Printf("  %-20s %-30s %s\n", strings.Repeat("─", 20), strings.Repeat("─", 30), strings.Repeat("─", 20))
+		for _, m := range allMessages {
 			fmt.Printf("  %-20s %-30s %s\n", m.SendTime, m.Sender, m.MessageType)
 		}
 	}

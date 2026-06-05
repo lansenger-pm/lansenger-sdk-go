@@ -86,6 +86,10 @@ func runOAuthAuthorizeURL(cmd *cobra.Command, args []string) {
 	client := getClient()
 
 	url := client.BuildAuthorizeURL(args[0], oauthAuthorizeScope, oauthAuthorizeState)
+	if jsonOutput {
+		outputJSON(map[string]string{"authorize_url": url})
+		return
+	}
 	fmt.Println(url)
 }
 
@@ -95,6 +99,10 @@ func runOAuthExchangeCode(cmd *cobra.Command, args []string) {
 
 	result, err := client.ExchangeCode(ctx, args[0], oauthExchangeRedirectURI)
 	checkError(err)
+
+	store := getStore()
+	store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn)
+
 	outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope", "state"})
 }
 
@@ -124,6 +132,10 @@ func runOAuthParseCallback(cmd *cobra.Command, args []string) {
 
 func runOAuthValidateState(cmd *cobra.Command, args []string) {
 	valid := lansenger.ValidateCallbackState(args[0], args[1])
+	if jsonOutput {
+		outputJSON(map[string]bool{"valid": valid})
+		return
+	}
 	if valid {
 		fmt.Println("valid")
 	} else {

@@ -549,6 +549,21 @@ type ChatMessageInfo struct {
 	Content     map[string]interface{}
 }
 
+func (m *ChatMessageInfo) PlainText() string {
+	if m.Content == nil {
+		return ""
+	}
+	if text, ok := m.Content["text"].(string); ok && text != "" {
+		return text
+	}
+	if ft, ok := m.Content["formatText"].(map[string]interface{}); ok {
+		if content, ok := ft["content"].(string); ok {
+			return content
+		}
+	}
+	return ""
+}
+
 type ChatMessagesResult struct {
 	Success     bool
 	HasMore     bool

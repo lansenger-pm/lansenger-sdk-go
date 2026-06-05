@@ -98,7 +98,7 @@ func TestCredentialStoreUserToken(t *testing.T) {
 	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
 
 	store.SaveCredentials("app1", "secret1", "", "")
-	store.SaveUserToken("utok1", "rtok1", 7200)
+	store.SaveUserToken("utok1", "rtok1", 7200, 2592000)
 
 	tokens, err := store.LoadUserToken()
 	if err != nil {
