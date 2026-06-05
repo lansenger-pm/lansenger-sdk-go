@@ -129,7 +129,7 @@ func runChatMessages(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	if chatMsgSplitMonth && chatMsgStartTime != 0 && chatMsgEndTime != 0 {
+	if chatMsgSplitMonth {
 		runChatMessagesSplitMonth(client, ctx)
 		return
 	}
@@ -145,10 +145,6 @@ func runChatMessages(cmd *cobra.Command, args []string) {
 
 	result, err := client.FetchChatMessages(ctx, chatMsgUserToken, chatMsgPageSize, chatMsgVersion, chatMsgStaffID, chatMsgGroupID, startTimeStr, endTimeStr, chatMsgSenderID)
 	checkError(err)
-
-	if chatMsgProgress && !jsonOutput {
-		fmt.Printf("Fetched %d messages (has_more=%v, last_version=%s)\n", len(result.Messages), result.HasMore, result.LastVersion)
-	}
 
 	if jsonOutput {
 		outputJSON(result)
@@ -247,13 +243,7 @@ func runChatMessagesSplitMonth(client *lansenger.LansengerClient, ctx context.Co
 	}
 
 	if jsonOutput {
-		outputJSON(map[string]interface{}{
-			"success":     true,
-			"messages":    allMessages,
-			"total":       len(allMessages),
-			"months":      len(intervals),
-			"pages":       totalPages,
-		})
+		outputJSON(allMessages)
 		return
 	}
 

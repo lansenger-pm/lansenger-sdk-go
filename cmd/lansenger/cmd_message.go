@@ -240,22 +240,8 @@ var (
 
 func init() {
 	sendTextCmd.Flags().StringVarP(&sendTextFile, "file", "f", "", "File path to attach")
-	sendTextCmd.Flags().IntVarP(&sendTextMediaType, "media-type", "t", 0, "Media type: 1=video, 2=image, 3=file, 4=audio")
-	sendTextCmd.Flags().StringVar(&sendTextCoverImage, "cover-image", "", "Cover image path (required for video)")
-	sendTextCmd.Flags().BoolVarP(&sendTextIsGroup, "group", "g", false, "Send as group message")
-	sendTextCmd.Flags().BoolVar(&sendTextReminderAll, "mention-all", false, "@all in group")
-	sendTextCmd.Flags().StringArrayVar(&sendTextReminderUserIDs, "mention", nil, "User IDs to @mention")
-	sendTextCmd.Flags().StringVar(&sendTextUserToken, "user-token", "", "User token for private channel")
-	sendTextCmd.Flags().StringVar(&sendTextSenderID, "sender-id", "", "Sender staff ID for group message")
-
-	sendMarkdownCmd.Flags().BoolVarP(&sendMarkdownIsGroup, "group", "g", false, "Send as group message")
-	sendMarkdownCmd.Flags().BoolVar(&sendMarkdownReminderAll, "mention-all", false, "@all in group")
-	sendMarkdownCmd.Flags().StringArrayVar(&sendMarkdownReminderUserIDs, "mention", nil, "User IDs to @mention")
-	sendMarkdownCmd.Flags().StringVar(&sendMarkdownUserToken, "user-token", "", "User token for private channel")
-	sendMarkdownCmd.Flags().StringVar(&sendMarkdownSenderID, "sender-id", "", "Sender staff ID for group message")
-
-	sendFileCmd.Flags().StringVarP(&sendFileContent, "content", "c", "", "Content/caption text")
-	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=file, 4=audio")
+sendTextCmd.Flags().IntVarP(&sendTextMediaType, "media-type", "t", 0, "1=video, 2=image, 3=file")
+	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=file")
 	sendFileCmd.Flags().StringVar(&sendFileCoverImage, "cover-image", "", "Cover image path (required for video)")
 	sendFileCmd.Flags().BoolVarP(&sendFileIsGroup, "group", "g", false, "Send as group message")
 	sendFileCmd.Flags().StringVar(&sendFileUserToken, "user-token", "", "User token for private channel")
