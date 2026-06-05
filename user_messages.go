@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (c *LansengerClient) SendUserMessage(ctx context.Context, receiverID, msgType string, msgData map[string]interface{}, userToken, uuid string) (*UserMessageResult, error) {
+func (c *LansengerClient) SendUserMessage(ctx context.Context, receiverID, msgType string, msgData map[string]interface{}, common map[string]interface{}, userToken, uuid string) (*UserMessageResult, error) {
 	if userToken == "" {
 		return nil, fmt.Errorf("userToken is required for send_user_message")
 	}
@@ -23,6 +23,9 @@ func (c *LansengerClient) SendUserMessage(ctx context.Context, receiverID, msgTy
 		"receiverId": receiverID,
 		"msgType":    msgType,
 		"msgData":    msgData,
+	}
+	if common != nil {
+		body["common"] = common
 	}
 	if uuid != "" {
 		body["uuid"] = uuid

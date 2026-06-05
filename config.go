@@ -20,6 +20,7 @@ func NewConfig(appID, appSecret string) *Config {
 		AppID:         appID,
 		AppSecret:     appSecret,
 		APIGatewayURL: DefaultAPIGatewayURL,
+		PassportURL:   DefaultPassportURL,
 		HTTPTimeout:   30.0,
 	}
 }

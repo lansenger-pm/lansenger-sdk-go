@@ -35,8 +35,8 @@ func TestConfigIsConfigured(t *testing.T) {
 
 func TestConfigHasPassportURL(t *testing.T) {
 	cfg := NewConfig("app1", "secret1")
-	if cfg.HasPassportURL() {
-		t.Error("expected HasPassportURL=false with empty passport URL")
+	if !cfg.HasPassportURL() {
+		t.Error("expected HasPassportURL=true with default passport URL")
 	}
 
 	cfg.PassportURL = "https://passport.example.com"

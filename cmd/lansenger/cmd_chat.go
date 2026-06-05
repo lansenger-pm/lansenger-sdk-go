@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -205,6 +206,11 @@ func splitMonths(startUs, endUs int64) [][2]int64 {
 }
 
 func runChatMessagesSplitMonth(client *lansenger.LansengerClient, ctx context.Context) {
+	if chatMsgEndTime == 0 {
+		fmt.Fprintf(os.Stderr, "Error: --end is required when using --split-month\n")
+		os.Exit(1)
+	}
+
 	intervals := splitMonths(chatMsgStartTime, chatMsgEndTime)
 
 	var allMessages []lansenger.ChatMessageInfo

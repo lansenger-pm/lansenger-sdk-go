@@ -118,7 +118,19 @@ func runCallbackParsePayload(cmd *cobra.Command, args []string) {
 			}
 			token := resolveCallbackToken()
 			valid := lansenger.VerifyCallbackSignature(callbackTimestamp, callbackNonce, callbackSignature, encKey, sigDataEncrypt, token)
+			if jsonOutput {
+				outputJSON(map[string]interface{}{
+					"signature_valid": valid,
+					"result":          result,
+				})
+				return
+			}
 			fmt.Printf("Signature valid: %v\n\n", valid)
+		}
+
+		if jsonOutput {
+			outputJSON(result)
+			return
 		}
 
 		fmt.Printf("OrgID:  %s\n", result.OrgID)
@@ -151,6 +163,11 @@ func runCallbackParsePayload(cmd *cobra.Command, args []string) {
 
 	events, err := lansenger.ParseCallbackPayload(data)
 	checkError(err)
+
+	if jsonOutput {
+		outputJSON(events)
+		return
+	}
 
 	for i, event := range events {
 		fmt.Printf("Event %d:\n", i+1)

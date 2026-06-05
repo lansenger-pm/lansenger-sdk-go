@@ -222,6 +222,7 @@ var (
 	sendGroupMessageReminderUserIDs []string
 	sendGroupMessageOutlines       string
 	sendGroupMessageEntryID        string
+	sendGroupMessageUUID           string
 
 	sendAccountMessageChatIDs       []string
 	sendAccountMessageDepartmentIDs []string
@@ -240,7 +241,21 @@ var (
 
 func init() {
 	sendTextCmd.Flags().StringVarP(&sendTextFile, "file", "f", "", "File path to attach")
-sendTextCmd.Flags().IntVarP(&sendTextMediaType, "media-type", "t", 0, "1=video, 2=image, 3=file")
+	sendTextCmd.Flags().IntVarP(&sendTextMediaType, "media-type", "t", 0, "1=video, 2=image, 3=file")
+	sendTextCmd.Flags().StringVar(&sendTextCoverImage, "cover-image", "", "Cover image path (required for video)")
+	sendTextCmd.Flags().BoolVarP(&sendTextIsGroup, "group", "g", false, "Send as group message")
+	sendTextCmd.Flags().BoolVar(&sendTextReminderAll, "mention-all", false, "@all in group")
+	sendTextCmd.Flags().StringArrayVar(&sendTextReminderUserIDs, "mention", nil, "User IDs to @mention")
+	sendTextCmd.Flags().StringVar(&sendTextUserToken, "user-token", "", "User token for private channel")
+	sendTextCmd.Flags().StringVar(&sendTextSenderID, "sender-id", "", "Sender staff ID for group message")
+
+	sendMarkdownCmd.Flags().BoolVarP(&sendMarkdownIsGroup, "group", "g", false, "Send as group message")
+	sendMarkdownCmd.Flags().BoolVar(&sendMarkdownReminderAll, "mention-all", false, "@all in group")
+	sendMarkdownCmd.Flags().StringArrayVar(&sendMarkdownReminderUserIDs, "mention", nil, "User IDs to @mention")
+	sendMarkdownCmd.Flags().StringVar(&sendMarkdownUserToken, "user-token", "", "User token for private channel")
+	sendMarkdownCmd.Flags().StringVar(&sendMarkdownSenderID, "sender-id", "", "Sender staff ID for group message")
+
+	sendFileCmd.Flags().StringVarP(&sendFileContent, "content", "c", "", "Content/caption text")
 	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=file")
 	sendFileCmd.Flags().StringVar(&sendFileCoverImage, "cover-image", "", "Cover image path (required for video)")
 	sendFileCmd.Flags().BoolVarP(&sendFileIsGroup, "group", "g", false, "Send as group message")
@@ -319,6 +334,7 @@ sendTextCmd.Flags().IntVarP(&sendTextMediaType, "media-type", "t", 0, "1=video, 
 	sendGroupMessageCmd.Flags().StringArrayVar(&sendGroupMessageReminderUserIDs, "mention", nil, "User IDs to @mention (text/formatText only)")
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageOutlines, "outlines", "", "Group notification digest")
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageEntryID, "entry-id", "", "App entry selector")
+	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageUUID, "uuid", "", "Message UUID for deduplication")
 
 	sendAccountMessageCmd.Flags().StringArrayVar(&sendAccountMessageChatIDs, "chat-id", nil, "Chat IDs")
 	sendAccountMessageCmd.Flags().StringArrayVar(&sendAccountMessageDepartmentIDs, "dept", nil, "Department IDs")
@@ -632,7 +648,7 @@ func runSendGroupMessage(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	result, err := client.SendGroupMessage(ctx, args[0], args[1], msgDataMap, sendGroupMessageUserToken, sendGroupMessageSenderID, sendGroupMessageOutlines, "", sendGroupMessageEntryID)
+	result, err := client.SendGroupMessage(ctx, args[0], args[1], msgDataMap, sendGroupMessageUserToken, sendGroupMessageSenderID, sendGroupMessageOutlines, sendGroupMessageUUID, sendGroupMessageEntryID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id"})
 }
@@ -668,23 +684,17 @@ func runSendUserMessage(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var common interface{}
+	var commonMap map[string]interface{}
 	if sendUserMessageCommon != "" {
-		common, err = parseJSONRaw(sendUserMessageCommon)
-		checkError(err)
-	}
-
-	commonMap, _ := common.(map[string]interface{})
-
-	result, err := client.SendUserMessage(ctx, args[0], args[1], msgDataMap, sendUserMessageUserToken, sendUserMessageUUID)
-	checkError(err)
-
-	if commonMap != nil {
-		resMap := structToMap(result)
-		if resMap != nil {
-			resMap["common"] = commonMap
+		raw, cErr := parseJSONRaw(sendUserMessageCommon)
+		checkError(cErr)
+		if m, ok := raw.(map[string]interface{}); ok {
+			commonMap = m
 		}
 	}
+
+	result, err := client.SendUserMessage(ctx, args[0], args[1], msgDataMap, commonMap, sendUserMessageUserToken, sendUserMessageUUID)
+	checkError(err)
 
 	outputResultFields(result, []string{"message_id"})
 }

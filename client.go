@@ -198,8 +198,17 @@ func floatFromMap(m map[string]interface{}, key string) float64 {
 }
 
 func boolFromMap(m map[string]interface{}, key string) bool {
-	v, _ := m[key].(bool)
-	return v
+	v := m[key]
+	if b, ok := v.(bool); ok {
+		return b
+	}
+	if s, ok := v.(string); ok {
+		return s == "true" || s == "1"
+	}
+	if n, ok := v.(float64); ok {
+		return n != 0
+	}
+	return false
 }
 
 func mapFromMap(m map[string]interface{}, key string) map[string]interface{} {

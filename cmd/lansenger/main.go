@@ -32,6 +32,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.Version = lansenger.Version
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Output raw JSON instead of formatted tables")
 	rootCmd.PersistentFlags().StringVarP(&profileName, "profile", "P", "default", "Credential profile to use")
 	rootCmd.AddCommand(versionCmd)

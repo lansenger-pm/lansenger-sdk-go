@@ -42,7 +42,7 @@ func TestSendUserMessage(t *testing.T) {
 
 	c := newTestClient(server)
 	result, err := c.SendUserMessage(context.Background(), "r001", "text",
-		map[string]interface{}{"content": "hello"}, "utok1", "")
+		map[string]interface{}{"content": "hello"}, nil, "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -57,7 +57,7 @@ func TestSendUserMessage(t *testing.T) {
 func TestSendUserMessageNoToken(t *testing.T) {
 	c := NewClient("id", "secret")
 	_, err := c.SendUserMessage(context.Background(), "r001", "text",
-		map[string]interface{}{"content": "hello"}, "", "")
+		map[string]interface{}{"content": "hello"}, nil, "", "")
 	if err == nil {
 		t.Error("expected error for missing userToken")
 	}

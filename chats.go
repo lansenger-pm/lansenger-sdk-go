@@ -69,9 +69,18 @@ func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, c
 	if staffInfos, ok := data["staffIdInfos"].([]interface{}); ok {
 		for _, si := range staffInfos {
 			if m, ok := si.(map[string]interface{}); ok {
+				var sectors []string
+				if raw, ok := m["sectorNames"].([]interface{}); ok {
+					for _, v := range raw {
+						if s, ok := v.(string); ok {
+							sectors = append(sectors, s)
+						}
+					}
+				}
 				res.StaffInfos = append(res.StaffInfos, ChatStaffInfo{
-					StaffID:   strFromMap(m, "staffId"),
-					StaffName: strFromMap(m, "staffName"),
+					StaffID:     strFromMap(m, "staffId"),
+					StaffName:   strFromMap(m, "staffName"),
+					SectorNames: sectors,
 				})
 			}
 		}
@@ -150,6 +159,7 @@ func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken strin
 					SendTime:    strFromMap(m, "sendTime"),
 					Sender:      strFromMap(m, "sender"),
 					MessageType: strFromMap(m, "messageType"),
+					Content:     m,
 				})
 			}
 		}
