@@ -2,7 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"time"
 
 	lansenger "github.com/lansenger-pm/lansenger-sdk-go"
 
@@ -56,6 +62,13 @@ var oauthValidateStateCmd = &cobra.Command{
 	Run:   runOAuthValidateState,
 }
 
+var oauthLocalCallbackCmd = &cobra.Command{
+	Use:   "local-callback",
+	Short: "Start local HTTP server to capture OAuth2 callback",
+	Args:  cobra.NoArgs,
+	Run:   runOAuthLocalCallback,
+}
+
 var (
 	oauthAuthorizeScope string
 	oauthAuthorizeState string
@@ -63,6 +76,12 @@ var (
 	oauthExchangeRedirectURI string
 
 	oauthRefreshScope string
+
+	oauthLocalPort       int
+	oauthLocalScope      string
+	oauthLocalState      string
+	oauthLocalNoExchange bool
+	oauthLocalTimeout    int
 )
 
 func init() {
@@ -73,12 +92,19 @@ func init() {
 
 	oauthRefreshTokenCmd.Flags().StringVarP(&oauthRefreshScope, "scope", "s", "", "OAuth2 scope")
 
+	oauthLocalCallbackCmd.Flags().IntVarP(&oauthLocalPort, "port", "p", 8765, "Local HTTP server port")
+	oauthLocalCallbackCmd.Flags().StringVarP(&oauthLocalScope, "scope", "s", "basic_userinfor", "OAuth2 scope")
+	oauthLocalCallbackCmd.Flags().StringVar(&oauthLocalState, "state", "", "CSRF state (auto-generated if empty)")
+	oauthLocalCallbackCmd.Flags().BoolVar(&oauthLocalNoExchange, "no-exchange", false, "Skip auto-exchange code")
+	oauthLocalCallbackCmd.Flags().IntVarP(&oauthLocalTimeout, "timeout", "t", 120, "Max wait seconds")
+
 	oauthCmd.AddCommand(oauthAuthorizeURLCmd)
 	oauthCmd.AddCommand(oauthExchangeCodeCmd)
 	oauthCmd.AddCommand(oauthRefreshTokenCmd)
 	oauthCmd.AddCommand(oauthUserInfoCmd)
 	oauthCmd.AddCommand(oauthParseCallbackCmd)
 	oauthCmd.AddCommand(oauthValidateStateCmd)
+	oauthCmd.AddCommand(oauthLocalCallbackCmd)
 	rootCmd.AddCommand(oauthCmd)
 }
 
@@ -140,5 +166,121 @@ func runOAuthValidateState(cmd *cobra.Command, args []string) {
 		fmt.Println("valid")
 	} else {
 		fmt.Println("invalid")
+	}
+}
+
+type callbackResult struct {
+	code  string
+	state string
+	err   string
+}
+
+type oauthHandler struct {
+	result *callbackResult
+}
+
+func (h *oauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	parsed, _ := url.Parse(r.URL.RequestURI())
+	params := parsed.Query()
+
+	code := params.Get("code")
+	state := params.Get("state")
+	errVal := params.Get("error")
+
+	if errVal != "" {
+		h.result = &callbackResult{err: errVal}
+		w.WriteHeader(400)
+		w.Write([]byte("OAuth2 error: " + errVal))
+	} else if code != "" {
+		h.result = &callbackResult{code: code, state: state}
+		w.WriteHeader(200)
+		w.Write([]byte("Authorization successful. You can close this tab."))
+	} else {
+		h.result = &callbackResult{err: "missing_code"}
+		w.WriteHeader(400)
+		w.Write([]byte("Missing code parameter."))
+	}
+}
+
+func generateState() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+func runOAuthLocalCallback(cmd *cobra.Command, args []string) {
+	client := getClient()
+
+	state := oauthLocalState
+	if state == "" {
+		state = generateState()
+	}
+
+	redirectURI := fmt.Sprintf("http://localhost:%d", oauthLocalPort)
+	authURL := client.BuildAuthorizeURL(redirectURI, oauthLocalScope, state)
+
+	if jsonOutput {
+		outputJSON(map[string]string{
+			"authorize_url": authURL,
+			"redirect_uri":  redirectURI,
+			"state":         state,
+		})
+	} else {
+		fmt.Println("Authorize URL:")
+		fmt.Println(authURL)
+		fmt.Printf("\nWaiting for callback on port %d... (timeout: %ds)\n", oauthLocalPort, oauthLocalTimeout)
+		fmt.Println("Open the URL above in a browser, authorize, then wait.")
+	}
+
+	handler := &oauthHandler{}
+	server := &http.Server{
+		Addr:    fmt.Sprintf("localhost:%d", oauthLocalPort),
+		Handler: handler,
+	}
+
+	go server.ListenAndServe()
+
+	start := time.Now()
+	for handler.result == nil && time.Since(start) < time.Duration(oauthLocalTimeout)*time.Second {
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	server.Shutdown(context.Background())
+
+	if handler.result == nil {
+		fmt.Fprintf(os.Stderr, "Error: timeout — no callback received within %ds\n", oauthLocalTimeout)
+		os.Exit(1)
+	}
+
+	if handler.result.err != "" {
+		fmt.Fprintf(os.Stderr, "Error: OAuth2 error: %s\n", handler.result.err)
+		os.Exit(1)
+	}
+
+	code := handler.result.code
+	receivedState := handler.result.state
+
+	if jsonOutput && oauthLocalNoExchange {
+		outputJSON(map[string]string{"code": code, "state": receivedState})
+		return
+	}
+
+	if !jsonOutput {
+		fmt.Printf("Received code: %s\n", code)
+		fmt.Printf("Received state: %s\n", receivedState)
+	}
+
+	if !oauthLocalNoExchange {
+		ctx := context.Background()
+		result, err := client.ExchangeCode(ctx, code, redirectURI)
+		checkError(err)
+
+		store := getStore()
+		store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn)
+
+		outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope"})
+	} else if !jsonOutput {
+		fmt.Printf("Code: %s\n", code)
+		fmt.Printf("State: %s\n", receivedState)
 	}
 }

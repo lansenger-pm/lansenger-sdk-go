@@ -5,7 +5,7 @@
 Lansenger（藍信）平台的 Go SDK — 支援藍信應用、組織機械人和個人機械人。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.5.1](https://img.shields.io/badge/Version-0.5.1-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Version: 0.6.0](https://img.shields.io/badge/Version-0.6.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-blue)](https://go.dev/)
 [![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 

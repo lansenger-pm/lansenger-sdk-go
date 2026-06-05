@@ -11,9 +11,10 @@ import (
 )
 
 type LansengerClient struct {
-	config     *Config
-	httpClient *http.Client
-	tokenMgr   *TokenManager
+	config       *Config
+	httpClient   *http.Client
+	tokenMgr     *TokenManager
+	userTokenMgr *UserTokenManager
 }
 
 func NewClient(appID, appSecret string) *LansengerClient {
