@@ -2,6 +2,7 @@ package lansenger
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -38,6 +39,19 @@ func (utm *UserTokenManager) loadFromStore() {
 	}
 	utm.userToken = tokens["user_token"]
 	utm.refreshToken = tokens["refresh_token"]
+
+	if expStr := tokens["user_token_expires_at"]; expStr != "" {
+		exp, err := strconv.ParseInt(expStr, 10, 64)
+		if err == nil && exp > time.Now().Unix() {
+			utm.expiresAt = time.Unix(exp, 0)
+		}
+	}
+	if refExpStr := tokens["refresh_token_expires_at"]; refExpStr != "" {
+		refExp, err := strconv.ParseInt(refExpStr, 10, 64)
+		if err == nil && refExp > 0 {
+			utm.refreshExpiresAt = time.Unix(refExp, 0)
+		}
+	}
 
 	creds, err := utm.store.LoadCredentials()
 	if err != nil {
@@ -79,8 +93,10 @@ func (utm *UserTokenManager) refresh(ctx context.Context) (string, error) {
 	}
 
 	utm.userToken = result.UserToken
-	utm.refreshToken = result.RefreshToken
-	utm.expiresAt = time.Now().Add(time.Duration(result.ExpiresIn) * time.Second)
+	if result.RefreshToken != "" {
+		utm.refreshToken = result.RefreshToken
+	}
+	utm.expiresAt = time.Now().Add(time.Duration(result.ExpiresIn-UserTokenRefreshMargin) * time.Second)
 	utm.refreshExpiresAt = time.Now().Add(time.Duration(result.RefreshExpiresIn) * time.Second)
 	if result.StaffID != "" {
 		utm.staffID = result.StaffID
@@ -93,19 +109,22 @@ func (utm *UserTokenManager) refresh(ctx context.Context) (string, error) {
 	return utm.userToken, nil
 }
 
-func (utm *UserTokenManager) SetTokens(userToken, refreshToken string, expiresIn int, staffID string) {
+func (utm *UserTokenManager) SetTokens(userToken, refreshToken string, expiresIn int, staffID string, refreshExpiresIn int) {
 	utm.mu.Lock()
 	defer utm.mu.Unlock()
 
 	utm.userToken = userToken
 	utm.refreshToken = refreshToken
-	utm.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
+	utm.expiresAt = time.Now().Add(time.Duration(expiresIn-UserTokenRefreshMargin) * time.Second)
+	if refreshExpiresIn > 0 {
+		utm.refreshExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second)
+	}
 	if staffID != "" {
 		utm.staffID = staffID
 	}
 
 	if utm.store != nil {
-		utm.store.SaveUserToken(userToken, refreshToken, expiresIn, 0)
+		utm.store.SaveUserToken(userToken, refreshToken, expiresIn, refreshExpiresIn)
 	}
 }
 
@@ -128,6 +147,12 @@ func (utm *UserTokenManager) RefreshToken() string {
 	return utm.refreshToken
 }
 
+func (utm *UserTokenManager) RefreshTokenExpiry() time.Time {
+	utm.mu.Lock()
+	defer utm.mu.Unlock()
+	return utm.refreshExpiresAt
+}
+
 func (c *LansengerClient) GetUserToken(ctx context.Context) (string, error) {
 	if c.userTokenMgr == nil {
 		return "", NewAuthError("UserTokenManager not initialized — use SetUserTokens or exchange_code first")
@@ -135,9 +160,9 @@ func (c *LansengerClient) GetUserToken(ctx context.Context) (string, error) {
 	return c.userTokenMgr.GetToken(ctx)
 }
 
-func (c *LansengerClient) SetUserTokens(userToken, refreshToken string, expiresIn int, staffID string) {
+func (c *LansengerClient) SetUserTokens(userToken, refreshToken string, expiresIn int, staffID string, refreshExpiresIn int) {
 	if c.userTokenMgr == nil {
 		c.userTokenMgr = NewUserTokenManager(c, nil)
 	}
-	c.userTokenMgr.SetTokens(userToken, refreshToken, expiresIn, staffID)
+	c.userTokenMgr.SetTokens(userToken, refreshToken, expiresIn, staffID, refreshExpiresIn)
 }

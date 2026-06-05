@@ -238,7 +238,11 @@ func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expires
 	profile.UserToken = userToken
 	profile.RefreshToken = refreshToken
 	if expiresIn > 0 {
-		profile.UserTokenExpiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second).Unix()
+		margin := UserTokenRefreshMargin
+		if expiresIn < margin*2 {
+			margin = expiresIn / 2
+		}
+		profile.UserTokenExpiresAt = time.Now().Add(time.Duration(expiresIn-margin) * time.Second).Unix()
 	}
 	if refreshExpiresIn > 0 {
 		profile.RefreshTokenExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second).Unix()
