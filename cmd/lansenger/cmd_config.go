@@ -72,7 +72,10 @@ func resolveProfile(localFlag string) string {
 }
 
 func resolveStorePath() string {
-	store := lansenger.NewCredentialStore("", "")
+	store, err := lansenger.NewCredentialStore("", "")
+	if err != nil {
+		return ""
+	}
 	return store.Path()
 }
 
@@ -101,7 +104,11 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	store := lansenger.NewCredentialStore("", prof)
+	store, err := lansenger.NewCredentialStore("", prof)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
 	creds, err := store.LoadCredentials()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading credentials: %v\n", err)
@@ -140,7 +147,11 @@ func maskIfSecret(key, value string) string {
 
 func runConfigShow(cmd *cobra.Command, args []string) {
 	prof := resolveProfile(configShowProfile)
-	store := lansenger.NewCredentialStore("", prof)
+	store, err := lansenger.NewCredentialStore("", prof)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
 
 	creds, err := store.LoadCredentials()
 	if err != nil {
@@ -179,8 +190,12 @@ func runConfigShow(cmd *cobra.Command, args []string) {
 
 func runConfigClear(cmd *cobra.Command, args []string) {
 	if configClearAll {
-		store := lansenger.NewCredentialStore("", "")
-		err := store.Clear()
+		store, err := lansenger.NewCredentialStore("", "")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+			os.Exit(1)
+		}
+		err = store.Clear()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error clearing all profiles: %v\n", err)
 			os.Exit(1)
@@ -194,8 +209,12 @@ func runConfigClear(cmd *cobra.Command, args []string) {
 	}
 
 	prof := resolveProfile(configClearProfile)
-	store := lansenger.NewCredentialStore("", prof)
-	err := store.ClearProfile()
+	store, err := lansenger.NewCredentialStore("", prof)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
+	err = store.ClearProfile()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error clearing profile '%s': %v\n", prof, err)
 		os.Exit(1)
@@ -210,7 +229,11 @@ func runConfigClear(cmd *cobra.Command, args []string) {
 }
 
 func runConfigListProfiles(cmd *cobra.Command, args []string) {
-	metaStore := lansenger.NewCredentialStore("", "")
+	metaStore, err := lansenger.NewCredentialStore("", "")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
 	profiles, err := metaStore.ListProfiles()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error listing profiles: %v\n", err)
@@ -229,7 +252,10 @@ func runConfigListProfiles(cmd *cobra.Command, args []string) {
 		fmt.Printf("%-4s  %-20s  %-8s  %-50s  %-50s\n", "Act", "Profile", "Creds", "App ID", "API Gateway URL")
 		fmt.Printf("%-4s  %-20s  %-8s  %-50s  %-50s\n", strings.Repeat("━", 4), strings.Repeat("━", 20), strings.Repeat("━", 8), strings.Repeat("━", 50), strings.Repeat("━", 50))
 		for _, p := range profiles {
-			pStore := lansenger.NewCredentialStore("", p)
+			pStore, storeErr := lansenger.NewCredentialStore("", p)
+			if storeErr != nil {
+				continue
+			}
 			creds, _ := pStore.LoadCredentials()
 			active := ""
 			if p == activeProfile {
@@ -248,7 +274,10 @@ func runConfigListProfiles(cmd *cobra.Command, args []string) {
 
 	items := make([]map[string]interface{}, 0, len(profiles))
 	for _, p := range profiles {
-		pStore := lansenger.NewCredentialStore("", p)
+		pStore, storeErr := lansenger.NewCredentialStore("", p)
+		if storeErr != nil {
+			continue
+		}
 		creds, _ := pStore.LoadCredentials()
 		isActive := p == activeProfile
 		hasCreds := pStore.HasCredentials()

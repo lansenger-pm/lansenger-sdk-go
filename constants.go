@@ -1,5 +1,7 @@
 package lansenger
 
+import "strings"
+
 const (
 	DefaultAPIGatewayURL = "https://open.e.lanxin.cn/open/apigw"
 	DefaultPassportURL   = "https://passport.e.lanxin.cn"
@@ -46,6 +48,16 @@ var VideoExtensions = map[string]bool{
 	".mkv":  true,
 	".webm": true,
 	".3gp":  true,
+}
+
+var AudioExtensions = map[string]bool{
+	".mp3":  true,
+	".wav":  true,
+	".amr":  true,
+	".m4a":  true,
+	".ogg":  true,
+	".flac": true,
+	".aac":  true,
 }
 
 var APIEndpoints = map[string]map[string]string{
@@ -177,7 +189,7 @@ func GuessMediaType(filePath string) int {
 	ext := ""
 	for i := len(filePath) - 1; i >= 0; i-- {
 		if filePath[i] == '.' {
-			ext = filePath[i:]
+			ext = strings.ToLower(filePath[i:])
 			break
 		}
 	}
@@ -186,6 +198,9 @@ func GuessMediaType(filePath string) int {
 	}
 	if VideoExtensions[ext] {
 		return MediaTypeVideo
+	}
+	if AudioExtensions[ext] {
+		return MediaTypeAudio
 	}
 	return MediaTypeFile
 }

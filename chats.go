@@ -3,27 +3,10 @@ package lansenger
 import (
 	"context"
 	"fmt"
-	"net/url"
+	"strconv"
 )
 
-func addQueryParam(baseURL, key, value string) string {
-	sep := "&"
-	if !containsChar(baseURL, '?') {
-		sep = "?"
-	}
-	return baseURL + sep + url.QueryEscape(key) + "=" + url.QueryEscape(value)
-}
-
-func containsChar(s string, c byte) bool {
-	for i := 0; i < len(s); i++ {
-		if s[i] == c {
-			return true
-		}
-	}
-	return false
-}
-
-func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, chatType string, keyword, startTime, endTime string) (*ChatListResult, error) {
+func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, chatType string, keyword string, startTime, endTime int64) (*ChatListResult, error) {
 	if userToken == "" {
 		return nil, fmt.Errorf("userToken is required for fetch_chat_list")
 	}
@@ -33,7 +16,7 @@ func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, c
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "chats", "fetch", token,
+	apiURL := BuildAPIURL(c.config, "chats", "fetch", token,
 		WithUserToken(userToken),
 	)
 
@@ -44,14 +27,14 @@ func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, c
 	if keyword != "" {
 		body["keyword"] = keyword
 	}
-	if startTime != "" {
+	if startTime != 0 {
 		body["startTime"] = startTime
 	}
-	if endTime != "" {
+	if endTime != 0 {
 		body["endTime"] = endTime
 	}
 
-	result, err := c.doPost(ctx, url, body)
+	result, err := c.doPost(ctx, apiURL, body)
 	if err != nil {
 		return &ChatListResult{Success: false, Error: err.Error()}, nil
 	}
@@ -110,29 +93,38 @@ func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken strin
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "messages", "fetch", token,
+	apiURL := BuildAPIURL(c.config, "messages", "fetch", token,
 		WithUserToken(userToken),
 		WithPageSize(pageSize),
 		WithQueryParam("base_version", baseVersion),
 	)
 
+	body := map[string]interface{}{}
 	if staffID != "" {
-		url = addQueryParam(url, "staffId", staffID)
+		body["staffId"] = staffID
 	}
 	if groupID != "" {
-		url = addQueryParam(url, "groupId", groupID)
+		body["groupId"] = groupID
 	}
 	if startTime != "" {
-		url = addQueryParam(url, "startTime", startTime)
+		if n, err := strconv.ParseInt(startTime, 10, 64); err == nil {
+			body["startTime"] = n
+		} else {
+			body["startTime"] = startTime
+		}
 	}
 	if endTime != "" {
-		url = addQueryParam(url, "endTime", endTime)
+		if n, err := strconv.ParseInt(endTime, 10, 64); err == nil {
+			body["endTime"] = n
+		} else {
+			body["endTime"] = endTime
+		}
 	}
 	if senderID != "" {
-		url = addQueryParam(url, "senderId", senderID)
+		body["senderId"] = senderID
 	}
 
-	result, err := c.doGet(ctx, url)
+	result, err := c.doPost(ctx, apiURL, body)
 	if err != nil {
 		return &ChatMessagesResult{Success: false, Error: err.Error()}, nil
 	}

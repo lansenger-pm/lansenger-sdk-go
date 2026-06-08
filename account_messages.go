@@ -45,6 +45,8 @@ func (c *LansengerClient) SendAccountMessage(ctx context.Context, msgType string
 	}
 	if data != nil {
 		res.MessageID = strFromMap(data, "msgId")
+		res.InvalidStaff = stringArrayFromMap(data, "invalidStaff")
+		res.InvalidDepartment = stringArrayFromMap(data, "invalidDepartment")
 	}
 	return res, nil
 }

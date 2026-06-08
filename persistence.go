@@ -11,16 +11,17 @@ import (
 )
 
 type CredentialStore struct {
-	path    string
-	profile string
-	mu      sync.Mutex
+	path      string
+	profile   string
+	mu        sync.Mutex
+	migrated  bool
 }
 
-func NewCredentialStore(path string, profile string) *CredentialStore {
+func NewCredentialStore(path string, profile string) (*CredentialStore, error) {
 	if path == "" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			homeDir = "~"
+			return nil, fmt.Errorf("cannot determine home directory: %w", err)
 		}
 		path = filepath.Join(homeDir, ".lansenger", DefaultStateFile)
 	}
@@ -30,7 +31,7 @@ func NewCredentialStore(path string, profile string) *CredentialStore {
 	return &CredentialStore{
 		path:    path,
 		profile: profile,
-	}
+	}, nil
 }
 
 type storeData struct {
@@ -51,6 +52,7 @@ type profileData struct {
 	RefreshToken          string `json:"refresh_token"`
 	UserTokenExpiresAt    int64  `json:"user_token_expires_at"`
 	RefreshTokenExpiresAt int64  `json:"refresh_token_expires_at"`
+	StaffID               string `json:"staff_id"`
 }
 
 func (cs *CredentialStore) loadUnlocked() (*storeData, error) {
@@ -95,9 +97,79 @@ func (cs *CredentialStore) saveUnlocked(sd *storeData) error {
 	return nil
 }
 
+func (cs *CredentialStore) ensureMigrated() {
+	if cs.migrated {
+		return
+	}
+	cs.migrated = true
+
+	data, err := os.ReadFile(cs.path)
+	if err != nil {
+		return
+	}
+
+	var sd storeData
+	if json.Unmarshal(data, &sd) == nil && sd.Profiles != nil {
+		return
+	}
+
+	var flat map[string]interface{}
+	if json.Unmarshal(data, &flat) != nil {
+		return
+	}
+	if _, hasProfiles := flat["profiles"]; hasProfiles {
+		return
+	}
+
+	profile := profileData{}
+	if v, ok := flat["app_id"].(string); ok {
+		profile.AppID = v
+	}
+	if v, ok := flat["app_secret"].(string); ok {
+		profile.AppSecret = v
+	}
+	if v, ok := flat["api_gateway_url"].(string); ok {
+		profile.APIGatewayURL = v
+	}
+	if v, ok := flat["passport_url"].(string); ok {
+		profile.PassportURL = v
+	}
+	if v, ok := flat["encoding_key"].(string); ok {
+		profile.EncodingKey = v
+	}
+	if v, ok := flat["callback_token"].(string); ok {
+		profile.CallbackToken = v
+	}
+	if v, ok := flat["app_token"].(string); ok {
+		profile.AppToken = v
+	}
+	if v, ok := flat["token_expires_at"].(float64); ok {
+		profile.TokenExpiresAt = int64(v)
+	}
+	if v, ok := flat["user_token"].(string); ok {
+		profile.UserToken = v
+	}
+	if v, ok := flat["refresh_token"].(string); ok {
+		profile.RefreshToken = v
+	}
+	if v, ok := flat["user_token_expires_at"].(float64); ok {
+		profile.UserTokenExpiresAt = int64(v)
+	}
+	if v, ok := flat["refresh_token_expires_at"].(float64); ok {
+		profile.RefreshTokenExpiresAt = int64(v)
+	}
+
+	newSD := &storeData{
+		Profiles:      map[string]profileData{DefaultProfile: profile},
+		ActiveProfile: DefaultProfile,
+	}
+	cs.saveUnlocked(newSD)
+}
+
 func (cs *CredentialStore) LoadCredentials() (map[string]string, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -122,6 +194,7 @@ func (cs *CredentialStore) LoadCredentials() (map[string]string, error) {
 func (cs *CredentialStore) SaveCredentials(appID, appSecret, apiGatewayURL, passportURL string) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -142,6 +215,7 @@ func (cs *CredentialStore) SaveCredentials(appID, appSecret, apiGatewayURL, pass
 func (cs *CredentialStore) SaveCallbackConfig(encodingKey, callbackToken string) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -160,6 +234,7 @@ func (cs *CredentialStore) SaveCallbackConfig(encodingKey, callbackToken string)
 func (cs *CredentialStore) LoadAppToken() (string, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -185,6 +260,7 @@ func (cs *CredentialStore) LoadAppToken() (string, error) {
 func (cs *CredentialStore) SaveAppToken(token string, expiresIn int) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -206,6 +282,7 @@ func (cs *CredentialStore) SaveAppToken(token string, expiresIn int) error {
 func (cs *CredentialStore) LoadUserToken() (map[string]string, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -218,16 +295,18 @@ func (cs *CredentialStore) LoadUserToken() (map[string]string, error) {
 	}
 
 	return map[string]string{
-		"user_token":          profile.UserToken,
-		"refresh_token":       profile.RefreshToken,
-		"user_token_expires_at": strconv.FormatInt(profile.UserTokenExpiresAt, 10),
+		"user_token":              profile.UserToken,
+		"refresh_token":           profile.RefreshToken,
+		"user_token_expires_at":   strconv.FormatInt(profile.UserTokenExpiresAt, 10),
 		"refresh_token_expires_at": strconv.FormatInt(profile.RefreshTokenExpiresAt, 10),
+		"staff_id":                profile.StaffID,
 	}, nil
 }
 
-func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expiresIn int, refreshExpiresIn int) error {
+func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expiresIn int, refreshExpiresIn int, staffID string) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -247,6 +326,9 @@ func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expires
 	if refreshExpiresIn > 0 {
 		profile.RefreshTokenExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second).Unix()
 	}
+	if staffID != "" {
+		profile.StaffID = staffID
+	}
 	sd.Profiles[cs.profile] = profile
 
 	return cs.saveUnlocked(sd)
@@ -263,6 +345,7 @@ func (cs *CredentialStore) HasCredentials() bool {
 func (cs *CredentialStore) ListProfiles() ([]string, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -279,6 +362,7 @@ func (cs *CredentialStore) ListProfiles() ([]string, error) {
 func (cs *CredentialStore) ClearProfile() error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -299,6 +383,7 @@ func (cs *CredentialStore) Clear() error {
 func (cs *CredentialStore) LoadState() (*storeData, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	return cs.loadUnlocked()
 }
@@ -306,6 +391,7 @@ func (cs *CredentialStore) LoadState() (*storeData, error) {
 func (cs *CredentialStore) GetActiveProfile() string {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -317,6 +403,7 @@ func (cs *CredentialStore) GetActiveProfile() string {
 func (cs *CredentialStore) SetActiveProfile(profile string) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
+	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
@@ -328,80 +415,4 @@ func (cs *CredentialStore) SetActiveProfile(profile string) error {
 
 func (cs *CredentialStore) Path() string {
 	return cs.path
-}
-
-func (cs *CredentialStore) migrateLegacyFormat() {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
-	sd, err := cs.loadUnlocked()
-	if err != nil {
-		return
-	}
-
-	if len(sd.Profiles) == 1 && sd.ActiveProfile == DefaultProfile {
-		p := sd.Profiles[DefaultProfile]
-		if p.AppID != "" && p.APIGatewayURL == "" && p.AppToken != "" && p.AppSecret == "" {
-			return
-		}
-	}
-
-	data, err := os.ReadFile(cs.path)
-	if err != nil {
-		return
-	}
-
-	var flat map[string]interface{}
-	if json.Unmarshal(data, &flat) == nil {
-		if _, hasProfiles := flat["profiles"]; !hasProfiles {
-			profile := profileData{}
-			if v, ok := flat["app_id"].(string); ok {
-				profile.AppID = v
-			}
-			if v, ok := flat["app_secret"].(string); ok {
-				profile.AppSecret = v
-			}
-			if v, ok := flat["api_gateway_url"].(string); ok {
-				profile.APIGatewayURL = v
-			}
-			if v, ok := flat["passport_url"].(string); ok {
-				profile.PassportURL = v
-			}
-			if v, ok := flat["encoding_key"].(string); ok {
-				profile.EncodingKey = v
-			}
-			if v, ok := flat["callback_token"].(string); ok {
-				profile.CallbackToken = v
-			}
-			if v, ok := flat["app_token"].(string); ok {
-				profile.AppToken = v
-			}
-			if v, ok := flat["token_expires_at"].(float64); ok {
-				profile.TokenExpiresAt = int64(v)
-			}
-			if v, ok := flat["user_token"].(string); ok {
-				profile.UserToken = v
-			}
-			if v, ok := flat["refresh_token"].(string); ok {
-				profile.RefreshToken = v
-			}
-			if v, ok := flat["user_token_expires_at"].(float64); ok {
-				profile.UserTokenExpiresAt = int64(v)
-			}
-			if v, ok := flat["refresh_token_expires_at"].(float64); ok {
-				profile.RefreshTokenExpiresAt = int64(v)
-			}
-
-			newSD := &storeData{
-				Profiles:      map[string]profileData{DefaultProfile: profile},
-				ActiveProfile: DefaultProfile,
-			}
-			cs.saveUnlocked(newSD)
-		}
-	}
-}
-
-func init() {
-	store := NewCredentialStore("", DefaultProfile)
-	store.migrateLegacyFormat()
 }

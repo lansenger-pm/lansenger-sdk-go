@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (c *LansengerClient) UploadMedia(ctx context.Context, filePath string, mediaType int, userToken string) (*UploadMediaResult, error) {
@@ -75,14 +76,37 @@ func (c *LansengerClient) DownloadMedia(ctx context.Context, mediaID string) (*D
 		WithPathVar("media_id", mediaID),
 	)
 
-	data, err := c.doGetRaw(ctx, url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return &DownloadMediaResult{Success: false, Error: err.Error()}, nil
+		return nil, fmt.Errorf("creating download request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return &DownloadMediaResult{Success: false, Error: NewNetworkError("download request failed: " + err.Error()).Error()}, nil
+	}
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading download response: %w", err)
+	}
+
+	if strings.HasPrefix(contentType, "application/json") {
+		var result map[string]interface{}
+		if json.Unmarshal(respBody, &result) == nil {
+			errCode, _ := result["errCode"].(float64)
+			if errCode != 0 {
+				errMsg, _ := result["errMsg"].(string)
+				return &DownloadMediaResult{Success: false, Error: NewAPIError(errMsg, int(errCode)).Error()}, nil
+			}
+		}
 	}
 
 	return &DownloadMediaResult{
 		Success: true,
-		Data:    data,
+		Data:    respBody,
 	}, nil
 }
 
@@ -185,7 +209,7 @@ func uploadMediaInternal(ctx context.Context, httpClient *http.Client, url strin
 	errCode, _ := result["errCode"].(float64)
 	if errCode != 0 {
 		errMsg, _ := result["errMsg"].(string)
-		return result, NewAPIError(errMsg, int(errCode))
+		return nil, NewAPIError(errMsg, int(errCode))
 	}
 
 	return result, nil

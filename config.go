@@ -35,7 +35,7 @@ func ConfigFromEnv() (*Config, error) {
 		AppID:         appID,
 		AppSecret:     appSecret,
 		APIGatewayURL: getEnvOrDefault("LANSENGER_API_GATEWAY_URL", DefaultAPIGatewayURL),
-		PassportURL:   os.Getenv("LANSENGER_PASSPORT_URL"),
+		PassportURL:   getEnvOrDefault("LANSENGER_PASSPORT_URL", DefaultPassportURL),
 		HTTPTimeout:   30.0,
 		EncodingKey:   os.Getenv("LANSENGER_ENCODING_KEY"),
 		CallbackToken: os.Getenv("LANSENGER_CALLBACK_TOKEN"),

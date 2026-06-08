@@ -79,16 +79,8 @@ func runChatList(cmd *cobra.Command, args []string) {
 	ctx := context.Background()
 
 	chatTypeStr := strconv.Itoa(chatListType)
-	startTimeStr := ""
-	if chatListStartTime != 0 {
-		startTimeStr = strconv.FormatInt(chatListStartTime, 10)
-	}
-	endTimeStr := ""
-	if chatListEndTime != 0 {
-		endTimeStr = strconv.FormatInt(chatListEndTime, 10)
-	}
 
-	result, err := client.FetchChatList(ctx, chatListUserToken, chatTypeStr, chatListKeyword, startTimeStr, endTimeStr)
+	result, err := client.FetchChatList(ctx, chatListUserToken, chatTypeStr, chatListKeyword, chatListStartTime, chatListEndTime)
 	checkError(err)
 
 	if jsonOutput {

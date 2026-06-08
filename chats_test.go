@@ -20,7 +20,7 @@ func TestFetchChatList(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.FetchChatList(context.Background(), "utok1", "private", "", "", "")
+	result, err := c.FetchChatList(context.Background(), "utok1", "private", "", 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestFetchChatList(t *testing.T) {
 
 func TestFetchChatListNoToken(t *testing.T) {
 	c := NewClient("id", "secret")
-	_, err := c.FetchChatList(context.Background(), "", "private", "", "", "")
+	_, err := c.FetchChatList(context.Background(), "", "private", "", 0, 0)
 	if err == nil {
 		t.Error("expected error for missing userToken")
 	}
@@ -103,7 +103,7 @@ func TestFetchChatListAPIError(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.FetchChatList(context.Background(), "utok1", "private", "", "", "")
+	result, err := c.FetchChatList(context.Background(), "utok1", "private", "", 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

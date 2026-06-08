@@ -93,6 +93,10 @@ func (c *LansengerClient) doGet(ctx context.Context, url string) (map[string]int
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, NewNetworkError(fmt.Sprintf("GET request returned HTTP %d", resp.StatusCode))
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading response body: %w", err)
@@ -124,6 +128,10 @@ func (c *LansengerClient) doGetRaw(ctx context.Context, url string) ([]byte, err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, NewNetworkError(fmt.Sprintf("GET request returned HTTP %d", resp.StatusCode))
+	}
+
 	return io.ReadAll(resp.Body)
 }
 
@@ -145,6 +153,10 @@ func (c *LansengerClient) doPost(ctx context.Context, url string, body interface
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, NewNetworkError(fmt.Sprintf("POST request returned HTTP %d", resp.StatusCode))
+	}
+
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading response body: %w", err)
@@ -164,7 +176,7 @@ func (c *LansengerClient) doPost(ctx context.Context, url string, body interface
 	return result, nil
 }
 
-func (c *LansengerClient) doPostMultipart(ctx context.Context, url string, filePath string, mediaType int) (map[string]interface{}, error) {
+func (c *LansengerClient) doPostMultipart(ctx context.Context, url string, filePath string) (map[string]interface{}, error) {
 	return uploadMediaInternal(ctx, c.httpClient, url, filePath)
 }
 

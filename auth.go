@@ -61,6 +61,10 @@ func (tm *TokenManager) refreshToken(ctx context.Context) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", NewNetworkError(fmt.Sprintf("token request returned HTTP %d", resp.StatusCode))
+	}
+
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", fmt.Errorf("decoding token response: %w", err)

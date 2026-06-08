@@ -43,7 +43,11 @@ func main() {
 }
 
 func getClient() *lansenger.LansengerClient {
-	store := lansenger.NewCredentialStore("", profileName)
+	store, err := lansenger.NewCredentialStore("", profileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
 	creds, err := store.LoadCredentials()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading credentials: %v\n", err)
@@ -75,7 +79,12 @@ func getClient() *lansenger.LansengerClient {
 }
 
 func getStore() *lansenger.CredentialStore {
-	return lansenger.NewCredentialStore("", profileName)
+	store, err := lansenger.NewCredentialStore("", profileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
+	return store
 }
 
 func outputJSON(data interface{}) {

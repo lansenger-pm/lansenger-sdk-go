@@ -200,6 +200,14 @@ func (c *LansengerClient) FetchTodoTaskList(ctx context.Context, orgID string, a
 	}
 	if data != nil {
 		res.Total = intFromMap(data, "total")
+		if list, ok := data["todotaskList"].([]interface{}); ok {
+			res.TodotaskList = make([]map[string]interface{}, 0, len(list))
+			for _, item := range list {
+				if m, ok := item.(map[string]interface{}); ok {
+					res.TodotaskList = append(res.TodotaskList, m)
+				}
+			}
+		}
 	}
 	return res, nil
 }
@@ -239,11 +247,13 @@ func (c *LansengerClient) FetchTodoTaskBySourceID(ctx context.Context, sourceID,
 		res.Title = strFromMap(data, "title")
 		res.Desc = strFromMap(data, "desc")
 		res.Status = strFromMap(data, "status")
+		res.Type = intFromMap(data, "type")
 		res.Link = strFromMap(data, "link")
 		res.PcLink = strFromMap(data, "pcLink")
 		res.SenderID = strFromMap(data, "senderId")
 		res.CreateTime = strFromMap(data, "createTime")
 		res.AppID = strFromMap(data, "appId")
+		res.ExecutorIDs = stringArrayFromMap(data, "executorIds")
 	}
 	return res, nil
 }
@@ -283,11 +293,13 @@ func (c *LansengerClient) FetchTodoTaskByID(ctx context.Context, todotaskID, org
 		res.Title = strFromMap(data, "title")
 		res.Desc = strFromMap(data, "desc")
 		res.Status = strFromMap(data, "status")
+		res.Type = intFromMap(data, "type")
 		res.Link = strFromMap(data, "link")
 		res.PcLink = strFromMap(data, "pcLink")
 		res.SenderID = strFromMap(data, "senderId")
 		res.CreateTime = strFromMap(data, "createTime")
 		res.AppID = strFromMap(data, "appId")
+		res.ExecutorIDs = stringArrayFromMap(data, "executorIds")
 	}
 	return res, nil
 }
@@ -318,10 +330,23 @@ func (c *LansengerClient) FetchTodoTaskStatusCounts(ctx context.Context, staffID
 		return &TodoTaskStatusCountResult{Success: false, Error: err.Error()}, nil
 	}
 
-	return &TodoTaskStatusCountResult{
+	data := extractData(result)
+
+	res := &TodoTaskStatusCountResult{
 		Success:     true,
 		RawResponse: result,
-	}, nil
+	}
+	if data != nil {
+		if counts, ok := data["statusCounts"].([]interface{}); ok {
+			res.StatusCounts = make([]map[string]interface{}, 0, len(counts))
+			for _, item := range counts {
+				if m, ok := item.(map[string]interface{}); ok {
+					res.StatusCounts = append(res.StatusCounts, m)
+				}
+			}
+		}
+	}
+	return res, nil
 }
 
 func (c *LansengerClient) UpdateExecutorStatus(ctx context.Context, executorStatusList []map[string]interface{}, orgID, todotaskID, userToken string) (*TodoTaskCreateResult, error) {
@@ -463,6 +488,14 @@ func (c *LansengerClient) FetchExecutorList(ctx context.Context, todotaskID, org
 	}
 	if data != nil {
 		res.Total = intFromMap(data, "total")
+		if list, ok := data["executorList"].([]interface{}); ok {
+			res.ExecutorList = make([]map[string]interface{}, 0, len(list))
+			for _, item := range list {
+				if m, ok := item.(map[string]interface{}); ok {
+					res.ExecutorList = append(res.ExecutorList, m)
+				}
+			}
+		}
 	}
 	return res, nil
 }

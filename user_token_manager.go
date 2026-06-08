@@ -53,11 +53,7 @@ func (utm *UserTokenManager) loadFromStore() {
 		}
 	}
 
-	creds, err := utm.store.LoadCredentials()
-	if err != nil {
-		return
-	}
-	utm.staffID = creds["user_id"]
+	utm.staffID = tokens["staff_id"]
 }
 
 func (utm *UserTokenManager) GetToken(ctx context.Context) (string, error) {
@@ -96,14 +92,18 @@ func (utm *UserTokenManager) refresh(ctx context.Context) (string, error) {
 	if result.RefreshToken != "" {
 		utm.refreshToken = result.RefreshToken
 	}
-	utm.expiresAt = time.Now().Add(time.Duration(result.ExpiresIn-UserTokenRefreshMargin) * time.Second)
+	effectiveExpiresIn := result.ExpiresIn - UserTokenRefreshMargin
+	if effectiveExpiresIn <= 0 {
+		effectiveExpiresIn = result.ExpiresIn / 2
+	}
+	utm.expiresAt = time.Now().Add(time.Duration(effectiveExpiresIn) * time.Second)
 	utm.refreshExpiresAt = time.Now().Add(time.Duration(result.RefreshExpiresIn) * time.Second)
 	if result.StaffID != "" {
 		utm.staffID = result.StaffID
 	}
 
 	if utm.store != nil {
-		utm.store.SaveUserToken(utm.userToken, utm.refreshToken, result.ExpiresIn, result.RefreshExpiresIn)
+		utm.store.SaveUserToken(utm.userToken, utm.refreshToken, result.ExpiresIn, result.RefreshExpiresIn, utm.staffID)
 	}
 
 	return utm.userToken, nil
@@ -115,7 +115,11 @@ func (utm *UserTokenManager) SetTokens(userToken, refreshToken string, expiresIn
 
 	utm.userToken = userToken
 	utm.refreshToken = refreshToken
-	utm.expiresAt = time.Now().Add(time.Duration(expiresIn-UserTokenRefreshMargin) * time.Second)
+	effectiveExpiresIn := expiresIn - UserTokenRefreshMargin
+	if effectiveExpiresIn <= 0 {
+		effectiveExpiresIn = expiresIn / 2
+	}
+	utm.expiresAt = time.Now().Add(time.Duration(effectiveExpiresIn) * time.Second)
 	if refreshExpiresIn > 0 {
 		utm.refreshExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second)
 	}
@@ -124,7 +128,7 @@ func (utm *UserTokenManager) SetTokens(userToken, refreshToken string, expiresIn
 	}
 
 	if utm.store != nil {
-		utm.store.SaveUserToken(userToken, refreshToken, expiresIn, refreshExpiresIn)
+		utm.store.SaveUserToken(userToken, refreshToken, expiresIn, refreshExpiresIn, utm.staffID)
 	}
 }
 

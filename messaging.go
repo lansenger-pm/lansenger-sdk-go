@@ -13,7 +13,7 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 		"content": content,
 	}
 	if filePath != "" {
-uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, "")
+	uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, userToken)
 	if err != nil {
 			return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
 		}
@@ -23,7 +23,7 @@ uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, "")
 		textData["mediaIds"] = []string{uploadResult.MediaID}
 		textData["mediaType"] = mediaType
 		if coverImagePath != "" {
-			coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, "")
+			coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, userToken)
 			if err != nil {
 				return &SendMessageResult{Success: false, Error: "cover upload failed: " + err.Error(), Platform: "lansenger"}, nil
 			}
@@ -50,7 +50,7 @@ uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, "")
 		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData, userToken)
 }
 
 func (c *LansengerClient) SendMarkdown(ctx context.Context, chatID, content string, reminderAll bool, reminderUserIDs []string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
@@ -75,11 +75,11 @@ func (c *LansengerClient) SendMarkdown(ctx context.Context, chatID, content stri
 		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData, userToken)
 }
 
 func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string, content string, mediaType int, coverImagePath string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
-	uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, "")
+uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, userToken)
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
 	}
@@ -95,7 +95,7 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 		textData["content"] = content
 	}
 	if coverImagePath != "" {
-		coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, "")
+		coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, userToken)
 		if err != nil {
 			return &SendMessageResult{Success: false, Error: "cover upload failed: " + err.Error(), Platform: "lansenger"}, nil
 		}
@@ -114,7 +114,7 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData, userToken)
 }
 
 func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, content string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
@@ -125,7 +125,11 @@ func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, co
 		return &SendMessageResult{Success: false, Error: "image_url is required", Platform: "lansenger"}, nil
 	}
 
-	resp, err := c.httpClient.Get(imageURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil)
+	if err != nil {
+		return &SendMessageResult{Success: false, Error: "failed to create image download request: " + err.Error(), Platform: "lansenger"}, nil
+	}
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: "failed to download image: " + err.Error(), Platform: "lansenger"}, nil
 	}
@@ -188,19 +192,31 @@ func (c *LansengerClient) SendAppArticles(ctx context.Context, chatID string, ar
 		return c.SendGroupMessage(ctx, chatID, msgType, msgData, userToken, senderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, chatID, msgType, msgData)
+	return c.sendBotPrivate(ctx, chatID, msgType, msgData, userToken)
 }
 
 func (c *LansengerClient) SendLinkCardWithParams(ctx context.Context, params *LinkCardParams) (*SendMessageResult, error) {
 	linkCardData := map[string]interface{}{
-		"title":        params.Title,
-		"link":         params.Link,
-		"description":  params.Description,
-		"iconLink":     params.IconLink,
-		"pcLink":       params.PcLink,
-		"padLink":      params.PadLink,
-		"fromName":     params.FromName,
-		"fromIconLink": params.FromIconLink,
+		"title": params.Title,
+		"link":  params.Link,
+	}
+	if params.Description != "" {
+		linkCardData["description"] = params.Description
+	}
+	if params.IconLink != "" {
+		linkCardData["iconLink"] = params.IconLink
+	}
+	if params.PcLink != "" {
+		linkCardData["pcLink"] = params.PcLink
+	}
+	if params.PadLink != "" {
+		linkCardData["padLink"] = params.PadLink
+	}
+	if params.FromName != "" {
+		linkCardData["fromName"] = params.FromName
+	}
+	if params.FromIconLink != "" {
+		linkCardData["fromIconLink"] = params.FromIconLink
 	}
 
 	msgData := map[string]interface{}{
@@ -212,22 +228,46 @@ func (c *LansengerClient) SendLinkCardWithParams(ctx context.Context, params *Li
 		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData)
+	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, params.UserToken)
 }
 
 func (c *LansengerClient) SendAppCardWithParams(ctx context.Context, params *AppCardParams) (*SendMessageResult, error) {
 	appCardData := map[string]interface{}{
-		"bodyTitle":    params.BodyTitle,
-		"headTitle":    params.HeadTitle,
-		"bodySubTitle": params.BodySubTitle,
-		"bodyContent":  params.BodyContent,
-		"signature":    params.Signature,
-		"cardLink":     params.CardLink,
-		"pcCardLink":   params.PcCardLink,
-		"padCardLink":  params.PadCardLink,
-		"isDynamic":    params.IsDynamic,
-		"staffId":      params.StaffID,
-		"headIconUrl":  params.HeadIconURL,
+		"bodyTitle": params.BodyTitle,
+	}
+	if params.HeadTitle != "" {
+		appCardData["headTitle"] = params.HeadTitle
+	}
+	if params.BodySubTitle != "" {
+		appCardData["bodySubTitle"] = params.BodySubTitle
+	}
+	if params.BodyContent != "" {
+		appCardData["bodyContent"] = params.BodyContent
+	}
+	if params.Signature != "" {
+		appCardData["signature"] = params.Signature
+	}
+	if params.CardLink != "" {
+		appCardData["cardLink"] = params.CardLink
+	}
+	if params.PcCardLink != "" {
+		appCardData["pcCardLink"] = params.PcCardLink
+	}
+	if params.PadCardLink != "" {
+		appCardData["padCardLink"] = params.PadCardLink
+	}
+	appCardData["isDynamic"] = params.IsDynamic
+	if params.IsDynamic && params.HeadStatusInfo == nil {
+		params.HeadStatusInfo = map[string]interface{}{
+			"description": `<div style="color:rgba(0,0,0,.47)">Active</div>`,
+			"colour":      "rgba(0,0,0,.47)",
+		}
+	}
+	if params.StaffID != "" {
+		appCardData["staffId"] = params.StaffID
+	}
+	if params.HeadIconURL != "" {
+		appCardData["headIconUrl"] = params.HeadIconURL
 	}
 	if len(params.Fields) > 0 {
 		appCardData["fields"] = params.Fields
@@ -248,18 +288,30 @@ func (c *LansengerClient) SendAppCardWithParams(ctx context.Context, params *App
 		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData)
+	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, params.UserToken)
 }
 
 func (c *LansengerClient) SendOaCardWithParams(ctx context.Context, params *OaCardParams) (*SendMessageResult, error) {
 	oaCardData := map[string]interface{}{
-		"head":     params.Head,
-		"title":    params.Title,
-		"subTitle": params.SubTitle,
-		"staffId":  params.StaffID,
-		"link":     params.Link,
-		"pcLink":   params.PcLink,
-		"padLink":  params.PadLink,
+		"title": params.Title,
+	}
+	if params.Head != "" {
+		oaCardData["head"] = params.Head
+	}
+	if params.SubTitle != "" {
+		oaCardData["subTitle"] = params.SubTitle
+	}
+	if params.StaffID != "" {
+		oaCardData["staffId"] = params.StaffID
+	}
+	if params.Link != "" {
+		oaCardData["link"] = params.Link
+	}
+	if params.PcLink != "" {
+		oaCardData["pcLink"] = params.PcLink
+	}
+	if params.PadLink != "" {
+		oaCardData["padLink"] = params.PadLink
 	}
 	if len(params.Fields) > 0 {
 		oaCardData["fields"] = params.Fields
@@ -277,7 +329,7 @@ func (c *LansengerClient) SendOaCardWithParams(ctx context.Context, params *OaCa
 		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, "", "", "")
 	}
 
-	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData)
+	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, params.UserToken)
 }
 
 func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *DynamicCardUpdateParams) (*SendMessageResult, error) {
@@ -388,13 +440,15 @@ func (c *LansengerClient) QueryGroups(ctx context.Context, pageOffset, pageSize 
 		return &QueryGroupsResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &QueryGroupsResult{
+	res := &QueryGroupsResult{
 		Success:       true,
 		TotalGroupIDs: intFromMap(data, "totalGroupIds"),
 		Platform:      "lansenger",
 		Operation:     "query_groups",
 		RawResponse:   result,
-	}, nil
+	}
+	res.GroupIDs = stringArrayFromMap(data, "groupIds")
+	return res, nil
 }
 
 func (c *LansengerClient) SendReminder(ctx context.Context, msgID string, reminderTypes []int, userIDList []string) (*SendMessageResult, error) {
@@ -424,13 +478,15 @@ func (c *LansengerClient) SendReminder(ctx context.Context, msgID string, remind
 	}, nil
 }
 
-func (c *LansengerClient) sendBotPrivate(ctx context.Context, chatID, msgType string, msgData map[string]interface{}) (*SendMessageResult, error) {
+func (c *LansengerClient) sendBotPrivate(ctx context.Context, chatID, msgType string, msgData map[string]interface{}, userToken string) (*SendMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "bot", "messages_create", token)
+	url := BuildAPIURL(c.config, "bot", "messages_create", token,
+		WithUserToken(userToken),
+	)
 
 	body := map[string]interface{}{
 		"userIdList": []string{chatID},

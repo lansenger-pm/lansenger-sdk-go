@@ -129,7 +129,7 @@ func runOAuthExchangeCode(cmd *cobra.Command, args []string) {
 	checkError(err)
 
 	store := getStore()
-	store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn)
+	store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn, result.StaffID)
 
 	outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope", "state"})
 }
@@ -140,6 +140,10 @@ func runOAuthRefreshToken(cmd *cobra.Command, args []string) {
 
 	result, err := client.RefreshUserToken(ctx, args[0], oauthRefreshScope)
 	checkError(err)
+
+	store := getStore()
+	store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn, result.StaffID)
+
 	outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope"})
 }
 
@@ -281,7 +285,7 @@ func runOAuthLocalCallback(cmd *cobra.Command, args []string) {
 		checkError(err)
 
 		store := getStore()
-		store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn)
+		store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn, result.StaffID)
 
 		outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope"})
 	} else if !jsonOutput {

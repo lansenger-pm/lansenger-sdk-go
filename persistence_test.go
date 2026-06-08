@@ -8,7 +8,10 @@ import (
 
 func TestCredentialStoreInit(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if store.profile != "default" {
 		t.Errorf("expected profile=default, got %s", store.profile)
 	}
@@ -16,9 +19,12 @@ func TestCredentialStoreInit(t *testing.T) {
 
 func TestCredentialStoreSaveAndLoadCredentials(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	err := store.SaveCredentials("app1", "secret1", "https://gateway.example.com", "https://passport.example.com")
+	err = store.SaveCredentials("app1", "secret1", "https://gateway.example.com", "https://passport.example.com")
 	if err != nil {
 		t.Fatalf("unexpected error saving credentials: %v", err)
 	}
@@ -43,7 +49,10 @@ func TestCredentialStoreSaveAndLoadCredentials(t *testing.T) {
 
 func TestCredentialStoreHasCredentials(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if store.HasCredentials() {
 		t.Error("expected HasCredentials=false before saving")
@@ -57,11 +66,14 @@ func TestCredentialStoreHasCredentials(t *testing.T) {
 
 func TestCredentialStoreAppToken(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	store.SaveCredentials("app1", "secret1", "", "")
 
-	err := store.SaveAppToken("test_token", 7200)
+	err = store.SaveAppToken("test_token", 7200)
 	if err != nil {
 		t.Fatalf("unexpected error saving app token: %v", err)
 	}
@@ -77,7 +89,10 @@ func TestCredentialStoreAppToken(t *testing.T) {
 
 func TestCredentialStoreAppTokenExpired(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	store.SaveCredentials("app1", "secret1", "", "")
 	store.SaveAppToken("expired_token", 1)
@@ -95,10 +110,13 @@ func TestCredentialStoreAppTokenExpired(t *testing.T) {
 
 func TestCredentialStoreUserToken(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	store.SaveCredentials("app1", "secret1", "", "")
-	store.SaveUserToken("utok1", "rtok1", 7200, 2592000)
+	store.SaveUserToken("utok1", "rtok1", 7200, 2592000, "staff1")
 
 	tokens, err := store.LoadUserToken()
 	if err != nil {
@@ -110,11 +128,17 @@ func TestCredentialStoreUserToken(t *testing.T) {
 	if tokens["refresh_token"] != "rtok1" {
 		t.Errorf("expected refresh_token=rtok1, got %s", tokens["refresh_token"])
 	}
+	if tokens["staff_id"] != "staff1" {
+		t.Errorf("expected staff_id=staff1, got %s", tokens["staff_id"])
+	}
 }
 
 func TestCredentialStoreClear(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	store.SaveCredentials("app1", "secret1", "", "")
 	store.Clear()
@@ -126,7 +150,10 @@ func TestCredentialStoreClear(t *testing.T) {
 
 func TestCredentialStoreClearProfile(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	store.SaveCredentials("app1", "secret1", "", "")
 	store.ClearProfile()
@@ -138,7 +165,10 @@ func TestCredentialStoreClearProfile(t *testing.T) {
 
 func TestCredentialStoreListProfiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	store.SaveCredentials("app1", "secret1", "", "")
 
@@ -152,7 +182,10 @@ func TestCredentialStoreListProfiles(t *testing.T) {
 }
 
 func TestCredentialStoreDefaultProfile(t *testing.T) {
-	store := NewCredentialStore("", "")
+	store, err := NewCredentialStore("", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if store.profile != DefaultProfile {
 		t.Errorf("expected profile=%s, got %s", DefaultProfile, store.profile)
 	}
@@ -160,7 +193,10 @@ func TestCredentialStoreDefaultProfile(t *testing.T) {
 
 func TestCredentialStorePreservesState(t *testing.T) {
 	tmpDir := t.TempDir()
-	store := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	store.SaveCredentials("app1", "secret1", "https://gateway.com", "")
 	store.SaveAppToken("tok1", 7200)

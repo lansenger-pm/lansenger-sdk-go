@@ -43,6 +43,8 @@ func (c *LansengerClient) SendBotMessage(ctx context.Context, msgType string, ms
 	}
 	if data != nil {
 		res.MessageID = strFromMap(data, "msgId")
+		res.InvalidStaff = stringArrayFromMap(data, "invalidStaff")
+		res.InvalidDepartment = stringArrayFromMap(data, "invalidDepartment")
 	}
 	return res, nil
 }
