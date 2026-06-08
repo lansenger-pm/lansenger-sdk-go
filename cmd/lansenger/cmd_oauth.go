@@ -77,11 +77,12 @@ var (
 
 	oauthRefreshScope string
 
-	oauthLocalPort       int
-	oauthLocalScope      string
-	oauthLocalState      string
-	oauthLocalNoExchange bool
-	oauthLocalTimeout    int
+	oauthLocalPort         int
+	oauthLocalScope        string
+	oauthLocalState        string
+	oauthLocalNoExchange   bool
+	oauthLocalTimeout      int
+	oauthLocalRedirectURI  string
 )
 
 func init() {
@@ -97,6 +98,7 @@ func init() {
 	oauthLocalCallbackCmd.Flags().StringVar(&oauthLocalState, "state", "", "CSRF state (auto-generated if empty)")
 	oauthLocalCallbackCmd.Flags().BoolVar(&oauthLocalNoExchange, "no-exchange", false, "Skip auto-exchange code")
 	oauthLocalCallbackCmd.Flags().IntVarP(&oauthLocalTimeout, "timeout", "t", 120, "Max wait seconds")
+	oauthLocalCallbackCmd.Flags().StringVar(&oauthLocalRedirectURI, "redirect-uri", "", "Override redirect_uri (default: http://localhost:<port>)")
 
 	oauthCmd.AddCommand(oauthAuthorizeURLCmd)
 	oauthCmd.AddCommand(oauthExchangeCodeCmd)
@@ -217,6 +219,9 @@ func runOAuthLocalCallback(cmd *cobra.Command, args []string) {
 	}
 
 	redirectURI := fmt.Sprintf("http://localhost:%d", oauthLocalPort)
+	if oauthLocalRedirectURI != "" {
+		redirectURI = oauthLocalRedirectURI
+	}
 	authURL := client.BuildAuthorizeURL(redirectURI, oauthLocalScope, state)
 
 	if jsonOutput {
