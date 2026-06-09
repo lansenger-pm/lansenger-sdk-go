@@ -5,11 +5,11 @@
 SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les applications Lansenger, les bots d'organisation et les bots personnels.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.6.0](https://img.shields.io/badge/Version-0.6.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
-[![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-blue)](https://go.dev/)
+[![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-blue)](https://go.dev/)
 [![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
-> Zéro dépendance externe — uniquement la bibliothèque standard Go. Fonctionne avec tout projet Go.
+> La bibliothèque SDK n'a aucune dépendance externe (stdlib uniquement). Le CLI (`cmd/lansenger`) utilise [spf13/cobra](https://github.com/spf13/cobra).
 
 ## Types de bots pris en charge
 
@@ -476,11 +476,13 @@ lansenger-sdk-go/
 ├── config.go            # Config — configuration + variables d'environnement
 ├── constants.go         # Endpoints API, types de médias, types d'événements de callback
 ├── errors.go            # Hiérarchie LansengerError (Auth/Config/API/Network/File)
-├── models.go            # 35+ types de structs résultat/params
+├── models.go            # 50+ types de structs résultat/params
 ├── auth.go              # TokenManager — cycle de vie appToken avec renouvellement auto
+├── user_token_manager.go # UserTokenManager — cycle de vie userToken avec renouvellement auto
 ├── url_helpers.go       # BuildAPIURL — pattern Options pour construction d'URL
 ├── oauth.go             # OAuth2 URL d'autorisation, échange de code, renouvellement de token
 ├── contacts.go          # API Personnel & infos organisation
+├── users.go             # API Profil utilisateur
 ├── departments.go       # API Départements
 ├── groups.go            # API Groupes V2
 ├── chats.go             # API Liste de chats & messages
@@ -492,10 +494,12 @@ lansenger-sdk-go/
 ├── streaming.go         # Messages en streaming SSE
 ├── media.go             # Upload/download de fichiers & images
 ├── todos.go             # Todo unifié (4.33) — 12 endpoints
-├── calendars.go         # Calendrier & planification (4.23) — 8 endpoints
+├── calendars.go         # Calendrier & planification (4.23) — 10 endpoints
 ├── callbacks.go         # Analyse d'événements de callback + déchiffrement AES-256-CBC + vérification de signature SHA1
 ├── persistence.go       # CredentialStore — persistance dans fichier JSON
-├── *_test.go            # 115 tests unitaires + 10 tests d'intégration
+├── version.go           # Constante de version SDK
+├── *_test.go            # 136 tests unitaires + 10 tests d'intégration
+├── cmd/lansenger/       # Outil CLI (config, oauth, messaging, staff, etc.)
 ├── go.mod
 └── README.md
 ```
@@ -503,8 +507,8 @@ lansenger-sdk-go/
 ## Développement
 
 ```bash
-go test ./... -v                    # tests unitaires (115 tests)
-go test ./... -run TestIntegration  # tests d'intégration (10 tests, requiert ~/.lansenger/sdk_state.json)
+go test . -v                        # tous les tests (136 unitaires + 10 intégration)
+go test . -run TestIntegration      # tests d'intégration uniquement (requiert ~/.lansenger/sdk_state.json + réseau)
 ```
 
 ## Licence

@@ -5,11 +5,11 @@
 Lansenger（蓝信）平台的 Go SDK — 支持蓝信应用、组织机器人和个人机器人。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.6.0](https://img.shields.io/badge/Version-0.6.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
-[![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-blue)](https://go.dev/)
+[![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-blue)](https://go.dev/)
 [![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
-> 零外部依赖 — 仅使用 Go 标准库。适用于任何 Go 项目。
+> SDK 库零外部依赖（仅标准库）。CLI（`cmd/lansenger`）使用 [spf13/cobra](https://github.com/spf13/cobra)。
 
 ## 支持的机器人类型
 
@@ -476,11 +476,13 @@ lansenger-sdk-go/
 ├── config.go            # Config — 配置 + 环境变量
 ├── constants.go         # API 端点、媒体类型、回调事件类型
 ├── errors.go            # LansengerError 层级（Auth/Config/API/Network/File）
-├── models.go            # 35+ 结果/参数结构体类型
+├── models.go            # 50+ 结果/参数结构体类型
 ├── auth.go              # TokenManager — appToken 生命周期与自动刷新
+├── user_token_manager.go # UserTokenManager — userToken 生命周期与自动刷新
 ├── url_helpers.go       # BuildAPIURL — Options 模式构建 URL
 ├── oauth.go             # OAuth2 授权 URL、代码交换、令牌刷新
 ├── contacts.go          # 员工与组织信息 API
+├── users.go             # 用户资料 API
 ├── departments.go       # 部门 API
 ├── groups.go            # 群组 V2 API
 ├── chats.go             # 聊天列表与消息 API
@@ -492,10 +494,12 @@ lansenger-sdk-go/
 ├── streaming.go         # SSE 流式消息
 ├── media.go             # 上传/下载文件与图片
 ├── todos.go             # 统一待办（4.33）— 12 个端点
-├── calendars.go         # 日历与日程（4.23）— 8 个端点
+├── calendars.go         # 日历与日程（4.23）— 10 个端点
 ├── callbacks.go         # 回调事件解析 + AES-256-CBC 解密 + SHA1 签名验证
 ├── persistence.go       # CredentialStore — JSON 文件持久化
-├── *_test.go            # 115 单元测试 + 10 集成测试
+├── version.go           # SDK 版本常量
+├── *_test.go            # 136 单元测试 + 10 集成测试
+├── cmd/lansenger/       # CLI 工具（config、oauth、消息、员工等）
 ├── go.mod
 └── README.md
 ```
@@ -503,8 +507,8 @@ lansenger-sdk-go/
 ## 开发
 
 ```bash
-go test ./... -v                    # 单元测试（115 个测试）
-go test ./... -run TestIntegration  # 集成测试（10 个测试，需要 ~/.lansenger/sdk_state.json）
+go test . -v                        # 全部测试（136 单元 + 10 集成）
+go test . -run TestIntegration      # 仅集成测试（需要 ~/.lansenger/sdk_state.json + 网络）
 ```
 
 ## 许可证
