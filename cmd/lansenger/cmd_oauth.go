@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -242,12 +243,24 @@ func runOAuthLocalCallback(cmd *cobra.Command, args []string) {
 	}
 
 	handler := &oauthHandler{}
+
+	// Use net.ListenConfig withReuseAddr/ReusePort to avoid "address already in use"
+	// errors when the port is still in TIME_WAIT from a previous run.
+	lc := net.ListenConfig{
+		ReuseAddr: true,
+		ReusePort: true,
+	}
+	ln, err := lc.Listen(context.Background(), "tcp", fmt.Sprintf("localhost:%d", oauthLocalPort))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to listen on port %d: %v\n", oauthLocalPort, err)
+		os.Exit(1)
+	}
+
 	server := &http.Server{
-		Addr:    fmt.Sprintf("localhost:%d", oauthLocalPort),
 		Handler: handler,
 	}
 
-	go server.ListenAndServe()
+	go server.Serve(ln)
 
 	start := time.Now()
 	for handler.result == nil && time.Since(start) < time.Duration(oauthLocalTimeout)*time.Second {
