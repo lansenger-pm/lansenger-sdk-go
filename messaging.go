@@ -13,8 +13,8 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 		"content": content,
 	}
 	if filePath != "" {
-	uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, userToken)
-	if err != nil {
+		uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, userToken)
+		if err != nil {
 			return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
 		}
 		if !uploadResult.Success {

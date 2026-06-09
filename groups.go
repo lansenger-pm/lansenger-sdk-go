@@ -275,8 +275,8 @@ func (c *LansengerClient) UpdateGroupMembers(ctx context.Context, groupID string
 		res.TotalMembers = intFromMap(data, "totalMembers")
 		res.AddedStaffCount = intFromMap(data, "addedStaffCount")
 		res.DeletedStaffCount = intFromMap(data, "deletedStaffCount")
-res.InvalidStaff = stringArrayFromMap(data, "invalidStaff")
-	res.InvalidDepartment = stringArrayFromMap(data, "invalidDepartment")
+		res.InvalidStaff = stringArrayFromMap(data, "invalidStaff")
+		res.InvalidDepartment = stringArrayFromMap(data, "invalidDepartment")
 	}
 	return res, nil
 }
