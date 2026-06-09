@@ -82,6 +82,24 @@ func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, c
 	return res, nil
 }
 
+func extractMsgInfo(m map[string]interface{}) map[string]interface{} {
+	for _, key := range []string{"messageInfo", "messageInfos"} {
+		raw := m[key]
+		if raw == nil {
+			continue
+		}
+		if mi, ok := raw.(map[string]interface{}); ok {
+			return mi
+		}
+		if arr, ok := raw.([]interface{}); ok && len(arr) > 0 {
+			if mi, ok := arr[0].(map[string]interface{}); ok {
+				return mi
+			}
+		}
+	}
+	return nil
+}
+
 func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken string, pageSize int, baseVersion string, staffID, groupID string, startTime, endTime int64, senderID string) (*ChatMessagesResult, error) {
 	if userToken == "" {
 		return nil, fmt.Errorf("userToken is required for fetch_chat_messages")
@@ -138,7 +156,7 @@ func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken strin
 	if msgs, ok := data["messageList"].([]interface{}); ok {
 		for _, msg := range msgs {
 			if m, ok := msg.(map[string]interface{}); ok {
-				info, _ := m["messageInfo"].(map[string]interface{})
+				info := extractMsgInfo(m)
 				if info == nil {
 					continue
 				}
@@ -146,10 +164,14 @@ func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken strin
 				if content == nil {
 					content = map[string]interface{}{}
 				}
+				msgType := strFromMap(info, "type")
+				if msgType == "" {
+					msgType = strFromMap(info, "messageType")
+				}
 				res.Messages = append(res.Messages, ChatMessageInfo{
 					SendTime:    strFromMap(info, "sendTime"),
 					Sender:      strFromMap(info, "sender"),
-					MessageType: strFromMap(info, "type"),
+					MessageType: msgType,
 					Content:     content,
 				})
 			}
