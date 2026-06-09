@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"syscall"
 	"time"
 
 	lansenger "github.com/lansenger-pm/lansenger-sdk-go"
@@ -244,11 +245,20 @@ func runOAuthLocalCallback(cmd *cobra.Command, args []string) {
 
 	handler := &oauthHandler{}
 
-	// Use net.ListenConfig withReuseAddr/ReusePort to avoid "address already in use"
-	// errors when the port is still in TIME_WAIT from a previous run.
+	// Set SO_REUSEADDR via ListenConfig.Control for cross-platform port reuse.
+	// This prevents "bind: address already in use" when the port is still
+	// in TIME_WAIT from a previous run.
 	lc := net.ListenConfig{
-		ReuseAddr: true,
-		ReusePort: true,
+		Control: func(network, address string, c syscall.RawConn) error {
+			var setErr error
+			err := c.Control(func(fd uintptr) {
+				setErr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+			})
+			if setErr != nil {
+				return setErr
+			}
+			return err
+		},
 	}
 	ln, err := lc.Listen(context.Background(), "tcp", fmt.Sprintf("localhost:%d", oauthLocalPort))
 	if err != nil {
