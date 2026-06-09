@@ -9,10 +9,10 @@ func TestFetchUserInfo(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
 		handle("/v1/users/fetch", 0, "ok", map[string]interface{}{
-			"staffid":        "u001",
+			"staffId":        "u001",
 			"name":           "Bob",
-			"orgid":          "org1",
-			"orgname":        "TestOrg",
+			"orgId":          "org1",
+			"orgName":        "TestOrg",
 			"avatar":         "https://avatar.example.com/bob.png",
 			"email":          "bob@example.com",
 			"employeeNumber": "EMP001",

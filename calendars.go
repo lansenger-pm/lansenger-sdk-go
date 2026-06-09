@@ -179,7 +179,7 @@ func (c *LansengerClient) DeleteSchedule(ctx context.Context, calendarID, schedu
 	return res, nil
 }
 
-func (c *LansengerClient) FetchScheduleList(ctx context.Context, calendarID string, startTime, endTime map[string]interface{}, userToken, userID string) (*ScheduleListResult, error) {
+func (c *LansengerClient) FetchScheduleList(ctx context.Context, calendarID string, startTime, endTime int64, userToken, userID string) (*ScheduleListResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err

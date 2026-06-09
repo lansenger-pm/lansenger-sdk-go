@@ -31,11 +31,11 @@ func (c *LansengerClient) FetchUserInfo(ctx context.Context, userToken string) (
 
 	return &UserInfoResult{
 		Success:        true,
-		StaffID:        strFromMap(data, "staffid"),
+		StaffID:        strFromMap(data, "staffId"),
 		Name:           strFromMap(data, "name"),
-		OrgID:          strFromMap(data, "orgid"),
-		OrgName:        strFromMap(data, "orgname"),
-		AvatarID:       strFromMap(data, "avatarid"),
+		OrgID:          strFromMap(data, "orgId"),
+		OrgName:        strFromMap(data, "orgName"),
+		AvatarID:       strFromMap(data, "avatarId"),
 		AvatarURL:      strFromMap(data, "avatar"),
 		Email:          strFromMap(data, "email"),
 		EmployeeNumber: strFromMap(data, "employeeNumber"),

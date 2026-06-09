@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -78,9 +77,7 @@ func runChatList(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	chatTypeStr := strconv.Itoa(chatListType)
-
-	result, err := client.FetchChatList(ctx, chatListUserToken, chatTypeStr, chatListKeyword, chatListStartTime, chatListEndTime)
+	result, err := client.FetchChatList(ctx, chatListUserToken, chatListType, chatListKeyword, chatListStartTime, chatListEndTime)
 	checkError(err)
 
 	if jsonOutput {
@@ -127,16 +124,7 @@ func runChatMessages(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	startTimeStr := ""
-	if chatMsgStartTime != 0 {
-		startTimeStr = strconv.FormatInt(chatMsgStartTime, 10)
-	}
-	endTimeStr := ""
-	if chatMsgEndTime != 0 {
-		endTimeStr = strconv.FormatInt(chatMsgEndTime, 10)
-	}
-
-	result, err := client.FetchChatMessages(ctx, chatMsgUserToken, chatMsgPageSize, chatMsgVersion, chatMsgStaffID, chatMsgGroupID, startTimeStr, endTimeStr, chatMsgSenderID)
+	result, err := client.FetchChatMessages(ctx, chatMsgUserToken, chatMsgPageSize, chatMsgVersion, chatMsgStaffID, chatMsgGroupID, chatMsgStartTime, chatMsgEndTime, chatMsgSenderID)
 	checkError(err)
 
 	if jsonOutput {
@@ -210,14 +198,12 @@ func runChatMessagesSplitMonth(client *lansenger.LansengerClient, ctx context.Co
 
 	for i, interval := range intervals {
 		monthNum := i + 1
-		startStr := strconv.FormatInt(interval[0], 10)
-		endStr := strconv.FormatInt(interval[1], 10)
 		cursor := "0"
 		monthMsgCount := 0
 		pages := 0
 
 		for {
-			result, err := client.FetchChatMessages(ctx, chatMsgUserToken, chatMsgPageSize, cursor, chatMsgStaffID, chatMsgGroupID, startStr, endStr, chatMsgSenderID)
+			result, err := client.FetchChatMessages(ctx, chatMsgUserToken, chatMsgPageSize, cursor, chatMsgStaffID, chatMsgGroupID, interval[0], interval[1], chatMsgSenderID)
 			checkError(err)
 
 			allMessages = append(allMessages, result.Messages...)

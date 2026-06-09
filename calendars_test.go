@@ -127,7 +127,7 @@ func TestFetchScheduleList(t *testing.T) {
 
 	c := newTestClient(server)
 	result, err := c.FetchScheduleList(context.Background(), "cal001",
-		map[string]interface{}{"time": 1000}, map[string]interface{}{"time": 2000}, "utok1", "")
+		1000, 2000, "utok1", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

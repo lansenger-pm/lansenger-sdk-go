@@ -88,6 +88,9 @@ var APIEndpoints = map[string]map[string]string{
 		"children_fetch": "/v1/departments/{department_id}/children/fetch",
 		"staffs_fetch":   "/v1/departments/{department_id}/staffs/fetch",
 	},
+	"groups": {
+		"fetch": "/v2/groups/fetch",
+	},
 	"groups_v2": {
 		"create":         "/v2/groups/create",
 		"info_fetch":     "/v2/groups/{group_id}/info/fetch",
@@ -124,7 +127,8 @@ var APIEndpoints = map[string]map[string]string{
 		"create": "/v1/app/medias/create",
 	},
 	"chats": {
-		"fetch": "/v1/chats/fetch",
+		"fetch":           "/v1/chats/fetch",
+		"messages_fetch": "/v1/messages/fetch",
 	},
 	"calendars": {
 		"primary_fetch":                   "/v1/calendars/primary",

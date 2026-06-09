@@ -14,7 +14,7 @@ func BuildAPIURL(cfg *Config, category, endpoint, appToken string, opts ...URLOp
 
 	path = substitutePathVars(path, opts...)
 
-	baseURL := cfg.APIGatewayURL + path
+	baseURL := strings.TrimRight(cfg.APIGatewayURL, "/") + path
 
 	params := url.Values{}
 	params.Set("app_token", appToken)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -288,7 +289,9 @@ func runCalendarListSchedules(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.FetchScheduleList(ctx, args[0], map[string]interface{}{"time": args[1]}, map[string]interface{}{"time": args[2]}, calListUserToken, calListUserID)
+	startTime, _ := strconv.ParseInt(args[1], 10, 64)
+	endTime, _ := strconv.ParseInt(args[2], 10, 64)
+	result, err := client.FetchScheduleList(ctx, args[0], startTime, endTime, calListUserToken, calListUserID)
 	checkError(err)
 	outputResultFields(result, []string{"schedule_list"})
 }

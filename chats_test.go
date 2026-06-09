@@ -20,7 +20,7 @@ func TestFetchChatList(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.FetchChatList(context.Background(), "utok1", "private", "", 0, 0)
+	result, err := c.FetchChatList(context.Background(), "utok1", 1, "", 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestFetchChatList(t *testing.T) {
 
 func TestFetchChatListNoToken(t *testing.T) {
 	c := NewClient("id", "secret")
-	_, err := c.FetchChatList(context.Background(), "", "private", "", 0, 0)
+	_, err := c.FetchChatList(context.Background(), "", 1, "", 0, 0)
 	if err == nil {
 		t.Error("expected error for missing userToken")
 	}
@@ -59,14 +59,23 @@ func TestFetchChatMessages(t *testing.T) {
 			"name":        "Alice",
 			"chatType":    "private",
 			"messageList": []map[string]interface{}{
-				{"sendTime": "2024-01-01", "sender": "Alice", "messageType": "text"},
+				{
+					"name":     "Alice",
+					"chatType": "private",
+					"messageInfo": map[string]interface{}{
+						"sendTime":    "2024-01-01",
+						"sender":      "Alice",
+						"type":        "text",
+						"content":     map[string]interface{}{"text": "hello"},
+					},
+				},
 			},
 		}).
 		build()
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.FetchChatMessages(context.Background(), "utok1", 10, "", "s001", "", "", "", "")
+	result, err := c.FetchChatMessages(context.Background(), "utok1", 10, "", "s001", "", 0, 0, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -89,7 +98,7 @@ func TestFetchChatMessages(t *testing.T) {
 
 func TestFetchChatMessagesNoToken(t *testing.T) {
 	c := NewClient("id", "secret")
-	_, err := c.FetchChatMessages(context.Background(), "", 10, "", "s001", "", "", "", "")
+	_, err := c.FetchChatMessages(context.Background(), "", 10, "", "s001", "", 0, 0, "")
 	if err == nil {
 		t.Error("expected error for missing userToken")
 	}
@@ -103,7 +112,7 @@ func TestFetchChatListAPIError(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.FetchChatList(context.Background(), "utok1", "private", "", 0, 0)
+	result, err := c.FetchChatList(context.Background(), "utok1", 1, "", 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
