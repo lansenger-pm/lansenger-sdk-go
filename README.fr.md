@@ -5,9 +5,9 @@
 SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les applications Lansenger, les bots d'organisation et les bots personnels.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Version: 0.9.3](https://img.shields.io/badge/Version-0.9.3-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-blue)](https://go.dev/)
-[![Tests: 146](https://img.shields.io/badge/Tests-146-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Tests: 148](https://img.shields.io/badge/Tests-148-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
 > La bibliothèque SDK n'a aucune dépendance externe (stdlib uniquement). Le CLI (`cmd/lansenger`) utilise [spf13/cobra](https://github.com/spf13/cobra).
 
