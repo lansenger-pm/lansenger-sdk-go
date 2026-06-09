@@ -13,7 +13,7 @@ func TestFetchStaffBasicInfo(t *testing.T) {
 			"orgName":   "TestOrg",
 			"name":      "Alice",
 			"gender":    "female",
-			"avatarUrl": "https://avatar.example.com/alice.png",
+			"avatar":  "https://avatar.example.com/alice.png",
 			"status":    "active",
 		}).
 		build()

@@ -158,7 +158,7 @@ func TestFetchTodoTaskStatusCounts(t *testing.T) {
 	defer server.Close()
 
 	c := newTestClient(server)
-	result, err := c.FetchTodoTaskStatusCounts(context.Background(), "s001", "org1", "", "", "")
+	result, err := c.FetchTodoTaskStatusCounts(context.Background(), "s001", "org1", "", nil, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

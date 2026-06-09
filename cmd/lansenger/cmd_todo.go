@@ -169,7 +169,7 @@ func init() {
 	todoFetchByIDCmd.Flags().StringVar(&todoFetchByIDUserToken, "user-token", "", "User token")
 
 	todoStatusCountsCmd.Flags().StringVar(&todoStatusCountsAppID, "app-id", "", "App ID")
-	todoStatusCountsCmd.Flags().StringVar(&todoStatusCountsStatus, "status", "", "Status filter")
+	todoStatusCountsCmd.Flags().StringVar(&todoStatusCountsStatus, "status", "", "Comma-separated status filters")
 	todoStatusCountsCmd.Flags().StringVar(&todoStatusCountsUserToken, "user-token", "", "User token")
 
 	todoExecutorStatusCmd.Flags().StringVar(&todoExecutorStatusTaskID, "task-id", "", "Todo task ID")
@@ -287,7 +287,17 @@ func runTodoStatusCounts(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
 
-	result, err := client.FetchTodoTaskStatusCounts(ctx, args[0], args[1], todoStatusCountsAppID, todoStatusCountsStatus, todoStatusCountsUserToken)
+	var statusList []string
+	if todoStatusCountsStatus != "" {
+		for _, s := range strings.Split(todoStatusCountsStatus, ",") {
+			s = strings.TrimSpace(s)
+			if s != "" {
+				statusList = append(statusList, s)
+			}
+		}
+	}
+
+	result, err := client.FetchTodoTaskStatusCounts(ctx, args[0], args[1], todoStatusCountsAppID, statusList, todoStatusCountsUserToken)
 	checkError(err)
 	outputResult(result)
 }

@@ -47,12 +47,63 @@ type profileData struct {
 	EncodingKey           string `json:"encoding_key"`
 	CallbackToken         string `json:"callback_token"`
 	AppToken              string `json:"app_token"`
-	TokenExpiresAt        int64  `json:"token_expires_at"`
+	TokenExpiresAt        int64  `json:"app_token_expiry"`
 	UserToken             string `json:"user_token"`
 	RefreshToken          string `json:"refresh_token"`
-	UserTokenExpiresAt    int64  `json:"user_token_expires_at"`
-	RefreshTokenExpiresAt int64  `json:"refresh_token_expires_at"`
+	UserTokenExpiresAt    int64  `json:"user_token_expiry"`
+	RefreshTokenExpiresAt int64  `json:"refresh_token_expiry"`
 	StaffID               string `json:"staff_id"`
+}
+
+func (p *profileData) UnmarshalJSON(data []byte) error {
+	type rawPD struct {
+		AppID              string `json:"app_id"`
+		AppSecret          string `json:"app_secret"`
+		APIGatewayURL      string `json:"api_gateway_url"`
+		PassportURL        string `json:"passport_url"`
+		EncodingKey        string `json:"encoding_key"`
+		CallbackToken      string `json:"callback_token"`
+		AppToken           string `json:"app_token"`
+		TokenExpiresAt       int64  `json:"app_token_expiry"`
+		ATokenExpiresAtCompat *int64 `json:"token_expires_at"`
+		UserToken          string `json:"user_token"`
+		RefreshToken       string `json:"refresh_token"`
+		StaffID            string `json:"staff_id"`
+		UserTokenExpiry    *int64 `json:"user_token_expiry"`
+		UserTokenExpiresAt *int64 `json:"user_token_expires_at"`
+		RTokenExpiry       *int64 `json:"refresh_token_expiry"`
+		RTokenExpiresAt    *int64 `json:"refresh_token_expires_at"`
+	}
+	var raw rawPD
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	p.AppID = raw.AppID
+	p.AppSecret = raw.AppSecret
+	p.APIGatewayURL = raw.APIGatewayURL
+	p.PassportURL = raw.PassportURL
+	p.EncodingKey = raw.EncodingKey
+	p.CallbackToken = raw.CallbackToken
+	p.AppToken = raw.AppToken
+	p.TokenExpiresAt = raw.TokenExpiresAt
+	if raw.ATokenExpiresAtCompat != nil && p.TokenExpiresAt == 0 {
+		p.TokenExpiresAt = *raw.ATokenExpiresAtCompat
+	}
+	p.UserToken = raw.UserToken
+	p.RefreshToken = raw.RefreshToken
+	p.StaffID = raw.StaffID
+
+	if raw.UserTokenExpiry != nil {
+		p.UserTokenExpiresAt = *raw.UserTokenExpiry
+	} else if raw.UserTokenExpiresAt != nil {
+		p.UserTokenExpiresAt = *raw.UserTokenExpiresAt
+	}
+	if raw.RTokenExpiry != nil {
+		p.RefreshTokenExpiresAt = *raw.RTokenExpiry
+	} else if raw.RTokenExpiresAt != nil {
+		p.RefreshTokenExpiresAt = *raw.RTokenExpiresAt
+	}
+	return nil
 }
 
 func (cs *CredentialStore) loadUnlocked() (*storeData, error) {
@@ -143,7 +194,9 @@ func (cs *CredentialStore) ensureMigrated() {
 	if v, ok := flat["app_token"].(string); ok {
 		profile.AppToken = v
 	}
-	if v, ok := flat["token_expires_at"].(float64); ok {
+	if v, ok := flat["app_token_expiry"].(float64); ok {
+		profile.TokenExpiresAt = int64(v)
+	} else if v, ok := flat["token_expires_at"].(float64); ok {
 		profile.TokenExpiresAt = int64(v)
 	}
 	if v, ok := flat["user_token"].(string); ok {
@@ -152,10 +205,14 @@ func (cs *CredentialStore) ensureMigrated() {
 	if v, ok := flat["refresh_token"].(string); ok {
 		profile.RefreshToken = v
 	}
-	if v, ok := flat["user_token_expires_at"].(float64); ok {
+	if v, ok := flat["user_token_expiry"].(float64); ok {
+		profile.UserTokenExpiresAt = int64(v)
+	} else if v, ok := flat["user_token_expires_at"].(float64); ok {
 		profile.UserTokenExpiresAt = int64(v)
 	}
-	if v, ok := flat["refresh_token_expires_at"].(float64); ok {
+	if v, ok := flat["refresh_token_expiry"].(float64); ok {
+		profile.RefreshTokenExpiresAt = int64(v)
+	} else if v, ok := flat["refresh_token_expires_at"].(float64); ok {
 		profile.RefreshTokenExpiresAt = int64(v)
 	}
 
@@ -295,11 +352,11 @@ func (cs *CredentialStore) LoadUserToken() (map[string]string, error) {
 	}
 
 	return map[string]string{
-		"user_token":              profile.UserToken,
-		"refresh_token":           profile.RefreshToken,
-		"user_token_expires_at":   strconv.FormatInt(profile.UserTokenExpiresAt, 10),
-		"refresh_token_expires_at": strconv.FormatInt(profile.RefreshTokenExpiresAt, 10),
-		"staff_id":                profile.StaffID,
+		"user_token":               profile.UserToken,
+		"refresh_token":            profile.RefreshToken,
+		"user_token_expiry":        strconv.FormatInt(profile.UserTokenExpiresAt, 10),
+		"refresh_token_expiry":     strconv.FormatInt(profile.RefreshTokenExpiresAt, 10),
+		"staff_id":                 profile.StaffID,
 	}, nil
 }
 

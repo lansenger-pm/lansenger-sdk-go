@@ -40,13 +40,13 @@ func (utm *UserTokenManager) loadFromStore() {
 	utm.userToken = tokens["user_token"]
 	utm.refreshToken = tokens["refresh_token"]
 
-	if expStr := tokens["user_token_expires_at"]; expStr != "" {
+	if expStr := tokens["user_token_expiry"]; expStr != "" {
 		exp, err := strconv.ParseInt(expStr, 10, 64)
 		if err == nil && exp > time.Now().Unix() {
 			utm.expiresAt = time.Unix(exp, 0)
 		}
 	}
-	if refExpStr := tokens["refresh_token_expires_at"]; refExpStr != "" {
+	if refExpStr := tokens["refresh_token_expiry"]; refExpStr != "" {
 		refExp, err := strconv.ParseInt(refExpStr, 10, 64)
 		if err == nil && refExp > 0 {
 			utm.refreshExpiresAt = time.Unix(refExp, 0)

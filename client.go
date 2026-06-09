@@ -199,6 +199,15 @@ func strFromMap(m map[string]interface{}, key string) string {
 	return v
 }
 
+func strOrNil(m map[string]interface{}, keys ...string) string {
+	for _, k := range keys {
+		if s := strFromMap(m, k); s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
 func intFromMap(m map[string]interface{}, key string) int {
 	v, _ := m[key].(float64)
 	return int(v)

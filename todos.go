@@ -304,7 +304,7 @@ func (c *LansengerClient) FetchTodoTaskByID(ctx context.Context, todotaskID, org
 	return res, nil
 }
 
-func (c *LansengerClient) FetchTodoTaskStatusCounts(ctx context.Context, staffID, orgID, appID, status, userToken string) (*TodoTaskStatusCountResult, error) {
+func (c *LansengerClient) FetchTodoTaskStatusCounts(ctx context.Context, staffID, orgID, appID string, statusList []string, userToken string) (*TodoTaskStatusCountResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -321,8 +321,8 @@ func (c *LansengerClient) FetchTodoTaskStatusCounts(ctx context.Context, staffID
 	if appID != "" {
 		body["appId"] = appID
 	}
-	if status != "" {
-		body["status"] = status
+	if len(statusList) > 0 {
+		body["status"] = statusList
 	}
 
 	result, err := c.doPost(ctx, url, body)

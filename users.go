@@ -34,7 +34,7 @@ func (c *LansengerClient) FetchUserInfo(ctx context.Context, userToken string) (
 		StaffID:        strFromMap(data, "staffId"),
 		Name:           strFromMap(data, "name"),
 		OrgID:          strFromMap(data, "orgId"),
-		OrgName:        strFromMap(data, "orgName"),
+		OrgName:        strOrNil(data, "orgname", "orgName"),
 		AvatarID:       strFromMap(data, "avatarId"),
 		AvatarURL:      strFromMap(data, "avatar"),
 		Email:          strFromMap(data, "email"),

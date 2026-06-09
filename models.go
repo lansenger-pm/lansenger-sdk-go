@@ -237,7 +237,7 @@ type UserInfoResult struct {
 	EmployeeNumber string                 `json:"employee_number"`
 	LoginName      string                 `json:"login_name"`
 	ExternalID     string                 `json:"external_id"`
-	Departments    []map[string]interface{} `json:"departments"`
+	Departments    []map[string]interface{} `json:"department"`
 	Error          string                 `json:"error"`
 	RawResponse    map[string]interface{} `json:"raw_response"`
 }
