@@ -386,6 +386,7 @@ msgs, err := client.FetchChatMessages(ctx, "ut", 10, "", "", "g001", "", "", "")
 | App Secret | ✓ | `app_secret` | 藍信應用/機器人密鑰 |
 | API Gateway URL | ✓ | `api_gateway_url` | API 網關地址（預設：`https://open.e.lanxin.cn/open/apigw`） |
 | Passport URL | 僅 OAuth2 | `passport_url` | OAuth2 授權頁地址 |
+| Redirect URI | 僅 OAuth2 | `redirect_uri` | OAuth2 回呼地址（預設：`http://localhost:8765`） |
 | Encoding Key | 僅回呼 | `encoding_key` | AES-256-CBC 解密密鑰 |
 | Callback Token | 僅回呼 | `callback_token` | 回呼簽章驗證令牌 |
 
@@ -399,6 +400,7 @@ lansenger config set api_gateway_url https://open.e.lanxin.cn/open/apigw
 
 # 第2步（可選）：設定 OAuth2 授權頁地址（取得 userToken 需要）
 lansenger config set passport_url https://passport.lx.qianxin.com
+lansenger config set redirect_uri http://localhost:8765   # OAuth2 回呼地址（預設值）
 
 # 第3步（可選）：設定回呼憑證（接收 Webhook 回呼需要）
 lansenger config set encoding_key YOUR_ENCODING_KEY
@@ -422,6 +424,7 @@ client := lansenger.NewClient("app_id", "app_secret")
 cfg := lansenger.NewConfig("app_id", "app_secret")
 cfg.APIGatewayURL = "https://custom-gateway.example.com"
 cfg.PassportURL = "https://passport.example.com"
+cfg.RedirectURI = "https://myapp.com/callback"
 cfg.EncodingKey = "your_encoding_key"
 cfg.CallbackToken = "your_callback_token"
 client := lansenger.NewClientWithConfig(cfg)
@@ -435,6 +438,7 @@ client := lansenger.NewClientWithConfig(cfg)
 | `LANSENGER_APP_SECRET` | ✓ | 應用/機器人密鑰 | — |
 | `LANSENGER_API_GATEWAY_URL` | ✗ | API 網關地址 | `https://open.e.lanxin.cn/open/apigw` |
 | `LANSENGER_PASSPORT_URL` | ✗ | 授權頁地址（OAuth2） | — |
+| `LANSENGER_REDIRECT_URI` | ✗ | OAuth2 回呼地址 | `http://localhost:8765` |
 | `LANSENGER_ENCODING_KEY` | ✗ | 回呼解密密鑰 | — |
 | `LANSENGER_CALLBACK_TOKEN` | ✗ | 回呼驗證令牌（預設同 encoding_key） | — |
 | `LANSENGER_HTTP_TIMEOUT` | ✗ | HTTP 逾時（秒） | `30` |

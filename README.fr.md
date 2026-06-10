@@ -386,6 +386,7 @@ Tous les identifiants sont persistés par profil dans `~/.lansenger/sdk_state.js
 | App Secret | ✓ | `app_secret` | Secret application/bot Lansenger |
 | API Gateway URL | ✓ | `api_gateway_url` | Point d'accès API (défaut : `https://open.e.lanxin.cn/open/apigw`) |
 | Passport URL | OAuth2 uniquement | `passport_url` | URL page d'autorisation OAuth2 |
+| Redirect URI | OAuth2 uniquement | `redirect_uri` | URI de redirection OAuth2 (défaut : `http://localhost:8765`) |
 | Encoding Key | Callbacks uniquement | `encoding_key` | Clé de déchiffrement AES-256-CBC |
 | Callback Token | Callbacks uniquement | `callback_token` | Token de vérification de signature callback |
 
@@ -399,6 +400,7 @@ lansenger config set api_gateway_url https://open.e.lanxin.cn/open/apigw
 
 # Étape 2 (optionnel) : URL Passport pour OAuth2 (nécessaire pour userToken)
 lansenger config set passport_url https://passport.lx.qianxin.com
+lansenger config set redirect_uri http://localhost:8765   # URI de redirection OAuth2 (défaut)
 
 # Étape 3 (optionnel) : Identifiants callback (nécessaire pour Webhook)
 lansenger config set encoding_key YOUR_ENCODING_KEY
@@ -422,6 +424,7 @@ client := lansenger.NewClient("app_id", "app_secret")
 cfg := lansenger.NewConfig("app_id", "app_secret")
 cfg.APIGatewayURL = "https://custom-gateway.example.com"
 cfg.PassportURL = "https://passport.example.com"
+cfg.RedirectURI = "https://myapp.com/callback"
 cfg.EncodingKey = "your_encoding_key"
 cfg.CallbackToken = "your_callback_token"
 client := lansenger.NewClientWithConfig(cfg)
@@ -435,6 +438,7 @@ client := lansenger.NewClientWithConfig(cfg)
 | `LANSENGER_APP_SECRET` | ✓ | Secret App/Bot | — |
 | `LANSENGER_API_GATEWAY_URL` | ✗ | URL Gateway API | `https://open.e.lanxin.cn/open/apigw` |
 | `LANSENGER_PASSPORT_URL` | ✗ | URL Passport (OAuth2) | — |
+| `LANSENGER_REDIRECT_URI` | ✗ | URI de redirection OAuth2 | `http://localhost:8765` |
 | `LANSENGER_ENCODING_KEY` | ✗ | Clé de déchiffrement callback | — |
 | `LANSENGER_CALLBACK_TOKEN` | ✗ | Token callback (défaut = encoding_key) | — |
 | `LANSENGER_HTTP_TIMEOUT` | ✗ | Timeout HTTP (secondes) | `30` |
