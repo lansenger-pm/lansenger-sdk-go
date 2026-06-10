@@ -2,6 +2,8 @@ package lansenger
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/url"
 )
@@ -17,13 +19,20 @@ func (c *LansengerClient) BuildAuthorizeURL(redirectURI string, scope string, st
 	} else {
 		params.Set("scope", OAuth2ScopeBasicUserInfo)
 	}
-	if state != "" {
-		params.Set("state", state)
+	if state == "" {
+		state = randomNonce(16)
 	}
+	params.Set("state", state)
 	params.Set("redirect_uri", redirectURI)
 
 	u.RawQuery = params.Encode()
 	return u.String()
+}
+
+func randomNonce(n int) string {
+	b := make([]byte, n)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)[:n*2]
 }
 
 func ParseAuthorizeCallback(queryString string) (map[string]string, error) {

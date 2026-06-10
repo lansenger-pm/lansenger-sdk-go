@@ -353,9 +353,7 @@ func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *Dynamic
 	body := map[string]interface{}{
 		"msgId":   params.MsgID,
 		"msgType": "appCard",
-		"msgData": map[string]interface{}{
-			"appCardUpdateMsg": msgData,
-		},
+		"msgData": msgData,
 	}
 	if params.UserId != "" {
 		body["userId"] = params.UserId

@@ -11,11 +11,8 @@ func TestMediaTypeConstants(t *testing.T) {
 	if MediaTypeImage != 2 {
 		t.Errorf("expected MediaTypeImage=2, got %d", MediaTypeImage)
 	}
-	if MediaTypeFile != 3 {
-		t.Errorf("expected MediaTypeFile=3, got %d", MediaTypeFile)
-	}
-	if MediaTypeAudio != 4 {
-		t.Errorf("expected MediaTypeAudio=4, got %d", MediaTypeAudio)
+	if MediaTypeAudio != 3 {
+		t.Errorf("expected MediaTypeAudio=3, got %d", MediaTypeAudio)
 	}
 }
 
@@ -38,13 +35,14 @@ func TestGuessMediaTypeVideo(t *testing.T) {
 }
 
 func TestGuessMediaTypeFile(t *testing.T) {
+	// Non-media files default to MediaTypeImage on core upload (4.5.1 only supports video/image/audio)
 	result := GuessMediaType("document.pdf")
-	if result != MediaTypeFile {
-		t.Errorf("expected MediaTypeFile for .pdf, got %d", result)
+	if result != MediaTypeImage {
+		t.Errorf("expected MediaTypeImage for .pdf, got %d", result)
 	}
 	result = GuessMediaType("data.xlsx")
-	if result != MediaTypeFile {
-		t.Errorf("expected MediaTypeFile for .xlsx, got %d", result)
+	if result != MediaTypeImage {
+		t.Errorf("expected MediaTypeImage for .xlsx, got %d", result)
 	}
 }
 

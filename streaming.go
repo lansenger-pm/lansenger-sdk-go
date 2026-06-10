@@ -42,7 +42,7 @@ func (c *LansengerClient) FetchStreamMessage(ctx context.Context, msgID string) 
 	url := BuildAPIURL(c.config, "sse", "msg_fetch", token)
 
 	body := map[string]interface{}{
-		"msgId": msgID,
+		"model": msgID,
 	}
 
 	result, err := c.doPost(ctx, url, body)

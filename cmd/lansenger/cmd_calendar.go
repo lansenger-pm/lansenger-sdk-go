@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -234,12 +235,16 @@ func runCalendarCreateSchedule(cmd *cobra.Command, args []string) {
 	calendarID := args[0]
 	summary := args[1]
 
-	startTime := map[string]interface{}{"time": args[2], "timeZone": calCreateTz}
+	var startTimeInt, endTimeInt int64
+	fmt.Sscanf(args[2], "%d", &startTimeInt)
+	fmt.Sscanf(args[3], "%d", &endTimeInt)
+
+	startTime := map[string]interface{}{"time": startTimeInt, "timeZone": calCreateTz}
 	if calCreateDate != "" {
 		startTime["date"] = calCreateDate
 	}
 
-	endTime := map[string]interface{}{"time": args[3], "timeZone": calCreateTz}
+	endTime := map[string]interface{}{"time": endTimeInt, "timeZone": calCreateTz}
 
 	attendeeMaps, err := parseJSONArray(args[4])
 	checkError(err)

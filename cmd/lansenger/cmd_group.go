@@ -94,6 +94,17 @@ var (
 	groupUpdateName      string
 	groupUpdateDesc      string
 	groupUpdateOwner     string
+	groupUpdateAvatar    string
+	groupUpdateAssistant []string
+	groupUpdateDemoteAssistant []string
+	groupUpdateManageMode      int
+	groupUpdateLocationShare   string
+	groupUpdateNeedsConfirm    string
+	groupUpdateIsPublic        string
+	groupUpdateMaxMembers      int
+	groupUpdateMaxHistory      int
+	groupUpdateRemindAll       string
+	groupUpdateMute            string
 	groupUpdateUserToken string
 
 	groupUpdateMembersAdd    []string
@@ -126,8 +137,19 @@ func init() {
 	groupCheckCmd.Flags().StringVar(&groupCheckStaffID, "staff-id", "", "Staff ID to check")
 
 	groupUpdateCmd.Flags().StringVar(&groupUpdateName, "name", "", "New group name")
-	groupUpdateCmd.Flags().StringVar(&groupUpdateDesc, "desc", "", "New description")
+	groupUpdateCmd.Flags().StringVarP(&groupUpdateDesc, "desc", "d", "", "New description")
 	groupUpdateCmd.Flags().StringVar(&groupUpdateOwner, "owner", "", "New owner ID")
+	groupUpdateCmd.Flags().StringVar(&groupUpdateAvatar, "avatar", "", "New avatar ID")
+	groupUpdateCmd.Flags().StringArrayVar(&groupUpdateAssistant, "assistant", nil, "Staff IDs to promote to assistant (repeatable)")
+	groupUpdateCmd.Flags().StringArrayVar(&groupUpdateDemoteAssistant, "demote-assistant", nil, "Staff IDs to demote from assistant (repeatable)")
+	groupUpdateCmd.Flags().IntVar(&groupUpdateManageMode, "manage-mode", -1, "0=all manage, 1=owner only")
+	groupUpdateCmd.Flags().StringVar(&groupUpdateLocationShare, "location-share", "", "Enable/disable location sharing (yes/no)")
+	groupUpdateCmd.Flags().StringVar(&groupUpdateNeedsConfirm, "needs-confirm", "", "Join requires confirmation (yes/no)")
+	groupUpdateCmd.Flags().StringVar(&groupUpdateIsPublic, "is-public", "", "Public visibility (yes/no)")
+	groupUpdateCmd.Flags().IntVar(&groupUpdateMaxMembers, "max-members", -1, "Maximum member count")
+	groupUpdateCmd.Flags().IntVar(&groupUpdateMaxHistory, "max-history", -1, "Max history message count")
+	groupUpdateCmd.Flags().StringVar(&groupUpdateRemindAll, "remind-all", "", "@mention enabled/disabled (yes/no)")
+	groupUpdateCmd.Flags().StringVar(&groupUpdateMute, "mute", "", "Group mute on/off (yes/no)")
 	groupUpdateCmd.Flags().StringVar(&groupUpdateUserToken, "user-token", "", "User token")
 
 	groupUpdateMembersCmd.Flags().StringArrayVar(&groupUpdateMembersAdd, "add", nil, "Staff IDs to add (repeatable)")
@@ -219,7 +241,6 @@ func runGroupCheck(cmd *cobra.Command, args []string) {
 func runGroupUpdate(cmd *cobra.Command, args []string) {
 	client := getClient()
 	ctx := context.Background()
-
 	params := map[string]interface{}{}
 	if groupUpdateName != "" {
 		params["name"] = groupUpdateName
@@ -229,6 +250,39 @@ func runGroupUpdate(cmd *cobra.Command, args []string) {
 	}
 	if groupUpdateOwner != "" {
 		params["ownerId"] = groupUpdateOwner
+	}
+	if groupUpdateAvatar != "" {
+		params["avatarId"] = groupUpdateAvatar
+	}
+	if len(groupUpdateAssistant) > 0 {
+		params["assistant"] = groupUpdateAssistant
+	}
+	if len(groupUpdateDemoteAssistant) > 0 {
+		params["demoteAssistant"] = groupUpdateDemoteAssistant
+	}
+	if cmd.Flags().Changed("manage-mode") {
+		params["manageMode"] = groupUpdateManageMode
+	}
+	if groupUpdateLocationShare != "" {
+		params["locationShare"] = groupUpdateLocationShare == "yes"
+	}
+	if groupUpdateNeedsConfirm != "" {
+		params["needsConfirm"] = groupUpdateNeedsConfirm == "yes"
+	}
+	if groupUpdateIsPublic != "" {
+		params["isPublic"] = groupUpdateIsPublic == "yes"
+	}
+	if cmd.Flags().Changed("max-members") {
+		params["maxMembers"] = groupUpdateMaxMembers
+	}
+	if cmd.Flags().Changed("max-history") {
+		params["maxHistoryMsgCount"] = groupUpdateMaxHistory
+	}
+	if groupUpdateRemindAll != "" {
+		params["remindAll"] = groupUpdateRemindAll == "yes"
+	}
+	if groupUpdateMute != "" {
+		params["sendMsgStatus"] = groupUpdateMute == "yes"
 	}
 
 	result, err := client.UpdateGroupInfo(ctx, args[0], params, groupUpdateUserToken)

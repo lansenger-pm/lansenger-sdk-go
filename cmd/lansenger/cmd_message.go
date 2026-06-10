@@ -326,7 +326,7 @@ func init() {
 	sendBotMessageCmd.Flags().StringArrayVar(&sendBotMessageDepartmentIDs, "dept", nil, "Department IDs (bot channel only)")
 	sendBotMessageCmd.Flags().StringVar(&sendBotMessageUserToken, "user-token", "", "User token")
 	sendBotMessageCmd.Flags().StringVar(&sendBotMessageEntryID, "entry-id", "", "App entry selector")
-	sendBotMessageCmd.Flags().BoolVarP(&sendBotMessageIsGroup, "group", "g", false, "Send to groups instead of users")
+	sendBotMessageCmd.Flags().BoolVarP(&sendBotMessageIsGroup, "group", "g", false, "Send to groups instead of users (uses /v1/messages/group/create)")
 
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageUserToken, "user-token", "", "User token")
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageSenderID, "sender-id", "", "Sender staff ID")
@@ -630,9 +630,19 @@ func runSendBotMessage(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	result, err := client.SendBotMessage(ctx, args[0], msgDataMap, sendBotMessageChatIDs, sendBotMessageDepartmentIDs, sendBotMessageUserToken, sendBotMessageEntryID, sendBotMessageIsGroup)
-	checkError(err)
-	outputResultFields(result, []string{"message_id"})
+	if sendBotMessageIsGroup {
+		// Route to group message endpoint (API 4.6.2 /v1/messages/group/create) for each chat ID
+		for _, gid := range sendBotMessageChatIDs {
+			result, err := client.SendGroupMessage(ctx, gid, args[0], msgDataMap,
+				sendBotMessageUserToken, "", "", "", sendBotMessageEntryID)
+			checkError(err)
+			outputResultFields(result, []string{"message_id"})
+		}
+	} else {
+		result, err := client.SendBotMessage(ctx, args[0], msgDataMap, sendBotMessageChatIDs, sendBotMessageDepartmentIDs, sendBotMessageUserToken, sendBotMessageEntryID)
+		checkError(err)
+		outputResultFields(result, []string{"message_id"})
+	}
 }
 
 func runSendGroupMessage(cmd *cobra.Command, args []string) {
@@ -646,6 +656,21 @@ func runSendGroupMessage(cmd *cobra.Command, args []string) {
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Error: msg_data must be a JSON object\n")
 		return
+	}
+
+	// Inject reminder into msgData if mention flags are set
+	if sendGroupMessageReminderAll || len(sendGroupMessageReminderUserIDs) > 0 {
+		if textData, ok := msgDataMap["text"].(map[string]interface{}); ok {
+			textData["reminder"] = map[string]interface{}{
+				"all":     sendGroupMessageReminderAll,
+				"userIds": sendGroupMessageReminderUserIDs,
+			}
+		} else if ftData, ok := msgDataMap["formatText"].(map[string]interface{}); ok {
+			ftData["reminder"] = map[string]interface{}{
+				"all":     sendGroupMessageReminderAll,
+				"userIds": sendGroupMessageReminderUserIDs,
+			}
+		}
 	}
 
 	result, err := client.SendGroupMessage(ctx, args[0], args[1], msgDataMap, sendGroupMessageUserToken, sendGroupMessageSenderID, sendGroupMessageOutlines, sendGroupMessageUUID, sendGroupMessageEntryID)

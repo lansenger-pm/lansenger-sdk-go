@@ -104,7 +104,7 @@ func TestSendBotMessage(t *testing.T) {
 	c := newTestClient(server)
 	result, err := c.SendBotMessage(context.Background(), "text",
 		map[string]interface{}{"content": "hello"},
-		[]string{"s001"}, nil, "", "", false)
+		[]string{"s001"}, nil, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

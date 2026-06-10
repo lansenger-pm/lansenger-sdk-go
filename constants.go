@@ -12,8 +12,7 @@ const (
 
 	MediaTypeVideo  = 1
 	MediaTypeImage  = 2
-	MediaTypeFile   = 3
-	MediaTypeAudio  = 4
+	MediaTypeAudio  = 3
 
 	AppMediaTypeFile  = "file"
 	AppMediaTypeVideo = "video"
@@ -206,5 +205,5 @@ func GuessMediaType(filePath string) int {
 	if AudioExtensions[ext] {
 		return MediaTypeAudio
 	}
-	return MediaTypeFile
+	return MediaTypeImage
 }

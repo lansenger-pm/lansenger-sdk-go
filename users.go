@@ -29,7 +29,7 @@ func (c *LansengerClient) FetchUserInfo(ctx context.Context, userToken string) (
 		return &UserInfoResult{Success: false, Error: "no data in response", RawResponse: result}, nil
 	}
 
-	return &UserInfoResult{
+	res := &UserInfoResult{
 		Success:        true,
 		StaffID:        strFromMap(data, "staffId"),
 		Name:           strFromMap(data, "name"),
@@ -42,5 +42,14 @@ func (c *LansengerClient) FetchUserInfo(ctx context.Context, userToken string) (
 		LoginName:      strFromMap(data, "loginName"),
 		ExternalID:     strFromMap(data, "externalId"),
 		RawResponse:    result,
-	}, nil
+	}
+	if departments, ok := data["department"].([]interface{}); ok {
+		res.Departments = make([]map[string]interface{}, 0, len(departments))
+		for _, item := range departments {
+			if m, ok := item.(map[string]interface{}); ok {
+				res.Departments = append(res.Departments, m)
+			}
+		}
+	}
+	return res, nil
 }

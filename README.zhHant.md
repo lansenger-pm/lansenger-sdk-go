@@ -213,7 +213,7 @@ result, err := client.FetchStreamMessage(ctx, "msg123")
 
 ```go
 // 上傳（核心服務 — 數字類型）
-upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeFile)
+upload, err := client.UploadAppMedia(ctx, "/path/to/file.pdf", lansenger.AppMediaTypeFile, 0, 0, 0)
 
 // 上傳（應用/機械人 — 字串類型，支援 width/height/duration）
 upload, err := client.UploadAppMedia(ctx, "/path/to/video.mp4",

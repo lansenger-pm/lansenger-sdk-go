@@ -318,7 +318,7 @@ type GroupInfoResult struct {
 	MaxHistoryMsgCount int                    `json:"max_history_msg_count"`
 	TotalMembers       int                    `json:"total_members"`
 	RemindAll          bool                   `json:"remind_all"`
-	SendMsgStatus      string                 `json:"send_msg_status"`
+	SendMsgStatus      bool                   `json:"send_msg_status"`
 	Error              string                 `json:"error"`
 	RawResponse        map[string]interface{} `json:"raw_response"`
 }
@@ -496,9 +496,9 @@ type ScheduleInfoResult struct {
 	Description         string                 `json:"description"`
 	RepeatType          string                 `json:"repeat_type"`
 	AllDay              string                 `json:"all_day"`
-	StartTime           string                 `json:"start_time"`
-	EndTime             string                 `json:"end_time"`
-	Creator             string                 `json:"creator"`
+	StartTime           map[string]interface{} `json:"start_time"`
+	EndTime             map[string]interface{} `json:"end_time"`
+	Creator             map[string]interface{} `json:"creator"`
 	RsvpStatus          string                 `json:"rsvp_status"`
 	PrimaryScheduleID   string                 `json:"primary_schedule_id"`
 	ExpireDateType      string                 `json:"expire_date_type"`

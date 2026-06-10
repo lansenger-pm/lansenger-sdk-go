@@ -213,7 +213,7 @@ result, err := client.FetchStreamMessage(ctx, "msg123")
 
 ```go
 // Upload (service principal — type numérique)
-upload, err := client.UploadMedia(ctx, "/path/to/file.pdf", lansenger.MediaTypeFile)
+upload, err := client.UploadAppMedia(ctx, "/path/to/file.pdf", lansenger.AppMediaTypeFile, 0, 0, 0)
 
 // Upload (app/bot — type chaîne, supporte width/height/duration)
 upload, err := client.UploadAppMedia(ctx, "/path/to/video.mp4",

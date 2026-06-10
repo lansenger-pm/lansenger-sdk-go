@@ -2,7 +2,7 @@ package lansenger
 
 import "context"
 
-func (c *LansengerClient) SendBotMessage(ctx context.Context, msgType string, msgData map[string]interface{}, chatIDs, departmentIDs []string, userToken, entryID string, isGroup bool) (*BotMessageResult, error) {
+func (c *LansengerClient) SendBotMessage(ctx context.Context, msgType string, msgData map[string]interface{}, chatIDs, departmentIDs []string, userToken, entryID string) (*BotMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -17,11 +17,7 @@ func (c *LansengerClient) SendBotMessage(ctx context.Context, msgType string, ms
 		"msgData": msgData,
 	}
 	if len(chatIDs) > 0 {
-		if isGroup {
-			body["groupIdList"] = chatIDs
-		} else {
-			body["userIdList"] = chatIDs
-		}
+		body["userIdList"] = chatIDs
 	}
 	if len(departmentIDs) > 0 {
 		body["departmentIdList"] = departmentIDs

@@ -111,7 +111,7 @@ func (c *LansengerClient) FetchGroupInfo(ctx context.Context, groupID, userToken
 		MaxHistoryMsgCount: intFromMap(data, "maxHistoryMsgCount"),
 		TotalMembers:       intFromMap(data, "totalMembers"),
 		RemindAll:          boolFromMap(data, "remindAll"),
-		SendMsgStatus:      strFromMap(data, "sendMsgStatus"),
+		SendMsgStatus:      boolFromMap(data, "sendMsgStatus"),
 		RawResponse:        result,
 	}
 	return res, nil
@@ -303,7 +303,7 @@ func (c *LansengerClient) DissolveGroup(ctx context.Context, groupID, userToken 
 	}, nil
 }
 
-func (c *LansengerClient) CreateGroupShareID(ctx context.Context, groupID, userToken string) (*SendMessageResult, error) {
+func (c *LansengerClient) CreateGroupShareID(ctx context.Context, groupID, creator string, expiresIn int64, userToken string) (*SendMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -314,7 +314,12 @@ func (c *LansengerClient) CreateGroupShareID(ctx context.Context, groupID, userT
 		WithPathVar("group_id", groupID),
 	)
 
-	result, err := c.doPost(ctx, url, map[string]interface{}{})
+	body := map[string]interface{}{
+		"creator":    creator,
+		"expiresIn": expiresIn,
+	}
+
+	result, err := c.doPost(ctx, url, body)
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
 	}
@@ -328,7 +333,7 @@ func (c *LansengerClient) CreateGroupShareID(ctx context.Context, groupID, userT
 		RawResponse: result,
 	}
 	if data != nil {
-		res.MessageID = strFromMap(data, "shareId")
+		res.MessageID = strFromMap(data, "groupShareId")
 	}
 	return res, nil
 }
