@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.8] - 2026-06-10
+
+### Changed
+
+- **SendText / SendFile**: File uploads now use app/bot upload endpoint (4.5.4) instead of core service endpoint (4.5.1). The `mediaType` parameter type changed from `int` to `string` (values: `"file"`, `"video"`, `"image"`, `"audio"`).
+- **SendImageURL**: Uses `UploadAppMedia` (4.5.4) with `AppMediaTypeImage` instead of `UploadMedia` (4.5.1).
+
+### Fixed
+
+- **GuessMediaType()**: Now returns `0` for unknown file extensions instead of `MediaTypeImage`, allowing callers to fall back to their own default.
+
+### Added
+
+- **GuessAppMediaType()**: New function for app/bot upload (4.5.4) — returns string type (`"file"`, `"video"`, `"image"`, `"audio"`), defaulting to `"file"` for unknown extensions.
+
+### CLI Changes
+
+- **send-text / send-file**: `--media-type` changed from `int` to `string` (`file`/`video`/`image`/`audio`).
+
 ## [0.9.7] - 2026-06-10
 
 ### Fixed

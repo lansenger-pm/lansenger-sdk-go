@@ -8,12 +8,16 @@ import (
 	"strings"
 )
 
-func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, filePath string, mediaType int, coverImagePath string, reminderAll bool, reminderUserIDs []string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
+func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, filePath string, mediaType string, coverImagePath string, reminderAll bool, reminderUserIDs []string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
 	textData := map[string]interface{}{
 		"content": content,
 	}
 	if filePath != "" {
-		uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, userToken)
+		mt := mediaType
+		if mt == "" {
+			mt = GuessAppMediaType(filePath)
+		}
+		uploadResult, err := c.UploadAppMedia(ctx, filePath, mt, 0, 0, 0)
 		if err != nil {
 			return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
 		}
@@ -21,9 +25,9 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 			return &SendMessageResult{Success: false, Error: "upload failed: " + uploadResult.Error, Platform: "lansenger"}, nil
 		}
 		textData["mediaIds"] = []string{uploadResult.MediaID}
-		textData["mediaType"] = mediaType
+		textData["mediaType"] = mt
 		if coverImagePath != "" {
-			coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, userToken)
+			coverResult, err := c.UploadAppMedia(ctx, coverImagePath, AppMediaTypeImage, 0, 0, 0)
 			if err != nil {
 				return &SendMessageResult{Success: false, Error: "cover upload failed: " + err.Error(), Platform: "lansenger"}, nil
 			}
@@ -35,7 +39,7 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 	}
 	if reminderAll || len(reminderUserIDs) > 0 {
 		reminder := map[string]interface{}{
-			"all":    reminderAll,
+			"all":     reminderAll,
 			"userIds": reminderUserIDs,
 		}
 		textData["reminder"] = reminder
@@ -60,7 +64,7 @@ func (c *LansengerClient) SendMarkdown(ctx context.Context, chatID, content stri
 	}
 	if reminderAll || len(reminderUserIDs) > 0 {
 		reminder := map[string]interface{}{
-			"all":    reminderAll,
+			"all":     reminderAll,
 			"userIds": reminderUserIDs,
 		}
 		formatTextData["reminder"] = reminder
@@ -78,8 +82,12 @@ func (c *LansengerClient) SendMarkdown(ctx context.Context, chatID, content stri
 	return c.sendBotPrivate(ctx, chatID, msgType, msgData, userToken)
 }
 
-func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string, content string, mediaType int, coverImagePath string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
-uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, userToken)
+func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string, content string, mediaType string, coverImagePath string, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
+	mt := mediaType
+	if mt == "" {
+		mt = GuessAppMediaType(filePath)
+	}
+	uploadResult, err := c.UploadAppMedia(ctx, filePath, mt, 0, 0, 0)
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
 	}
@@ -89,13 +97,13 @@ uploadResult, err := c.UploadMedia(ctx, filePath, mediaType, userToken)
 
 	textData := map[string]interface{}{
 		"mediaIds":  []string{uploadResult.MediaID},
-		"mediaType": mediaType,
+		"mediaType": mt,
 	}
 	if content != "" {
 		textData["content"] = content
 	}
 	if coverImagePath != "" {
-		coverResult, err := c.UploadMedia(ctx, coverImagePath, MediaTypeImage, userToken)
+		coverResult, err := c.UploadAppMedia(ctx, coverImagePath, AppMediaTypeImage, 0, 0, 0)
 		if err != nil {
 			return &SendMessageResult{Success: false, Error: "cover upload failed: " + err.Error(), Platform: "lansenger"}, nil
 		}
@@ -167,7 +175,7 @@ func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, co
 	}
 	tmpFile.Close()
 
-	result, err := c.SendFile(ctx, chatID, tmpPath, content, MediaTypeImage, "", isGroup, userToken, senderID)
+	result, err := c.SendFile(ctx, chatID, tmpPath, content, AppMediaTypeImage, "", isGroup, userToken, senderID)
 	os.Remove(tmpPath)
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
@@ -458,9 +466,9 @@ func (c *LansengerClient) SendReminder(ctx context.Context, msgID string, remind
 	url := BuildAPIURL(c.config, "messages", "reminder_create", token)
 
 	body := map[string]interface{}{
-		"msgId":          msgID,
-		"reminderTypes":  reminderTypes,
-		"userIdList":     userIDList,
+		"msgId":         msgID,
+		"reminderTypes": reminderTypes,
+		"userIdList":    userIDList,
 	}
 
 	result, err := c.doPost(ctx, url, body)

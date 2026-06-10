@@ -205,5 +205,25 @@ func GuessMediaType(filePath string) int {
 	if AudioExtensions[ext] {
 		return MediaTypeAudio
 	}
-	return MediaTypeImage
+	return 0
+}
+
+func GuessAppMediaType(filePath string) string {
+	ext := ""
+	for i := len(filePath) - 1; i >= 0; i-- {
+		if filePath[i] == '.' {
+			ext = strings.ToLower(filePath[i:])
+			break
+		}
+	}
+	if ImageExtensions[ext] {
+		return AppMediaTypeImage
+	}
+	if VideoExtensions[ext] {
+		return AppMediaTypeVideo
+	}
+	if AudioExtensions[ext] {
+		return AppMediaTypeAudio
+	}
+	return AppMediaTypeFile
 }

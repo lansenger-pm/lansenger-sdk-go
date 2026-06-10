@@ -132,7 +132,7 @@ var (
 	sendReminderUserIDs  []string
 
 	sendTextFile           string
-	sendTextMediaType      int
+	sendTextMediaType      string
 	sendTextCoverImage     string
 	sendTextIsGroup        bool
 	sendTextReminderAll    bool
@@ -147,7 +147,7 @@ var (
 	sendMarkdownSenderID       string
 
 	sendFileContent     string
-	sendFileMediaType  int
+	sendFileMediaType  string
 	sendFileCoverImage string
 	sendFileIsGroup    bool
 	sendFileUserToken  string
@@ -241,7 +241,7 @@ var (
 
 func init() {
 	sendTextCmd.Flags().StringVarP(&sendTextFile, "file", "f", "", "File path to attach")
-	sendTextCmd.Flags().IntVarP(&sendTextMediaType, "media-type", "t", 0, "1=video, 2=image, 3=file")
+	sendTextCmd.Flags().StringVarP(&sendTextMediaType, "media-type", "t", "", "file/video/image/audio")
 	sendTextCmd.Flags().StringVar(&sendTextCoverImage, "cover-image", "", "Cover image path (required for video)")
 	sendTextCmd.Flags().BoolVarP(&sendTextIsGroup, "group", "g", false, "Send as group message")
 	sendTextCmd.Flags().BoolVar(&sendTextReminderAll, "mention-all", false, "@all in group")
@@ -256,7 +256,7 @@ func init() {
 	sendMarkdownCmd.Flags().StringVar(&sendMarkdownSenderID, "sender-id", "", "Sender staff ID for group message")
 
 	sendFileCmd.Flags().StringVarP(&sendFileContent, "content", "c", "", "Content/caption text")
-	sendFileCmd.Flags().IntVar(&sendFileMediaType, "media-type", 0, "1=video, 2=image, 3=file")
+	sendFileCmd.Flags().StringVar(&sendFileMediaType, "media-type", "", "file/video/image/audio")
 	sendFileCmd.Flags().StringVar(&sendFileCoverImage, "cover-image", "", "Cover image path (required for video)")
 	sendFileCmd.Flags().BoolVarP(&sendFileIsGroup, "group", "g", false, "Send as group message")
 	sendFileCmd.Flags().StringVar(&sendFileUserToken, "user-token", "", "User token for private channel")
