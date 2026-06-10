@@ -194,7 +194,7 @@ lansenger media download-to-file MEDIA_ID --output /path/to/save.pdf
 | `--json` / `-j` | Sortie JSON brute au lieu de tableaux formatés |
 | `--profile` / `-P` | Utiliser un profil d'identifiants spécifique (défaut : `default`) |
 
-## Profils multi-applications / multi-bots
+## Profils multi-applications / multi-robots
 
 Le CLI prend en charge plusieurs profils, chacun correspondant à un appID, avec des identifiants isolés :
 
