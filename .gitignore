@@ -1,3 +1,4 @@
 /lansenger
 cmd/lansenger/lansenger
 *.exe.DS_Store
+.DS_Store
