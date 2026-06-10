@@ -98,9 +98,10 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 		"passport_url":    true,
 		"encoding_key":    true,
 		"callback_token":  true,
+		"redirect_uri":    true,
 	}
 	if !validKeys[key] {
-		fmt.Fprintf(os.Stderr, "Error: Invalid config key '%s'. Valid keys: app_id, app_secret, api_gateway_url, passport_url, encoding_key, callback_token\n", key)
+		fmt.Fprintf(os.Stderr, "Error: Invalid config key '%s'. Valid keys: app_id, app_secret, api_gateway_url, passport_url, redirect_uri, encoding_key, callback_token\n", key)
 		os.Exit(1)
 	}
 
@@ -122,7 +123,7 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 		cbToken := creds["callback_token"]
 		err = store.SaveCallbackConfig(encKey, cbToken)
 	} else {
-		err = store.SaveCredentials(creds["app_id"], creds["app_secret"], creds["api_gateway_url"], creds["passport_url"])
+		err = store.SaveCredentials(creds["app_id"], creds["app_secret"], creds["api_gateway_url"], creds["passport_url"], creds["redirect_uri"])
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error saving credentials: %v\n", err)

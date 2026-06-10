@@ -10,6 +10,7 @@ type Config struct {
 	AppSecret     string
 	APIGatewayURL string
 	PassportURL   string
+	RedirectURI   string
 	HTTPTimeout   float64
 	EncodingKey   string
 	CallbackToken string
@@ -36,6 +37,7 @@ func ConfigFromEnv() (*Config, error) {
 		AppSecret:     appSecret,
 		APIGatewayURL: getEnvOrDefault("LANSENGER_API_GATEWAY_URL", DefaultAPIGatewayURL),
 		PassportURL:   getEnvOrDefault("LANSENGER_PASSPORT_URL", DefaultPassportURL),
+		RedirectURI:   os.Getenv("LANSENGER_REDIRECT_URI"),
 		HTTPTimeout:   30.0,
 		EncodingKey:   os.Getenv("LANSENGER_ENCODING_KEY"),
 		CallbackToken: os.Getenv("LANSENGER_CALLBACK_TOKEN"),

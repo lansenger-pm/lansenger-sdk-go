@@ -23,6 +23,13 @@ func (c *LansengerClient) BuildAuthorizeURL(redirectURI string, scope string, st
 		state = randomNonce(16)
 	}
 	params.Set("state", state)
+
+	if redirectURI == "" {
+		redirectURI = c.config.RedirectURI
+	}
+	if redirectURI == "" {
+		return ""
+	}
 	params.Set("redirect_uri", redirectURI)
 
 	u.RawQuery = params.Encode()

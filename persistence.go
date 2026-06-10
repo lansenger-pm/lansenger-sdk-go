@@ -44,6 +44,7 @@ type profileData struct {
 	AppSecret             string `json:"app_secret"`
 	APIGatewayURL         string `json:"api_gateway_url"`
 	PassportURL           string `json:"passport_url"`
+	RedirectURI           string `json:"redirect_uri"`
 	EncodingKey           string `json:"encoding_key"`
 	CallbackToken         string `json:"callback_token"`
 	AppToken              string `json:"app_token"`
@@ -61,6 +62,7 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 		AppSecret          string `json:"app_secret"`
 		APIGatewayURL      string `json:"api_gateway_url"`
 		PassportURL        string `json:"passport_url"`
+		RedirectURI        string `json:"redirect_uri"`
 		EncodingKey        string `json:"encoding_key"`
 		CallbackToken      string `json:"callback_token"`
 		AppToken           string `json:"app_token"`
@@ -82,6 +84,7 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 	p.AppSecret = raw.AppSecret
 	p.APIGatewayURL = raw.APIGatewayURL
 	p.PassportURL = raw.PassportURL
+	p.RedirectURI = raw.RedirectURI
 	p.EncodingKey = raw.EncodingKey
 	p.CallbackToken = raw.CallbackToken
 	p.AppToken = raw.AppToken
@@ -185,6 +188,9 @@ func (cs *CredentialStore) ensureMigrated() {
 	if v, ok := flat["passport_url"].(string); ok {
 		profile.PassportURL = v
 	}
+	if v, ok := flat["redirect_uri"].(string); ok {
+		profile.RedirectURI = v
+	}
 	if v, ok := flat["encoding_key"].(string); ok {
 		profile.EncodingKey = v
 	}
@@ -243,12 +249,13 @@ func (cs *CredentialStore) LoadCredentials() (map[string]string, error) {
 		"app_secret":      profile.AppSecret,
 		"api_gateway_url": profile.APIGatewayURL,
 		"passport_url":    profile.PassportURL,
+		"redirect_uri":    profile.RedirectURI,
 		"encoding_key":    profile.EncodingKey,
 		"callback_token":  profile.CallbackToken,
 	}, nil
 }
 
-func (cs *CredentialStore) SaveCredentials(appID, appSecret, apiGatewayURL, passportURL string) error {
+func (cs *CredentialStore) SaveCredentials(appID, appSecret, apiGatewayURL, passportURL, redirectURI string) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 	cs.ensureMigrated()
@@ -263,6 +270,7 @@ func (cs *CredentialStore) SaveCredentials(appID, appSecret, apiGatewayURL, pass
 	profile.AppSecret = appSecret
 	profile.APIGatewayURL = apiGatewayURL
 	profile.PassportURL = passportURL
+	profile.RedirectURI = redirectURI
 	sd.Profiles[cs.profile] = profile
 	sd.ActiveProfile = cs.profile
 

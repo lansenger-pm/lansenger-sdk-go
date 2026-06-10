@@ -24,7 +24,7 @@ func TestCredentialStoreSaveAndLoadCredentials(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	err = store.SaveCredentials("app1", "secret1", "https://gateway.example.com", "https://passport.example.com")
+	err = store.SaveCredentials("app1", "secret1", "https://gateway.example.com", "https://passport.example.com", "")
 	if err != nil {
 		t.Fatalf("unexpected error saving credentials: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestCredentialStoreHasCredentials(t *testing.T) {
 		t.Error("expected HasCredentials=false before saving")
 	}
 
-	store.SaveCredentials("app1", "secret1", "", "")
+	store.SaveCredentials("app1", "secret1", "", "", "")
 	if !store.HasCredentials() {
 		t.Error("expected HasCredentials=true after saving")
 	}
@@ -71,7 +71,7 @@ func TestCredentialStoreAppToken(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	store.SaveCredentials("app1", "secret1", "", "")
+	store.SaveCredentials("app1", "secret1", "", "", "")
 
 	err = store.SaveAppToken("test_token", 7200)
 	if err != nil {
@@ -94,7 +94,7 @@ func TestCredentialStoreAppTokenExpired(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	store.SaveCredentials("app1", "secret1", "", "")
+	store.SaveCredentials("app1", "secret1", "", "", "")
 	store.SaveAppToken("expired_token", 1)
 
 	time.Sleep(2 * time.Second)
@@ -115,7 +115,7 @@ func TestCredentialStoreUserToken(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	store.SaveCredentials("app1", "secret1", "", "")
+	store.SaveCredentials("app1", "secret1", "", "", "")
 	store.SaveUserToken("utok1", "rtok1", 7200, 2592000, "staff1")
 
 	tokens, err := store.LoadUserToken()
@@ -140,7 +140,7 @@ func TestCredentialStoreClear(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	store.SaveCredentials("app1", "secret1", "", "")
+	store.SaveCredentials("app1", "secret1", "", "", "")
 	store.Clear()
 
 	if store.HasCredentials() {
@@ -155,7 +155,7 @@ func TestCredentialStoreClearProfile(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	store.SaveCredentials("app1", "secret1", "", "")
+	store.SaveCredentials("app1", "secret1", "", "", "")
 	store.ClearProfile()
 
 	if store.HasCredentials() {
@@ -170,7 +170,7 @@ func TestCredentialStoreListProfiles(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	store.SaveCredentials("app1", "secret1", "", "")
+	store.SaveCredentials("app1", "secret1", "", "", "")
 
 	profiles, err := store.ListProfiles()
 	if err != nil {
@@ -198,7 +198,7 @@ func TestCredentialStorePreservesState(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	store.SaveCredentials("app1", "secret1", "https://gateway.com", "")
+	store.SaveCredentials("app1", "secret1", "https://gateway.com", "", "")
 	store.SaveAppToken("tok1", 7200)
 
 	creds, _ := store.LoadCredentials()

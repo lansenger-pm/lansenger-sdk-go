@@ -62,6 +62,9 @@ func NewClientFromStore(store *CredentialStore) (*LansengerClient, error) {
 	if creds["callback_token"] != "" {
 		cfg.CallbackToken = creds["callback_token"]
 	}
+	if creds["redirect_uri"] != "" {
+		cfg.RedirectURI = creds["redirect_uri"]
+	}
 	return NewClientWithConfig(cfg), nil
 }
 
