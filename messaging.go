@@ -25,7 +25,7 @@ func (c *LansengerClient) SendText(ctx context.Context, chatID, content string, 
 			return &SendMessageResult{Success: false, Error: "upload failed: " + uploadResult.Error, Platform: "lansenger"}, nil
 		}
 		textData["mediaIds"] = []string{uploadResult.MediaID}
-		textData["mediaType"] = mt
+		textData["mediaType"] = AppToMsgMediaType[mt]
 		if coverImagePath != "" {
 			coverResult, err := c.UploadAppMedia(ctx, coverImagePath, AppMediaTypeImage, 0, 0, 0)
 			if err != nil {
@@ -97,7 +97,7 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 
 	textData := map[string]interface{}{
 		"mediaIds":  []string{uploadResult.MediaID},
-		"mediaType": mt,
+		"mediaType": AppToMsgMediaType[mt],
 	}
 	if content != "" {
 		textData["content"] = content

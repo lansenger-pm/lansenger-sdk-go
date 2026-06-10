@@ -10,9 +10,9 @@ const (
 	DefaultProfile       = "default"
 	TokenRefreshMargin   = 300
 
-	MediaTypeVideo  = 1
-	MediaTypeImage  = 2
-	MediaTypeAudio  = 3
+	MediaTypeVideo = 1
+	MediaTypeImage = 2
+	MediaTypeAudio = 3
 
 	AppMediaTypeFile  = "file"
 	AppMediaTypeVideo = "video"
@@ -31,6 +31,13 @@ const (
 	TodoTypeNotification = 1
 	TodoTypeApproval     = 2
 )
+
+var AppToMsgMediaType = map[string]int{
+	AppMediaTypeVideo: MediaTypeVideo, // "video" → 1
+	AppMediaTypeImage: MediaTypeImage, // "image" → 2
+	AppMediaTypeFile:  MediaTypeAudio, // "file"  → 3 (same as MediaTypeAudio value)
+	AppMediaTypeAudio: MediaTypeAudio, // "audio" → 3
+}
 
 var ImageExtensions = map[string]bool{
 	".jpg":  true,
@@ -126,20 +133,20 @@ var APIEndpoints = map[string]map[string]string{
 		"create": "/v1/app/medias/create",
 	},
 	"chats": {
-		"fetch":           "/v1/chats/fetch",
+		"fetch":          "/v1/chats/fetch",
 		"messages_fetch": "/v1/messages/fetch",
 	},
 	"calendars": {
-		"primary_fetch":                   "/v1/calendars/primary",
-		"schedules_create":                "/v1/calendars/{calendar_id}/schedules/create",
-		"schedules_fetch":                 "/v1/calendars/{calendar_id}/schedules/{schedule_id}/fetch",
-		"schedules_update":                "/v1/calendars/{calendar_id}/schedules/{schedule_id}/update",
-		"schedules_delete":                "/v1/calendars/{calendar_id}/schedules/{schedule_id}/delete",
-		"schedules_list_fetch":            "/v1/calendars/{calendar_id}/schedules/fetch",
-		"schedules_members_fetch":         "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/fetch",
-		"schedules_members_create":        "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/create",
-		"schedules_members_delete":        "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/delete",
-		"schedules_members_meta_update":   "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/meta/update",
+		"primary_fetch":                 "/v1/calendars/primary",
+		"schedules_create":              "/v1/calendars/{calendar_id}/schedules/create",
+		"schedules_fetch":               "/v1/calendars/{calendar_id}/schedules/{schedule_id}/fetch",
+		"schedules_update":              "/v1/calendars/{calendar_id}/schedules/{schedule_id}/update",
+		"schedules_delete":              "/v1/calendars/{calendar_id}/schedules/{schedule_id}/delete",
+		"schedules_list_fetch":          "/v1/calendars/{calendar_id}/schedules/fetch",
+		"schedules_members_fetch":       "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/fetch",
+		"schedules_members_create":      "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/create",
+		"schedules_members_delete":      "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/delete",
+		"schedules_members_meta_update": "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/meta/update",
 	},
 	"todo": {
 		"create":                  "/xtra/task/unified/v1/todotask/create",
