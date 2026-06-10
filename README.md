@@ -386,6 +386,7 @@ All credentials are persisted per profile in `~/.lansenger/sdk_state.json` (0600
 | App Secret | ✓ | `app_secret` | Lansenger app/bot secret |
 | API Gateway URL | ✓ | `api_gateway_url` | API gateway endpoint (default: `https://open.e.lanxin.cn/open/apigw`) |
 | Passport URL | OAuth2 only | `passport_url` | OAuth2 authorize page URL |
+| Redirect URI | OAuth2 only | `redirect_uri` | OAuth2 callback redirect URI (default: `http://localhost:8765`) |
 | Encoding Key | Callbacks only | `encoding_key` | AES-256-CBC key for callback decryption |
 | Callback Token | Callbacks only | `callback_token` | Token for callback signature verification |
 
@@ -399,6 +400,7 @@ lansenger config set api_gateway_url https://open.e.lanxin.cn/open/apigw
 
 # Step 2 (optional): Set OAuth2 passport URL (needed for userToken)
 lansenger config set passport_url https://passport.lx.qianxin.com
+lansenger config set redirect_uri http://localhost:8765   # OAuth2 redirect URI (default)
 
 # Step 3 (optional): Set callback credentials (needed for webhook decryption)
 lansenger config set encoding_key YOUR_ENCODING_KEY
@@ -422,6 +424,7 @@ client := lansenger.NewClient("app_id", "app_secret")
 cfg := lansenger.NewConfig("app_id", "app_secret")
 cfg.APIGatewayURL = "https://custom-gateway.example.com"
 cfg.PassportURL = "https://passport.example.com"
+cfg.RedirectURI = "https://myapp.com/callback"
 cfg.EncodingKey = "your_encoding_key"
 cfg.CallbackToken = "your_callback_token"
 client := lansenger.NewClientWithConfig(cfg)
@@ -435,6 +438,7 @@ client := lansenger.NewClientWithConfig(cfg)
 | `LANSENGER_APP_SECRET` | ✓ | App/Bot Secret | — |
 | `LANSENGER_API_GATEWAY_URL` | ✗ | API Gateway URL | `https://open.e.lanxin.cn/open/apigw` |
 | `LANSENGER_PASSPORT_URL` | ✗ | Passport URL (for OAuth2) | — |
+| `LANSENGER_REDIRECT_URI` | ✗ | OAuth2 redirect URI | `http://localhost:8765` |
 | `LANSENGER_ENCODING_KEY` | ✗ | Encoding key for callback decryption | — |
 | `LANSENGER_CALLBACK_TOKEN` | ✗ | Callback token (defaults to encoding_key) | — |
 | `LANSENGER_HTTP_TIMEOUT` | ✗ | HTTP timeout (seconds) | `30` |
