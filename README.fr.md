@@ -2,7 +2,7 @@
 
 # lansenger-sdk-go
 
-SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les applications Lansenger, les bots d'organisation et les bots personnels.
+SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les applications Lansenger, les robots d'organisation et les robots personnels.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version: 0.9.5](https://img.shields.io/badge/Version-0.9.5-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
@@ -11,15 +11,15 @@ SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les application
 
 > La bibliothèque SDK n'a aucune dépendance externe (stdlib uniquement). Le CLI (`cmd/lansenger`) utilise [spf13/cobra](https://github.com/spf13/cobra).
 
-## Types de bots pris en charge
+## Types de robots pris en charge
 
-| Type de bot | Authentification | WebSocket inbound | Toutes les API |
+| Type de robot | Authentification | WebSocket inbound | Toutes les API |
 |----------|------|-------------------|----------|
 | **Application Lansenger** | appToken + userToken | ✗ (utilise webhook) | ✓ |
 | **Bot d'organisation** | appToken + userToken | ✗ (utilise webhook) | ✓ |
-| **Bot personnel** | appToken | ✓ (WebSocket) | ✓ (limité pour les API non-bot) |
+| **Bot personnel** | appToken | ✓ (WebSocket) | ✓ (limité pour les API non-robot) |
 
-Les trois types de bots utilisent le même mécanisme d'authentification : `appToken` est requis pour chaque appel API ; `userToken` n'est nécessaire que pour des opérations spécifiques au niveau utilisateur (infos utilisateur, recherche de personnel, calendrier, etc.).
+Les trois types de robots utilisent le même mécanisme d'authentification : `appToken` est requis pour chaque appel API ; `userToken` n'est nécessaire que pour des opérations spécifiques au niveau utilisateur (infos utilisateur, recherche de personnel, calendrier, etc.).
 
 ## Fonctionnalités
 
@@ -28,10 +28,10 @@ Les trois types de bots utilisent le même mécanisme d'authentification : `appT
 - **Authentification utilisateur OAuth2** — URL d'autorisation, échange de code, renouvellement de token
 - **Organisation & départements** — infos organisation, détails/sous-departements/personnel du département
 - **Personnel & contacts** — infos basiques/détaillées, mappage d'ID, ancêtres de département, recherche
-- **Messagerie** — 3 canaux de chat privé (bot, compte officiel, impersonnation utilisateur) + chat de groupe, tous types de messages, @mention, identité d'émetteur humain/bot
+- **Messagerie** — 3 canaux de chat privé (robot, compte officiel, impersonnation utilisateur) + chat de groupe, tous types de messages, @mention, identité d'émetteur humain/robot
 - **Cartes enrichies** — appCard (avec mises à jour dynamiques), oacard, linkCard, appArticles
 - **Messages en streaming** — diffusion temps réel basée sur SSE pour agents IA
-- **Upload/download de médias** — fichiers, images, vidéos avec détection automatique du type, récupération du chemin de téléchargement, upload app/bot
+- **Upload/download de médias** — fichiers, images, vidéos avec détection automatique du type, récupération du chemin de téléchargement, upload app/robot
 - **Gestion des messages** — révoquer, mise à jour dynamique de carte, rappel urgent
 - **Groupes V2** — créer, infos, membres, liste, vérification de membership, mise à jour des paramètres & membres, dissoudre
 - **Calendrier & planification** — calendrier principal, CRUD de planification, gestion des participants, mise à jour des métadonnées des participants
@@ -85,11 +85,11 @@ client.InvalidateToken() // force le renouvellement au prochain appel
 
 ### Obtenir les identifiants
 
-| Type de bot | Comment obtenir appID + appSecret |
+| Type de robot | Comment obtenir appID + appSecret |
 |----------|----------------------------|
 | **Bot personnel** | Client desktop Lansenger → Contacts → Bots intelligents → Bots personnels → cliquer sur l'icône ℹ️ (le client mobile NE montre PAS les identifiants) |
-| **Application Lansenger** | Créer sur le [Centre développeur Lansenger](https://dev.lanxin.cn) — peut nécessiter l'approbation de l'administrateur d'organisation |
-| **Bot d'organisation** | Créer sur le [Centre développeur Lansenger](https://dev.lanxin.cn) — peut nécessiter l'approbation de l'administrateur d'organisation |
+| **Application Lansenger** | Créer sur le Centre développeur Lansenger — peut nécessiter l'approbation de l'administrateur d'organisation |
+| **Bot d'organisation** | Créer sur le Centre développeur Lansenger — peut nécessiter l'approbation de l'administrateur d'organisation |
 
 ### Authentification utilisateur OAuth2
 
@@ -143,7 +143,7 @@ fields, err := client.FetchOrgExtraFieldIDs(ctx, "orgId", "", 1, 1000)
 
 ## 4. Messagerie & Médias
 
-#### Chat privé bot — le plus courant
+#### Chat privé robot — le plus courant
 
 ```go
 result, err := client.SendText(ctx, "staff123", "Bonjour !", "", 0, "", false, nil, false, "", "")
@@ -215,7 +215,7 @@ result, err := client.FetchStreamMessage(ctx, "msg123")
 // Upload (service principal — type numérique)
 upload, err := client.UploadAppMedia(ctx, "/path/to/file.pdf", lansenger.AppMediaTypeFile, 0, 0, 0)
 
-// Upload (app/bot — type chaîne, supporte width/height/duration)
+// Upload (app/robot — type chaîne, supporte width/height/duration)
 upload, err := client.UploadAppMedia(ctx, "/path/to/video.mp4",
     lansenger.AppMediaTypeVideo, 680, 480, 300)
 
@@ -229,7 +229,7 @@ path, err := client.DownloadMediaToFile(ctx, "media123", "/path/to/save.pdf")
 pathInfo, err := client.FetchMediaPath(ctx, "media123", "ut")
 
 // Révoquer des messages
-result, err := client.RevokeMessage(ctx, []string{"msg1", "msg2"}, "bot", "")
+result, err := client.RevokeMessage(ctx, []string{"msg1", "msg2"}, "robot", "")
 
 // Envoyer un rappel urgent
 result, err := client.SendReminder(ctx, "msg123", []int{1, 2}, []string{"staff1", "staff2"})
@@ -382,8 +382,8 @@ Tous les identifiants sont persistés par profil dans `~/.lansenger/sdk_state.js
 
 | Identifiant | Requis | Clé CLI | Description |
 |-------------|--------|---------|-------------|
-| App ID | ✓ | `app_id` | ID application/bot Lansenger |
-| App Secret | ✓ | `app_secret` | Secret application/bot Lansenger |
+| App ID | ✓ | `app_id` | ID application/robot Lansenger |
+| App Secret | ✓ | `app_secret` | Secret application/robot Lansenger |
 | API Gateway URL | ✓ | `api_gateway_url` | Point d'accès API (défaut : `https://open.e.lanxin.cn/open/apigw`) |
 | Passport URL | OAuth2 uniquement | `passport_url` | URL page d'autorisation OAuth2 |
 | Redirect URI | OAuth2 uniquement | `redirect_uri` | URI de redirection OAuth2 (défaut : `http://localhost:8765`) |
@@ -493,7 +493,7 @@ lansenger-sdk-go/
 ├── account_messages.go  # Canal compte officiel (4.6.1)
 ├── user_messages.go     # Canal impersonnation utilisateur (4.6.3)
 ├── group_messages.go    # Canal chat de groupe (4.6.2)
-├── bot_messages.go      # Canal bot (4.6.12)
+├── robot_messages.go      # Canal robot (4.6.12)
 ├── messaging.go         # Méthodes de convenance + révoquer + mise à jour dynamique
 ├── streaming.go         # Messages en streaming SSE
 ├── media.go             # Upload/download de fichiers & images

@@ -64,7 +64,7 @@ export LANSENGER_REDIRECT_URI=http://localhost:8765
 lansenger config show
 ```
 
-### 3. 傳送第一條訊息
+### 3. 發送第一條訊息
 
 ```bash
 lansenger message send-text staff001 "Hello from CLI!"
@@ -75,7 +75,7 @@ lansenger message send-text staff001 "Hello from CLI!"
 | 命令組 | 說明 | 子命令 |
 |--------|------|--------|
 | `config` | 管理憑證設定 | `set`, `show`, `clear`, `list-profiles` |
-| `message` | 傳送與管理訊息 | `send-text`, `send-markdown`, `send-file`, `send-image-url`, `send-link-card`, `send-app-articles`, `send-app-card`, `send-oacard`, `send-bot-message`, `send-group-message`, `send-account-message`, `send-user-message`, `update-dynamic-card`, `revoke`, `query-groups`, `send-reminder` |
+| `message` | 發送與管理訊息 | `send-text`, `send-markdown`, `send-file`, `send-image-url`, `send-link-card`, `send-app-articles`, `send-app-card`, `send-oacard`, `send-bot-message`, `send-group-message`, `send-account-message`, `send-user-message`, `update-dynamic-card`, `revoke`, `query-groups`, `send-reminder` |
 | `group` | 管理群組 | `create`, `info`, `members`, `list`, `check`, `update`, `update-members`, `dismiss` |
 | `staff` | 查詢人員資訊 | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
 | `department` | 查詢部門資訊 | `detail`, `children`, `staffs` |
@@ -90,37 +90,37 @@ lansenger message send-text staff001 "Hello from CLI!"
 
 ## 常用範例
 
-### 訊息傳送
+### 訊息發送
 
 ```bash
-# 傳送純文字訊息
+# 發送純文字訊息
 lansenger message send-text chat123 "你好！"
 
-# 傳送 Markdown 訊息
+# 發送 Markdown 訊息
 lansenger message send-markdown chat123 "**粗體** *斜體*"
 
-# 傳送檔案
+# 發送檔案
 lansenger message send-file chat123 /path/to/report.pdf
 
-# 傳送網路圖片
+# 發送網路圖片
 lansenger message send-image-url chat123 https://example.com/photo.jpg
 
-# 傳送連結卡片
+# 發送連結卡片
 lansenger message send-link-card chat123 "文件" "點擊檢視" https://docs.example.com
 
-# 傳送應用卡片
+# 發送應用卡片
 lansenger message send-app-card chat123 "卡片標題" --content "正文內容" --card-link https://example.com
 
-# 傳送多條圖文（appArticles）
+# 發送多條圖文（appArticles）
 lansenger message send-app-articles chat123 '{"title":"文章1","url":"https://a.com"}' '{"title":"文章2","url":"https://b.com"}'
 
-# 群內傳送並 @all（user_token 可選，無則顯示為 bot）
+# 群內發送並 @all（user_token 可選，無則顯示為 bot）
 lansenger message send-text group123 "全員通知" --group --mention-all
 
 # 群內 @指定人
 lansenger message send-text group123 "請檢視" --group --mention staff001
 
-# 機械人通道傳送訊息
+# 機械人通道發送訊息
 lansenger message send-bot-message text '{"content":"通知內容"}' --chat-id user001 --chat-id user002
 ```
 

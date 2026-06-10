@@ -117,13 +117,13 @@ lansenger message send-app-articles chat123 '{"title":"Article 1","url":"https:/
 # Envoyer une carte d'approbation OA
 lansenger message send-oacard chat123 "Titre approbation" --head "Notification" --field '{"key":"Demandeur","value":"Jean"}'
 
-# Envoyer dans un groupe avec @all (user_token facultatif, affiché comme bot sans)
+# Envoyer dans un groupe avec @all (user_token facultatif, affiché comme robot sans)
 lansenger message send-text group123 "Annonce" --group --mention-all
 
 # @mention de personnes spécifiques dans un groupe
 lansenger message send-text group123 "Veuillez vérifier" --group --mention staff001
 
-# Diffusion via le canal bot
+# Diffusion via le canal robot
 lansenger message send-bot-message text '{"content":"Avis"}' --chat-id user001 --chat-id user002
 ```
 
@@ -139,7 +139,7 @@ lansenger group info group123
 # Voir les membres du groupe
 lansenger group members group123
 
-# Voir la liste des groupes (bot peut lister ses groupes)
+# Voir la liste des groupes (robot peut lister ses groupes)
 lansenger group list
 
 # Voir la liste des groupes en tant qu'utilisateur (nécessite user_token)
@@ -180,7 +180,7 @@ lansenger staff ancestors staff001
 # Télécharger un fichier plateforme principale
 lansenger media upload /path/to/file.pdf --media-type 3
 
-# Télécharger un média application/bot (utilisé pour send-text / send-file)
+# Télécharger un média application/robot (utilisé pour send-text / send-file)
 lansenger media upload-app /path/to/file.pdf --media-type file
 
 # Télécharger un média vers un fichier local
@@ -199,11 +199,11 @@ lansenger media download-to-file MEDIA_ID --output /path/to/save.pdf
 Le CLI prend en charge plusieurs profils, chacun correspondant à un appID, avec des identifiants isolés :
 
 ```bash
-# Configurer la première application (bot personnel)
+# Configurer la première application (robot personnel)
 lansenger config set app_id xxx1 --profile my-bot
 lansenger config set app_secret xxx1 --profile my-bot
 
-# Configurer la deuxième application (bot d'organisation)
+# Configurer la deuxième application (robot d'organisation)
 lansenger config set app_id xxx2 --profile org-bot
 lansenger config set app_secret xxx2 --profile org-bot
 
