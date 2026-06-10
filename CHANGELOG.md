@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.7] — v0.7.2 tag — 2026-06-10
+## [0.9.7] - 2026-06-10
+
+### Fixed
+- `NewClientFromStore`: Now initializes `UserTokenManager` with store to auto-load user token from cache, matching Python SDK behavior.
+
+## [0.9.6] — v0.7.2 tag — 2026-06-10
 
 ### Added
 - `Config.RedirectURI` field + `LANSENGER_REDIRECT_URI` env var support

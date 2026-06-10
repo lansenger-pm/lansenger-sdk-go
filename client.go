@@ -65,7 +65,11 @@ func NewClientFromStore(store *CredentialStore) (*LansengerClient, error) {
 	if creds["redirect_uri"] != "" {
 		cfg.RedirectURI = creds["redirect_uri"]
 	}
-	return NewClientWithConfig(cfg), nil
+
+	client := NewClientWithConfig(cfg)
+	// Initialize UserTokenManager with store to auto-load user token from cache
+	client.userTokenMgr = NewUserTokenManager(client, store)
+	return client, nil
 }
 
 func (c *LansengerClient) GetToken(ctx context.Context) (string, error) {
