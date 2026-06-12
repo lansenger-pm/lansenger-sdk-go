@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.12] - 2026-06-12
+
+### Fixed
+
+- **user_token_manager**: `refreshExpiresAt` now conditionally updated only when `RefreshExpiresIn > 0`, preventing the in-memory expiry from being reset to `time.Now()` when the API returns 0. Also added 300-second margin to refreshToken expiry check to avoid race at exact boundary. Fixed memory-disk inconsistency where persisted expiry kept the old value while in-memory was overwritten.
+
 ## [0.9.11] - 2026-06-12
 
 ### Changed

@@ -76,7 +76,7 @@ func (utm *UserTokenManager) refresh(ctx context.Context) (string, error) {
 		return "", NewAuthError("no refresh token available — must re-authorize via exchange_code")
 	}
 
-	if time.Now().After(utm.refreshExpiresAt) {
+	if time.Now().Add(time.Duration(UserTokenRefreshMargin) * time.Second).After(utm.refreshExpiresAt) {
 		return "", NewAuthError("refresh token expired — must re-authorize via exchange_code")
 	}
 
@@ -97,7 +97,9 @@ func (utm *UserTokenManager) refresh(ctx context.Context) (string, error) {
 		effectiveExpiresIn = result.ExpiresIn / 2
 	}
 	utm.expiresAt = time.Now().Add(time.Duration(effectiveExpiresIn) * time.Second)
-	utm.refreshExpiresAt = time.Now().Add(time.Duration(result.RefreshExpiresIn) * time.Second)
+	if result.RefreshExpiresIn > 0 {
+		utm.refreshExpiresAt = time.Now().Add(time.Duration(result.RefreshExpiresIn) * time.Second)
+	}
 	if result.StaffID != "" {
 		utm.staffID = result.StaffID
 	}
