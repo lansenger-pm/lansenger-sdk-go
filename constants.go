@@ -95,9 +95,6 @@ var APIEndpoints = map[string]map[string]string{
 		"staffs_fetch":   "/v1/departments/{department_id}/staffs/fetch",
 	},
 	"groups": {
-		"fetch": "/v2/groups/fetch",
-	},
-	"groups_v2": {
 		"create":         "/v2/groups/create",
 		"info_fetch":     "/v2/groups/{group_id}/info/fetch",
 		"members_fetch":  "/v2/groups/{group_id}/members/fetch",

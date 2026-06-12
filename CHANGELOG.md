@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.11] - 2026-06-12
+
+### Changed
+
+- **constants**: Merged `groups_v2` endpoint category into `groups`, removing the redundant separate category. All group APIs now use the unified `"groups"` key in `APIEndpoints`.
+
 ## [0.9.10] - 2026-06-12
 
 ### Changed

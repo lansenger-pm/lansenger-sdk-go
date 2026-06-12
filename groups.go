@@ -10,7 +10,7 @@ func (c *LansengerClient) CreateGroup(ctx context.Context, info *GroupCreateInfo
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "create", token,
+	url := BuildAPIURL(c.config, "groups", "create", token,
 		WithUserToken(userToken),
 	)
 

@@ -48,7 +48,7 @@ func TestGuessMediaTypeFile(t *testing.T) {
 
 func TestAPIEndpointsStructure(t *testing.T) {
 	categories := []string{"auth", "oauth", "users", "staffs", "org", "departments",
-		"groups_v2", "messages", "bot", "sse", "medias", "chats",
+		"groups", "messages", "bot", "sse", "medias", "chats",
 		"calendars", "todo", "websocket"}
 	for _, cat := range categories {
 		if APIEndpoints[cat] == nil {
@@ -73,7 +73,7 @@ func TestStaffsEndpointPaths(t *testing.T) {
 	}
 }
 
-func TestGroupsV2EndpointPaths(t *testing.T) {
+func TestGroupsEndpointPaths(t *testing.T) {
 	tests := map[string]string{
 		"create":         "/v2/groups/create",
 		"info_fetch":     "/v2/groups/{group_id}/info/fetch",
@@ -84,9 +84,9 @@ func TestGroupsV2EndpointPaths(t *testing.T) {
 		"members_update": "/v2/groups/{group_id}/members/update",
 	}
 	for key, expected := range tests {
-		actual := APIEndpoints["groups_v2"][key]
+		actual := APIEndpoints["groups"][key]
 		if actual != expected {
-			t.Errorf("expected groups_v2.%s=%s, got %s", key, expected, actual)
+			t.Errorf("expected groups.%s=%s, got %s", key, expected, actual)
 		}
 	}
 }

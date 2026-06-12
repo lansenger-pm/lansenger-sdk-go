@@ -431,7 +431,7 @@ func (c *LansengerClient) QueryGroups(ctx context.Context, pageOffset, pageSize 
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups", "fetch", token,
+	url := BuildAPIURL(c.config, "groups", "list_fetch", token,
 		WithPageOffset(pageOffset),
 		WithPageSize(pageSize),
 	)
