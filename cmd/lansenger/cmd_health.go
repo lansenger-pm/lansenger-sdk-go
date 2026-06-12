@@ -10,7 +10,7 @@ import (
 
 var healthCmd = &cobra.Command{
 	Use:   "health",
-	Short: "Health check commands",
+	Short: "Health check and connection verification",
 }
 
 var healthCheckCmd = &cobra.Command{

@@ -9,7 +9,7 @@ import (
 
 var todoCmd = &cobra.Command{
 	Use:   "todo",
-	Short: "Todo task commands",
+	Short: "Manage todo tasks",
 }
 
 var todoCreateCmd = &cobra.Command{

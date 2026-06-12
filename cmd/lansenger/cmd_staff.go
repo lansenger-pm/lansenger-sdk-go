@@ -8,7 +8,7 @@ import (
 
 var staffCmd = &cobra.Command{
 	Use:   "staff",
-	Short: "Staff and contact commands",
+	Short: "Query staff/contacts information",
 }
 
 var staffBasicInfoCmd = &cobra.Command{
@@ -48,7 +48,7 @@ var staffOrgExtraFieldsCmd = &cobra.Command{
 
 var staffSearchCmd = &cobra.Command{
 	Use:   "search KEYWORD",
-	Short: "Search staff",
+	Short: "Search staff by name/phone/email (requires --user-token OR --user-id)",
 	Args:  cobra.ExactArgs(1),
 	Run:   runStaffSearch,
 }
@@ -86,8 +86,8 @@ func init() {
 	staffOrgExtraFieldsCmd.Flags().StringVar(&staffOrgExtraFieldsToken, "user-token", "", "User token")
 	staffOrgExtraFieldsCmd.Flags().IntVarP(&staffOrgExtraFieldsPage, "page", "p", 1, "Page number")
 	staffOrgExtraFieldsCmd.Flags().IntVarP(&staffOrgExtraFieldsSize, "size", "s", 1000, "Page size")
-	staffSearchCmd.Flags().StringVar(&staffSearchUserToken, "user-token", "", "User token")
-	staffSearchCmd.Flags().StringVar(&staffSearchUserID, "user-id", "", "User ID")
+	staffSearchCmd.Flags().StringVar(&staffSearchUserToken, "user-token", "", "User token (one of --user-token or --user-id is required)")
+	staffSearchCmd.Flags().StringVar(&staffSearchUserID, "user-id", "", "User ID context (one of --user-token or --user-id is required)")
 	staffSearchCmd.Flags().BoolVar(&staffSearchRecursive, "recursive", true, "Recursive search")
 	staffSearchCmd.Flags().BoolVar(&staffSearchNoRecursive, "no-recursive", false, "Disable recursive search")
 	staffSearchCmd.Flags().StringArrayVar(&staffSearchSectorIDs, "sector", nil, "Sector IDs")

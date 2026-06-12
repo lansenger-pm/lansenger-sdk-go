@@ -11,7 +11,7 @@ import (
 
 var groupCmd = &cobra.Command{
 	Use:   "group",
-	Short: "Group commands",
+	Short: "Manage groups",
 }
 
 var groupCreateCmd = &cobra.Command{

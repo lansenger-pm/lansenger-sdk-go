@@ -19,7 +19,7 @@ import (
 
 var oauthCmd = &cobra.Command{
 	Use:   "oauth",
-	Short: "OAuth2 authentication commands",
+	Short: "OAuth2 user authentication operations",
 }
 
 var oauthAuthorizeURLCmd = &cobra.Command{

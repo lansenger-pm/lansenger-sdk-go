@@ -8,7 +8,7 @@ import (
 
 var departmentCmd = &cobra.Command{
 	Use:   "department",
-	Short: "Department commands",
+	Short: "Query department information",
 }
 
 var departmentDetailCmd = &cobra.Command{

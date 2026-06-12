@@ -10,7 +10,7 @@ import (
 
 var calendarCmd = &cobra.Command{
 	Use:   "calendar",
-	Short: "Calendar and schedule commands",
+	Short: "Calendar and schedule operations",
 }
 
 var calendarPrimaryCmd = &cobra.Command{

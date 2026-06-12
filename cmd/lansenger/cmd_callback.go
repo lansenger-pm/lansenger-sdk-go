@@ -13,7 +13,7 @@ import (
 
 var callbackCmd = &cobra.Command{
 	Use:   "callback",
-	Short: "Callback event commands",
+	Short: "Parse and verify callback events",
 }
 
 var callbackParsePayloadCmd = &cobra.Command{

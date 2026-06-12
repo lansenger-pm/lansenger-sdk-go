@@ -8,7 +8,7 @@ import (
 
 var streamingCmd = &cobra.Command{
 	Use:   "streaming",
-	Short: "Create and fetch streaming messages",
+	Short: "Streaming message operations (for AI agent progressive output)",
 }
 
 var streamingCreateCmd = &cobra.Command{
