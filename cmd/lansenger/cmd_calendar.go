@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -298,7 +299,30 @@ func runCalendarListSchedules(cmd *cobra.Command, args []string) {
 	endTime, _ := strconv.ParseInt(args[2], 10, 64)
 	result, err := client.FetchScheduleList(ctx, args[0], startTime, endTime, calListUserToken, calListUserID)
 	checkError(err)
-	outputResultFields(result, []string{"schedule_list"})
+
+	if jsonOutput {
+		outputJSON(result.ScheduleList)
+		return
+	}
+
+	if len(result.ScheduleList) == 0 {
+		fmt.Println("No schedules found.")
+		return
+	}
+
+	fmt.Printf("%-40s %s\n", "Schedule ID", "Summary")
+	fmt.Printf("%-40s %s\n", strings.Repeat("━", 40), strings.Repeat("━", 40))
+	for _, s := range result.ScheduleList {
+		sid := ""
+		if v, ok := s["scheduleId"]; ok {
+			sid = fmt.Sprintf("%v", v)
+		}
+		sum := ""
+		if v, ok := s["summary"]; ok {
+			sum = fmt.Sprintf("%v", v)
+		}
+		fmt.Printf("%-40s %s\n", sid, sum)
+	}
 }
 
 func runCalendarAttendees(cmd *cobra.Command, args []string) {
