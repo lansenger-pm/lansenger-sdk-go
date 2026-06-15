@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.14] - 2026-06-16
+
+### Fixed
+
+- **persistence**: Fix multi-user userToken overwrite bug in `CredentialStore`. Previously `SaveUserToken()` wrote tokens as flat fields in the profile, so each new OAuth2 authorization for the same app overwrote the previous user's tokens. Tokens are now stored per-staffID in `user_tokens[staffID]` so multiple users can coexist in the same profile. Legacy flat-format stores are auto-migrated on load.
+
 ## [0.9.13] - 2026-06-15
 
 ### Added
