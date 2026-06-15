@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.15] - 2026-06-16
+
+### Added
+
+- **tests**: Multi-user userToken isolation test suite covering: two users not overwriting each other, cross-staff independence, legacy flat format auto-migration, and backward-compatible no-staff_id fallback.
+
 ## [0.9.14] - 2026-06-16
 
 ### Fixed
