@@ -33,7 +33,7 @@ func (utm *UserTokenManager) loadFromStore() {
 	if utm.store == nil {
 		return
 	}
-	tokens, err := utm.store.LoadUserToken("")
+	tokens, err := utm.store.LoadUserToken()
 	if err != nil {
 		return
 	}

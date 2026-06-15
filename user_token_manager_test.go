@@ -221,7 +221,7 @@ func TestUserTokenManager_Persistence_PreservesExpiryWhenZero(t *testing.T) {
 	// First save with valid refresh_expires_in (30 days)
 	store.SaveUserToken("ut1", "rt1", 7200, 2592000, "staff1")
 
-	tokens1, _ := store.LoadUserToken("")
+	tokens1, _ := store.LoadUserToken()
 	if tokens1["refresh_token_expiry"] == "0" || tokens1["refresh_token_expiry"] == "" {
 		t.Fatal("expected refresh_token_expiry to be set after first save")
 	}
@@ -229,7 +229,7 @@ func TestUserTokenManager_Persistence_PreservesExpiryWhenZero(t *testing.T) {
 	// Save again with new refreshToken but refreshExpiresIn=0
 	store.SaveUserToken("ut2", "rt2", 7200, 0, "staff1")
 
-	tokens2, _ := store.LoadUserToken("")
+	tokens2, _ := store.LoadUserToken()
 	// refresh_token should be updated
 	if tokens2["refresh_token"] != "rt2" {
 		t.Errorf("expected refresh_token='rt2', got '%s'", tokens2["refresh_token"])

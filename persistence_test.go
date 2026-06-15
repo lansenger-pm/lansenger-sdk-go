@@ -118,7 +118,7 @@ func TestCredentialStoreUserToken(t *testing.T) {
 	store.SaveCredentials("app1", "secret1", "", "", "")
 	store.SaveUserToken("utok1", "rtok1", 7200, 2592000, "staff1")
 
-	tokens, err := store.LoadUserToken("")
+	tokens, err := store.LoadUserToken()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
