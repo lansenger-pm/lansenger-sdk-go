@@ -438,6 +438,28 @@ func (cs *CredentialStore) ClearProfile() error {
 	return cs.saveUnlocked(sd)
 }
 
+// DeleteProfileByName deletes a profile by name. If the deleted profile
+// is the active profile, it falls back to "default".
+func (cs *CredentialStore) DeleteProfileByName(name string) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.ensureMigrated()
+
+	sd, err := cs.loadUnlocked()
+	if err != nil {
+		return err
+	}
+
+	if _, ok := sd.Profiles[name]; !ok {
+		return fmt.Errorf("profile '%s' not found", name)
+	}
+	delete(sd.Profiles, name)
+	if sd.ActiveProfile == name {
+		sd.ActiveProfile = DefaultProfile
+	}
+	return cs.saveUnlocked(sd)
+}
+
 func (cs *CredentialStore) Clear() error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()

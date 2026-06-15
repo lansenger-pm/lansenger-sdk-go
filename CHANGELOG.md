@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.13] - 2026-06-15
+
+### Added
+
+- **persistence**: `CredentialStore.DeleteProfileByName(name)` method to delete a specific profile by name. Automatically falls back to `"default"` if the deleted profile was the active one. Returns an error if the profile does not exist.
+- **cli**: `config delete-profile` command to permanently remove a credential profile and all its data.
+
 ## [0.9.12] - 2026-06-12
 
 ### Fixed

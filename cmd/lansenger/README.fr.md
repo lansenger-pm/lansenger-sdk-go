@@ -74,7 +74,7 @@ lansenger message send-text staff001 "Hello from CLI!"
 
 | Groupe | Description | Sous-commandes |
 |--------|------|--------|
-| `config` | Gérer les identifiants | `set`, `show`, `clear`, `list-profiles` |
+| `config` | Gérer les identifiants | `set`, `show`, `clear`, `list-profiles`, `delete-profile` |
 | `message` | Envoyer et gérer les messages | `send-text`, `send-markdown`, `send-file`, `send-image-url`, `send-link-card`, `send-app-articles`, `send-app-card`, `send-oacard`, `send-bot-message`, `send-group-message`, `send-account-message`, `send-user-message`, `update-dynamic-card`, `revoke`, `query-groups`, `send-reminder` |
 | `group` | Gérer les groupes | `create`, `info`, `members`, `list`, `check`, `update`, `update-members`, `dismiss` |
 | `staff` | Interroger les infos du personnel | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
@@ -206,6 +206,9 @@ lansenger config set app_secret xxx1 --profile my-bot
 # Configurer la deuxième application (robot d'organisation)
 lansenger config set app_id xxx2 --profile org-bot
 lansenger config set app_secret xxx2 --profile org-bot
+
+# Supprimer un profil (bascule automatiquement vers default si actif)
+lansenger config delete-profile my-bot
 
 # Utiliser un profil spécifique
 lansenger --profile org-bot staff basic-info STAFF_ID

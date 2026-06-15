@@ -44,6 +44,13 @@ var configListProfilesCmd = &cobra.Command{
 	Run:   runConfigListProfiles,
 }
 
+var configDeleteProfileCmd = &cobra.Command{
+	Use:   "delete-profile <profile-name>",
+	Short: "Delete a credential profile by name",
+	Args:  cobra.ExactArgs(1),
+	Run:   runConfigDeleteProfile,
+}
+
 var (
 	configSetProfile   string
 	configShowProfile  string
@@ -60,6 +67,7 @@ func init() {
 	configCmd.AddCommand(configSetCmd)
 	configCmd.AddCommand(configShowCmd)
 	configCmd.AddCommand(configClearCmd)
+	configCmd.AddCommand(configDeleteProfileCmd)
 	configCmd.AddCommand(configListProfilesCmd)
 	rootCmd.AddCommand(configCmd)
 }
@@ -225,6 +233,27 @@ func runConfigClear(cmd *cobra.Command, args []string) {
 		"profile": prof,
 		"status":  "cleared",
 		"message": fmt.Sprintf("Profile '%s' cleared", prof),
+	}
+	outputResult(result)
+}
+
+func runConfigDeleteProfile(cmd *cobra.Command, args []string) {
+	name := args[0]
+	store, err := lansenger.NewCredentialStore("", "")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
+	if err := store.DeleteProfileByName(name); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	activeProfile := store.GetActiveProfile()
+	result := map[string]interface{}{
+		"profile":  name,
+		"status":   "deleted",
+		"message":  fmt.Sprintf("Profile '%s' deleted", name),
+		"active":   activeProfile,
 	}
 	outputResult(result)
 }

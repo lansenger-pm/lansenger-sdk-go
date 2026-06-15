@@ -74,7 +74,7 @@ lansenger message send-text staff001 "Hello from CLI!"
 
 | 命令組 | 說明 | 子命令 |
 |--------|------|--------|
-| `config` | 管理憑證設定 | `set`, `show`, `clear`, `list-profiles` |
+| `config` | 管理憑證設定 | `set`, `show`, `clear`, `list-profiles`, `delete-profile` |
 | `message` | 發送與管理訊息 | `send-text`, `send-markdown`, `send-file`, `send-image-url`, `send-link-card`, `send-app-articles`, `send-app-card`, `send-oacard`, `send-bot-message`, `send-group-message`, `send-account-message`, `send-user-message`, `update-dynamic-card`, `revoke`, `query-groups`, `send-reminder` |
 | `group` | 管理群組 | `create`, `info`, `members`, `list`, `check`, `update`, `update-members`, `dismiss` |
 | `staff` | 查詢人員資訊 | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
@@ -203,6 +203,9 @@ lansenger config set app_secret xxx1 --profile my-bot
 # 設定第二個應用（組織機械人）
 lansenger config set app_id xxx2 --profile org-bot
 lansenger config set app_secret xxx2 --profile org-bot
+
+# 刪除指定 profile（如為當前 active 則自動切換到 default）
+lansenger config delete-profile my-bot
 
 # 使用指定 profile
 lansenger --profile org-bot staff basic-info STAFF_ID
