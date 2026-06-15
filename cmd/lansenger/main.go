@@ -48,6 +48,19 @@ func getClient() *lansenger.LansengerClient {
 		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
 		os.Exit(1)
 	}
+	return getClientWithStore(store)
+}
+
+func getClientWithProfile(profile string) *lansenger.LansengerClient {
+	store, err := lansenger.NewCredentialStore("", profile)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
+	return getClientWithStore(store)
+}
+
+func getClientWithStore(store *lansenger.CredentialStore) *lansenger.LansengerClient {
 	creds, err := store.LoadCredentials()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading credentials: %v\n", err)
@@ -80,6 +93,15 @@ func getClient() *lansenger.LansengerClient {
 
 func getStore() *lansenger.CredentialStore {
 	store, err := lansenger.NewCredentialStore("", profileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
+	return store
+}
+
+func getStoreWithProfile(profile string) *lansenger.CredentialStore {
+	store, err := lansenger.NewCredentialStore("", profile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
 		os.Exit(1)
