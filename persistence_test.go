@@ -1,6 +1,8 @@
 package lansenger
 
 import (
+	"encoding/json"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -293,5 +295,138 @@ func TestCredentialStoreDeleteProfileByNameActiveFallback(t *testing.T) {
 
 	if store.GetActiveProfile() != DefaultProfile {
 		t.Errorf("expected active to fall back to %s, got %s", DefaultProfile, store.GetActiveProfile())
+	}
+}
+
+// ── Multi-user userToken isolation ──────────────────────────────────────
+
+func TestUserTokenMultiUserIsolation(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+
+	store.SaveUserToken("token-a", "rt-a", 7200, 2592000, "staff-a")
+	store.SaveUserToken("token-b", "rt-b", 7200, 2592000, "staff-b")
+
+	a, _ := store.LoadUserToken("staff-a")
+	b, _ := store.LoadUserToken("staff-b")
+
+	if a["user_token"] != "token-a" {
+		t.Errorf("staff-a user_token: expected token-a, got %s", a["user_token"])
+	}
+	if a["staff_id"] != "staff-a" {
+		t.Errorf("staff-a staff_id: expected staff-a, got %s", a["staff_id"])
+	}
+	if b["user_token"] != "token-b" {
+		t.Errorf("staff-b user_token: expected token-b, got %s", b["user_token"])
+	}
+}
+
+func TestUserTokenIsolationPreventsOverwrite(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+
+	store.SaveUserToken("token-a", "rt-a", 7200, 0, "staff-a")
+	store.SaveUserToken("token-b", "rt-b", 7200, 0, "staff-b")
+
+	a, _ := store.LoadUserToken("staff-a")
+	if a["user_token"] != "token-a" {
+		t.Error("staff-a should still have its own token after staff-b save")
+	}
+}
+
+func TestUserTokenCrossStaffIndependence(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+
+	store.SaveUserToken("token-a-v1", "rt-a", 7200, 0, "staff-a")
+	store.SaveUserToken("token-b", "rt-b", 7200, 0, "staff-b")
+
+	// Update staff-a
+	store.SaveUserToken("token-a-v2", "rt-a-v2", 7200, 0, "staff-a")
+
+	a, _ := store.LoadUserToken("staff-a")
+	b, _ := store.LoadUserToken("staff-b")
+	if a["user_token"] != "token-a-v2" {
+		t.Errorf("expected token-a-v2, got %s", a["user_token"])
+	}
+	if b["user_token"] != "token-b" {
+		t.Error("staff-b must be untouched")
+	}
+}
+
+func TestUserTokenBackwardCompatLegacyFlat(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test_state.json")
+
+	// Write legacy flat format BEFORE creating the store
+	// (store.migrated must be false for migration to run)
+	now := time.Now().Unix()
+	raw := map[string]interface{}{
+		"profiles": map[string]interface{}{
+			"default": map[string]interface{}{
+				"app_id":               "app1",
+				"app_secret":           "secret1",
+				"user_token":           "legacy-ut",
+				"refresh_token":        "legacy-rt",
+				"staff_id":             "legacy-staff",
+				"user_token_expiry":    int(now + 7200),
+				"refresh_token_expiry": int(now + 2592000),
+			},
+		},
+		"active_profile": "default",
+	}
+	data, _ := json.MarshalIndent(raw, "", "  ")
+	os.WriteFile(path, data, 0600)
+
+	store, _ := NewCredentialStore(path, "default")
+
+	// Load — migration should run and return the legacy token via fallback
+	got, _ := store.LoadUserToken("")
+	if got["user_token"] != "legacy-ut" {
+		t.Errorf("expected legacy-ut, got %s", got["user_token"])
+	}
+
+	// After migration, load by exact staff_id should work from nested store
+	gotNested, _ := store.LoadUserToken("legacy-staff")
+	if gotNested["user_token"] != "legacy-ut" {
+		t.Errorf("nested: expected legacy-ut, got %s", gotNested["user_token"])
+	}
+}
+
+func TestUserTokenRawStateStructure(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+
+	store.SaveUserToken("t-a", "r-a", 7200, 0, "staff-a")
+	store.SaveUserToken("t-b", "r-b", 7200, 0, "staff-b")
+
+	sd, _ := store.LoadState()
+	profile := sd.Profiles["default"]
+	if profile.UserTokens == nil {
+		t.Fatal("UserTokens should not be nil")
+	}
+
+	entryA, okA := profile.UserTokens["staff-a"]
+	entryB, okB := profile.UserTokens["staff-b"]
+	if !okA || entryA.UserToken != "t-a" {
+		t.Errorf("staff-a: expected t-a, got %s", entryA.UserToken)
+	}
+	if !okB || entryB.UserToken != "t-b" {
+		t.Errorf("staff-b: expected t-b, got %s", entryB.UserToken)
+	}
+}
+
+func TestUserTokenNoStaffIDStillWritesFlat(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+
+	store.SaveUserToken("flat-ut", "flat-rt", 7200, 0, "")
+	got, _ := store.LoadUserToken("")
+	if got["user_token"] != "flat-ut" {
+		t.Errorf("expected flat-ut, got %s", got["user_token"])
 	}
 }
