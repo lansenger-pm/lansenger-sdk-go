@@ -211,3 +211,87 @@ func TestCredentialStorePreservesState(t *testing.T) {
 		t.Errorf("expected token preserved, got %s", tok)
 	}
 }
+
+func TestCredentialStoreDeleteProfileByName(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	store.SaveCredentials("app1", "secret1", "", "", "")
+	err = store.DeleteProfileByName("default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	profiles, err := store.ListProfiles()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(profiles) != 0 {
+		t.Errorf("expected 0 profiles after delete, got %d", len(profiles))
+	}
+}
+
+func TestCredentialStoreDeleteProfileByNameNotFound(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	store.SaveCredentials("app1", "secret1", "", "", "")
+	err = store.DeleteProfileByName("ghost")
+	if err == nil {
+		t.Error("expected error for nonexistent profile, got nil")
+	}
+}
+
+func TestCredentialStoreDeleteProfileByNamePreservesOthers(t *testing.T) {
+	tmpDir := t.TempDir()
+	storeA, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "alpha")
+	storeB, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "beta")
+	storeA.SaveCredentials("appA", "secA", "", "", "")
+	storeB.SaveCredentials("appB", "secB", "", "", "")
+
+	profiles, _ := storeA.ListProfiles()
+	if len(profiles) != 2 {
+		t.Fatalf("expected 2 profiles before delete, got %d", len(profiles))
+	}
+
+	err := storeA.DeleteProfileByName("alpha")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	profiles, _ = storeB.ListProfiles()
+	if len(profiles) != 1 {
+		t.Errorf("expected 1 profile after delete, got %d", len(profiles))
+	}
+	if profiles[0] != "beta" {
+		t.Errorf("expected beta remaining, got %s", profiles[0])
+	}
+}
+
+func TestCredentialStoreDeleteProfileByNameActiveFallback(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SetActiveProfile("staging")
+
+	stagingStore, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "staging")
+	stagingStore.SaveCredentials("appX", "secX", "", "", "")
+
+	if store.GetActiveProfile() != "staging" {
+		t.Fatalf("expected active=staging before delete")
+	}
+
+	err := store.DeleteProfileByName("staging")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if store.GetActiveProfile() != DefaultProfile {
+		t.Errorf("expected active to fall back to %s, got %s", DefaultProfile, store.GetActiveProfile())
+	}
+}
