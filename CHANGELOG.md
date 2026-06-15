@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.16] - 2026-06-16
+
+### Fixed
+
+- **persistence**: `ensureMigrated` Phase 2 now always merges flat fields into nested entries, even when a nested entry already exists. Fixes stale flat fields left by old SDK after migration.
+
+### Added
+
+- **tests**: Test for stale flat field migration cleanup.
+
 ## [0.9.15] - 2026-06-16
 
 ### Added

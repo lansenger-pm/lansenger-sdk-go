@@ -430,3 +430,62 @@ func TestUserTokenNoStaffIDStillWritesFlat(t *testing.T) {
 		t.Errorf("expected flat-ut, got %s", got["user_token"])
 	}
 }
+
+func TestUserTokenMigrationCleansStaleFlat(t *testing.T) {
+	// Issue #2: flat fields written by old SDK after migration are cleaned.
+	// Simulation: a file that has BOTH nested user_tokens AND flat user_token/staff_id.
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test_state.json")
+	now := time.Now().Unix()
+
+	// Write a file where nested already exists AND flat has (newer) data
+	raw := map[string]interface{}{
+		"profiles": map[string]interface{}{
+			"default": map[string]interface{}{
+				"app_id":     "app1",
+				"app_secret": "secret1",
+				// Nested (old data from previous migration)
+				"user_tokens": map[string]interface{}{
+					"staff-1": map[string]interface{}{
+						"user_token":             "nested-old",
+						"refresh_token":          "nested-rt",
+						"user_token_expiry":      int(now + 3600),
+						"refresh_token_expiry":   int(now + 86400),
+					},
+				},
+				// Flat (written by old SDK) — has NEWER token
+				"user_token":           "flat-new",
+				"refresh_token":        "flat-rt-new",
+				"staff_id":             "staff-1",
+				"user_token_expiry":    int(now + 7200),
+				"refresh_token_expiry": int(now + 172800),
+			},
+		},
+		"active_profile": "default",
+	}
+	data, _ := json.MarshalIndent(raw, "", "  ")
+	os.WriteFile(path, data, 0600)
+
+	// Create store — migration should merge flat into nested and clean flat
+	store, _ := NewCredentialStore(path, "default")
+	got, _ := store.LoadUserToken("staff-1")
+	if got["user_token"] != "flat-new" {
+		t.Errorf("expected flat-new (flat overrides nested), got %s", got["user_token"])
+	}
+
+	// Verify file has no flat token values
+	rawAfter, _ := os.ReadFile(path)
+	var parsed map[string]interface{}
+	json.Unmarshal(rawAfter, &parsed)
+	profiles := parsed["profiles"].(map[string]interface{})
+	profile := profiles["default"].(map[string]interface{})
+
+	ut, _ := profile["user_token"]
+	if ut != nil && ut != "" {
+		t.Error("flat user_token should be empty after migration")
+	}
+	sid, _ := profile["staff_id"]
+	if sid != nil && sid != "" {
+		t.Error("flat staff_id should be empty after migration")
+	}
+}

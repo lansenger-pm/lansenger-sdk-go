@@ -183,19 +183,18 @@ func (cs *CredentialStore) ensureMigrated() {
 				if profile.UserTokens == nil {
 					profile.UserTokens = map[string]userTokenEntry{}
 				}
-				if _, exists := profile.UserTokens[profile.StaffID]; !exists {
-					profile.UserTokens[profile.StaffID] = userTokenEntry{
-						UserToken:             profile.UserToken,
-						RefreshToken:          profile.RefreshToken,
-						UserTokenExpiresAt:    profile.UserTokenExpiresAt,
-						RefreshTokenExpiresAt: profile.RefreshTokenExpiresAt,
-					}
-					profile.UserToken = ""
-					profile.RefreshToken = ""
-					profile.UserTokenExpiresAt = 0
-					profile.RefreshTokenExpiresAt = 0
-					profile.StaffID = ""
+				// Always merge flat into nested — old SDK may rewrite flat after migration
+				profile.UserTokens[profile.StaffID] = userTokenEntry{
+					UserToken:             profile.UserToken,
+					RefreshToken:          profile.RefreshToken,
+					UserTokenExpiresAt:    profile.UserTokenExpiresAt,
+					RefreshTokenExpiresAt: profile.RefreshTokenExpiresAt,
 				}
+				profile.UserToken = ""
+				profile.RefreshToken = ""
+				profile.UserTokenExpiresAt = 0
+				profile.RefreshTokenExpiresAt = 0
+				profile.StaffID = ""
 				sd.Profiles[name] = profile
 			}
 		}
