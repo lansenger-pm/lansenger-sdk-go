@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.17] - 2026-06-16
+
+### Fixed
+
+- **cli**: `calendar list-schedules` now renders a per-row `scheduleId | summary` table instead of dumping raw JSON.
+
 ## [0.9.16] - 2026-06-16
 
 ### Fixed
