@@ -11,10 +11,10 @@ import (
 )
 
 type CredentialStore struct {
-	path      string
-	profile   string
-	mu        sync.Mutex
-	migrated  bool
+	path     string
+	profile  string
+	mu       sync.Mutex
+	migrated bool
 }
 
 func NewCredentialStore(path string, profile string) (*CredentialStore, error) {
@@ -39,42 +39,51 @@ type storeData struct {
 	ActiveProfile string                 `json:"active_profile"`
 }
 
-type profileData struct {
-	AppID                 string `json:"app_id"`
-	AppSecret             string `json:"app_secret"`
-	APIGatewayURL         string `json:"api_gateway_url"`
-	PassportURL           string `json:"passport_url"`
-	RedirectURI           string `json:"redirect_uri"`
-	EncodingKey           string `json:"encoding_key"`
-	CallbackToken         string `json:"callback_token"`
-	AppToken              string `json:"app_token"`
-	TokenExpiresAt        int64  `json:"app_token_expiry"`
+type userTokenEntry struct {
 	UserToken             string `json:"user_token"`
 	RefreshToken          string `json:"refresh_token"`
 	UserTokenExpiresAt    int64  `json:"user_token_expiry"`
 	RefreshTokenExpiresAt int64  `json:"refresh_token_expiry"`
-	StaffID               string `json:"staff_id"`
+}
+
+type profileData struct {
+	AppID                 string                    `json:"app_id"`
+	AppSecret             string                    `json:"app_secret"`
+	APIGatewayURL         string                    `json:"api_gateway_url"`
+	PassportURL           string                    `json:"passport_url"`
+	RedirectURI           string                    `json:"redirect_uri"`
+	EncodingKey           string                    `json:"encoding_key"`
+	CallbackToken         string                    `json:"callback_token"`
+	AppToken              string                    `json:"app_token"`
+	TokenExpiresAt        int64                     `json:"app_token_expiry"`
+	UserToken             string                    `json:"user_token"`
+	RefreshToken          string                    `json:"refresh_token"`
+	UserTokenExpiresAt    int64                     `json:"user_token_expiry"`
+	RefreshTokenExpiresAt int64                     `json:"refresh_token_expiry"`
+	StaffID               string                    `json:"staff_id"`
+	UserTokens            map[string]userTokenEntry `json:"user_tokens,omitempty"`
 }
 
 func (p *profileData) UnmarshalJSON(data []byte) error {
 	type rawPD struct {
-		AppID              string `json:"app_id"`
-		AppSecret          string `json:"app_secret"`
-		APIGatewayURL      string `json:"api_gateway_url"`
-		PassportURL        string `json:"passport_url"`
-		RedirectURI        string `json:"redirect_uri"`
-		EncodingKey        string `json:"encoding_key"`
-		CallbackToken      string `json:"callback_token"`
-		AppToken           string `json:"app_token"`
-		TokenExpiresAt       int64  `json:"app_token_expiry"`
-		ATokenExpiresAtCompat *int64 `json:"token_expires_at"`
-		UserToken          string `json:"user_token"`
-		RefreshToken       string `json:"refresh_token"`
-		StaffID            string `json:"staff_id"`
-		UserTokenExpiry    *int64 `json:"user_token_expiry"`
-		UserTokenExpiresAt *int64 `json:"user_token_expires_at"`
-		RTokenExpiry       *int64 `json:"refresh_token_expiry"`
-		RTokenExpiresAt    *int64 `json:"refresh_token_expires_at"`
+		AppID                 string                    `json:"app_id"`
+		AppSecret             string                    `json:"app_secret"`
+		APIGatewayURL         string                    `json:"api_gateway_url"`
+		PassportURL           string                    `json:"passport_url"`
+		RedirectURI           string                    `json:"redirect_uri"`
+		EncodingKey           string                    `json:"encoding_key"`
+		CallbackToken         string                    `json:"callback_token"`
+		AppToken              string                    `json:"app_token"`
+		TokenExpiresAt        int64                     `json:"app_token_expiry"`
+		ATokenExpiresAtCompat *int64                    `json:"token_expires_at"`
+		UserToken             string                    `json:"user_token"`
+		RefreshToken          string                    `json:"refresh_token"`
+		StaffID               string                    `json:"staff_id"`
+		UserTokens            map[string]userTokenEntry `json:"user_tokens"`
+		UserTokenExpiry       *int64                    `json:"user_token_expiry"`
+		UserTokenExpiresAt    *int64                    `json:"user_token_expires_at"`
+		RTokenExpiry          *int64                    `json:"refresh_token_expiry"`
+		RTokenExpiresAt       *int64                    `json:"refresh_token_expires_at"`
 	}
 	var raw rawPD
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -95,6 +104,9 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 	p.UserToken = raw.UserToken
 	p.RefreshToken = raw.RefreshToken
 	p.StaffID = raw.StaffID
+	if raw.UserTokens != nil {
+		p.UserTokens = raw.UserTokens
+	}
 
 	if raw.UserTokenExpiry != nil {
 		p.UserTokenExpiresAt = *raw.UserTokenExpiry
@@ -162,8 +174,32 @@ func (cs *CredentialStore) ensureMigrated() {
 		return
 	}
 
+	// Phase 1: migrate flat top-level format → profiles["default"]
 	var sd storeData
 	if json.Unmarshal(data, &sd) == nil && sd.Profiles != nil {
+		// Phase 2: migrate flat userToken fields → user_tokens[staff_id] per profile
+		for name, profile := range sd.Profiles {
+			if profile.UserToken != "" && profile.StaffID != "" {
+				if profile.UserTokens == nil {
+					profile.UserTokens = map[string]userTokenEntry{}
+				}
+				if _, exists := profile.UserTokens[profile.StaffID]; !exists {
+					profile.UserTokens[profile.StaffID] = userTokenEntry{
+						UserToken:             profile.UserToken,
+						RefreshToken:          profile.RefreshToken,
+						UserTokenExpiresAt:    profile.UserTokenExpiresAt,
+						RefreshTokenExpiresAt: profile.RefreshTokenExpiresAt,
+					}
+					profile.UserToken = ""
+					profile.RefreshToken = ""
+					profile.UserTokenExpiresAt = 0
+					profile.RefreshTokenExpiresAt = 0
+					profile.StaffID = ""
+				}
+				sd.Profiles[name] = profile
+			}
+		}
+		cs.saveUnlocked(&sd)
 		return
 	}
 
@@ -220,6 +256,22 @@ func (cs *CredentialStore) ensureMigrated() {
 		profile.RefreshTokenExpiresAt = int64(v)
 	} else if v, ok := flat["refresh_token_expires_at"].(float64); ok {
 		profile.RefreshTokenExpiresAt = int64(v)
+	}
+	// Migrate flat userToken to nested if present
+	if profile.UserToken != "" && profile.StaffID != "" {
+		if profile.UserTokens == nil {
+			profile.UserTokens = map[string]userTokenEntry{}
+		}
+		profile.UserTokens[profile.StaffID] = userTokenEntry{
+			UserToken:             profile.UserToken,
+			RefreshToken:          profile.RefreshToken,
+			UserTokenExpiresAt:    profile.UserTokenExpiresAt,
+			RefreshTokenExpiresAt: profile.RefreshTokenExpiresAt,
+		}
+		profile.UserToken = ""
+		profile.RefreshToken = ""
+		profile.UserTokenExpiresAt = 0
+		profile.RefreshTokenExpiresAt = 0
 	}
 
 	newSD := &storeData{
@@ -344,7 +396,7 @@ func (cs *CredentialStore) SaveAppToken(token string, expiresIn int) error {
 	return cs.saveUnlocked(sd)
 }
 
-func (cs *CredentialStore) LoadUserToken() (map[string]string, error) {
+func (cs *CredentialStore) LoadUserToken(staffID string) (map[string]string, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 	cs.ensureMigrated()
@@ -359,13 +411,42 @@ func (cs *CredentialStore) LoadUserToken() (map[string]string, error) {
 		return map[string]string{}, nil
 	}
 
-	return map[string]string{
-		"user_token":               profile.UserToken,
-		"refresh_token":            profile.RefreshToken,
-		"user_token_expiry":        strconv.FormatInt(profile.UserTokenExpiresAt, 10),
-		"refresh_token_expiry":     strconv.FormatInt(profile.RefreshTokenExpiresAt, 10),
-		"staff_id":                 profile.StaffID,
-	}, nil
+	if staffID != "" {
+		if entry, ok := profile.UserTokens[staffID]; ok {
+			return map[string]string{
+				"user_token":           entry.UserToken,
+				"refresh_token":        entry.RefreshToken,
+				"user_token_expiry":    strconv.FormatInt(entry.UserTokenExpiresAt, 10),
+				"refresh_token_expiry": strconv.FormatInt(entry.RefreshTokenExpiresAt, 10),
+				"staff_id":             staffID,
+			}, nil
+		}
+	}
+
+	// Fallback: legacy flat fields
+	flat := map[string]string{
+		"user_token":           profile.UserToken,
+		"refresh_token":        profile.RefreshToken,
+		"user_token_expiry":    strconv.FormatInt(profile.UserTokenExpiresAt, 10),
+		"refresh_token_expiry": strconv.FormatInt(profile.RefreshTokenExpiresAt, 10),
+		"staff_id":             profile.StaffID,
+	}
+	if profile.UserToken != "" && profile.StaffID != "" {
+		return flat, nil
+	}
+
+	// Post-migration: try first entry from user_tokens
+	for sid, entry := range profile.UserTokens {
+		return map[string]string{
+			"user_token":           entry.UserToken,
+			"refresh_token":        entry.RefreshToken,
+			"user_token_expiry":    strconv.FormatInt(entry.UserTokenExpiresAt, 10),
+			"refresh_token_expiry": strconv.FormatInt(entry.RefreshTokenExpiresAt, 10),
+			"staff_id":             sid,
+		}, nil
+	}
+
+	return flat, nil
 }
 
 func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expiresIn int, refreshExpiresIn int, staffID string) error {
@@ -379,20 +460,47 @@ func (cs *CredentialStore) SaveUserToken(userToken, refreshToken string, expires
 	}
 
 	profile := sd.Profiles[cs.profile]
-	profile.UserToken = userToken
-	profile.RefreshToken = refreshToken
-	if expiresIn > 0 {
-		margin := UserTokenRefreshMargin
-		if expiresIn < margin*2 {
-			margin = expiresIn / 2
+
+	if staffID == "" {
+		// Legacy flat path — no staff_id to key on
+		profile.UserToken = userToken
+		profile.RefreshToken = refreshToken
+		if expiresIn > 0 {
+			margin := UserTokenRefreshMargin
+			if expiresIn < margin*2 {
+				margin = expiresIn / 2
+			}
+			profile.UserTokenExpiresAt = time.Now().Add(time.Duration(expiresIn-margin) * time.Second).Unix()
 		}
-		profile.UserTokenExpiresAt = time.Now().Add(time.Duration(expiresIn-margin) * time.Second).Unix()
-	}
-	if refreshExpiresIn > 0 {
-		profile.RefreshTokenExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second).Unix()
-	}
-	if staffID != "" {
-		profile.StaffID = staffID
+		if refreshExpiresIn > 0 {
+			profile.RefreshTokenExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second).Unix()
+		}
+		profile.StaffID = ""
+	} else {
+		if profile.UserTokens == nil {
+			profile.UserTokens = map[string]userTokenEntry{}
+		}
+		entry := profile.UserTokens[staffID]
+		entry.UserToken = userToken
+		entry.RefreshToken = refreshToken
+		if expiresIn > 0 {
+			margin := UserTokenRefreshMargin
+			if expiresIn < margin*2 {
+				margin = expiresIn / 2
+			}
+			entry.UserTokenExpiresAt = time.Now().Add(time.Duration(expiresIn-margin) * time.Second).Unix()
+		}
+		if refreshExpiresIn > 0 {
+			entry.RefreshTokenExpiresAt = time.Now().Add(time.Duration(refreshExpiresIn) * time.Second).Unix()
+		}
+		profile.UserTokens[staffID] = entry
+
+		// Clean up legacy flat fields after first nested save
+		profile.UserToken = ""
+		profile.RefreshToken = ""
+		profile.UserTokenExpiresAt = 0
+		profile.RefreshTokenExpiresAt = 0
+		profile.StaffID = ""
 	}
 	sd.Profiles[cs.profile] = profile
 
