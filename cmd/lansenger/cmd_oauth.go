@@ -72,39 +72,28 @@ var oauthLocalCallbackCmd = &cobra.Command{
 }
 
 var (
-	oauthAuthorizeScope   string
-	oauthAuthorizeState   string
-	oauthAuthorizeProfile string
+	oauthAuthorizeScope string
+	oauthAuthorizeState string
 
 	oauthExchangeRedirectURI string
-	oauthExchangeProfile     string
 
-	oauthRefreshScope   string
-	oauthRefreshProfile string
+	oauthRefreshScope string
 
-	oauthUserInfoProfile string
-
-	oauthLocalPort        int
-	oauthLocalScope       string
-	oauthLocalState       string
-	oauthLocalNoExchange  bool
-	oauthLocalTimeout     int
-	oauthLocalRedirectURI string
-	oauthLocalProfile     string
+	oauthLocalPort         int
+	oauthLocalScope        string
+	oauthLocalState        string
+	oauthLocalNoExchange   bool
+	oauthLocalTimeout      int
+	oauthLocalRedirectURI  string
 )
 
 func init() {
 	oauthAuthorizeURLCmd.Flags().StringVarP(&oauthAuthorizeScope, "scope", "s", "basic_userinfor", "OAuth2 scope")
 	oauthAuthorizeURLCmd.Flags().StringVar(&oauthAuthorizeState, "state", "", "State parameter")
-	oauthAuthorizeURLCmd.Flags().StringVarP(&oauthAuthorizeProfile, "profile", "P", "", "Credential profile (overrides global --profile)")
 
 	oauthExchangeCodeCmd.Flags().StringVar(&oauthExchangeRedirectURI, "redirect-uri", "", "Redirect URI")
-	oauthExchangeCodeCmd.Flags().StringVarP(&oauthExchangeProfile, "profile", "P", "", "Credential profile (overrides global --profile)")
 
 	oauthRefreshTokenCmd.Flags().StringVarP(&oauthRefreshScope, "scope", "s", "", "OAuth2 scope")
-	oauthRefreshTokenCmd.Flags().StringVarP(&oauthRefreshProfile, "profile", "P", "", "Credential profile (overrides global --profile)")
-
-	oauthUserInfoCmd.Flags().StringVarP(&oauthUserInfoProfile, "profile", "P", "", "Credential profile (overrides global --profile)")
 
 	oauthLocalCallbackCmd.Flags().IntVarP(&oauthLocalPort, "port", "p", 8765, "Local HTTP server port")
 	oauthLocalCallbackCmd.Flags().StringVarP(&oauthLocalScope, "scope", "s", "basic_userinfor", "OAuth2 scope")
@@ -112,7 +101,6 @@ func init() {
 	oauthLocalCallbackCmd.Flags().BoolVar(&oauthLocalNoExchange, "no-exchange", false, "Skip auto-exchange code")
 	oauthLocalCallbackCmd.Flags().IntVarP(&oauthLocalTimeout, "timeout", "t", 120, "Max wait seconds")
 	oauthLocalCallbackCmd.Flags().StringVar(&oauthLocalRedirectURI, "redirect-uri", "", "Override redirect_uri (default: http://localhost:<port>)")
-	oauthLocalCallbackCmd.Flags().StringVarP(&oauthLocalProfile, "profile", "P", "", "Credential profile (overrides global --profile)")
 
 	oauthCmd.AddCommand(oauthAuthorizeURLCmd)
 	oauthCmd.AddCommand(oauthExchangeCodeCmd)
@@ -125,7 +113,7 @@ func init() {
 }
 
 func runOAuthAuthorizeURL(cmd *cobra.Command, args []string) {
-	client := getClientWithProfile(resolveProfile(oauthAuthorizeProfile))
+	client := getClient()
 
 	url := client.BuildAuthorizeURL(args[0], oauthAuthorizeScope, oauthAuthorizeState)
 	if jsonOutput {
@@ -136,26 +124,26 @@ func runOAuthAuthorizeURL(cmd *cobra.Command, args []string) {
 }
 
 func runOAuthExchangeCode(cmd *cobra.Command, args []string) {
-	client := getClientWithProfile(resolveProfile(oauthExchangeProfile))
+	client := getClient()
 	ctx := context.Background()
 
 	result, err := client.ExchangeCode(ctx, args[0], oauthExchangeRedirectURI)
 	checkError(err)
 
-	store := getStoreWithProfile(resolveProfile(oauthExchangeProfile))
+	store := getStore()
 	store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn, result.StaffID)
 
 	outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope", "state"})
 }
 
 func runOAuthRefreshToken(cmd *cobra.Command, args []string) {
-	client := getClientWithProfile(resolveProfile(oauthRefreshProfile))
+	client := getClient()
 	ctx := context.Background()
 
 	result, err := client.RefreshUserToken(ctx, args[0], oauthRefreshScope)
 	checkError(err)
 
-	store := getStoreWithProfile(resolveProfile(oauthRefreshProfile))
+	store := getStore()
 	store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn, result.StaffID)
 
 	outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope"})
@@ -229,7 +217,7 @@ func generateState() string {
 }
 
 func runOAuthLocalCallback(cmd *cobra.Command, args []string) {
-	client := getClientWithProfile(resolveProfile(oauthLocalProfile))
+	client := getClient()
 
 	state := oauthLocalState
 	if state == "" {
@@ -319,7 +307,7 @@ func runOAuthLocalCallback(cmd *cobra.Command, args []string) {
 		result, err := client.ExchangeCode(ctx, code, redirectURI)
 		checkError(err)
 
-		store := getStoreWithProfile(resolveProfile(oauthLocalProfile))
+		store := getStore()
 		store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn, result.StaffID)
 
 		outputResultFields(result, []string{"user_token", "expires_in", "refresh_token", "refresh_expires_in", "staff_id", "scope"})
