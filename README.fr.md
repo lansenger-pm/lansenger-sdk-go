@@ -5,7 +5,7 @@
 SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les applications Lansenger, les robots d'organisation et les robots personnels.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.9.5](https://img.shields.io/badge/Version-0.9.5-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Version: 0.9.18](https://img.shields.io/badge/Version-0.9.18-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-blue)](https://go.dev/)
 [![Tests: 148](https://img.shields.io/badge/Tests-148-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 

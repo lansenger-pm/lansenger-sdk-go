@@ -160,10 +160,52 @@ func (utm *UserTokenManager) RefreshTokenExpiry() time.Time {
 }
 
 func (c *LansengerClient) GetUserToken(ctx context.Context) (string, error) {
-	if c.userTokenMgr == nil {
-		return "", NewAuthError("UserTokenManager not initialized — use SetUserTokens or exchange_code first")
+	return c.GetUserTokenWithStaffID(ctx, "")
+}
+
+func (c *LansengerClient) GetUserTokenWithStaffID(ctx context.Context, staffID string) (string, error) {
+	if staffID == "" {
+		if c.userTokenMgr == nil {
+			return "", NewAuthError("UserTokenManager not initialized — use SetUserTokens or exchange_code first")
+		}
+		return c.userTokenMgr.GetToken(ctx)
 	}
-	return c.userTokenMgr.GetToken(ctx)
+
+	utm := c.userTokenMgr
+	if utm == nil || utm.store == nil {
+		return "", NewAuthError("CredentialStore is required for multi-user token management")
+	}
+
+	tokens, err := utm.store.LoadUserToken(staffID)
+	if err != nil {
+		return "", err
+	}
+
+	userToken := tokens["user_token"]
+	refreshToken := tokens["refresh_token"]
+	expiryStr := tokens["user_token_expiry"]
+
+	if expiryStr != "" {
+		exp, err := strconv.ParseInt(expiryStr, 10, 64)
+		if err == nil && exp > time.Now().Unix() {
+			return userToken, nil
+		}
+	}
+
+	if refreshToken == "" {
+		return "", NewAuthError("no refresh token available for staff_id=" + staffID + " — must re-authorize via exchange_code")
+	}
+
+	result, err := c.RefreshUserToken(ctx, refreshToken, "")
+	if err != nil {
+		return "", err
+	}
+	if !result.Success {
+		return "", NewAuthError("user token refresh failed for staff_id=" + staffID + ": " + result.Error)
+	}
+
+	utm.store.SaveUserToken(result.UserToken, result.RefreshToken, result.ExpiresIn, result.RefreshExpiresIn, result.StaffID)
+	return result.UserToken, nil
 }
 
 func (c *LansengerClient) SetUserTokens(userToken, refreshToken string, expiresIn int, staffID string, refreshExpiresIn int) {

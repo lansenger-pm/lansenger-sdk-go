@@ -74,7 +74,7 @@ lansenger message send-text staff001 "Hello from CLI!"
 
 | Group | Description | Subcommands |
 |--------|------|--------|
-| `config` | Manage credentials | `set`, `show`, `clear`, `list-profiles`, `delete-profile` |
+| `config` | Manage credentials | `set`, `show`, `clear`, `list-profiles`, `delete-profile`, `list-users` |
 | `message` | Send & manage messages | `send-text`, `send-markdown`, `send-file`, `send-image-url`, `send-link-card`, `send-app-articles`, `send-app-card`, `send-oacard`, `send-bot-message`, `send-group-message`, `send-account-message`, `send-user-message`, `update-dynamic-card`, `revoke`, `query-groups`, `send-reminder` |
 | `group` | Manage groups | `create`, `info`, `members`, `list`, `check`, `update`, `update-members`, `dismiss` |
 | `staff` | Query staff info | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
@@ -193,6 +193,7 @@ lansenger media download-to-file MEDIA_ID --output /path/to/save.pdf
 |------|------|
 | `--json` / `-j` | Output raw JSON instead of formatted tables |
 | `--profile` / `-P` | Use a specific credential profile (default: `default`) |
+| `--as <staff_id>` | Auto-load & auto-refresh user token for the given staff_id from credential store |
 
 ## Multi-app / Multi-bot Profiles
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	jsonOutput  bool
-	profileName string
+	jsonOutput      bool
+	profileName     string
+	globalAsStaffID string
 )
 
 var versionCmd = &cobra.Command{
@@ -35,6 +37,7 @@ func init() {
 	rootCmd.Version = lansenger.Version
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Output raw JSON instead of formatted tables")
 	rootCmd.PersistentFlags().StringVarP(&profileName, "profile", "P", "default", "Credential profile to use")
+	rootCmd.PersistentFlags().StringVar(&globalAsStaffID, "as", "", "Act as the given staff_id (auto-loads user token from credential store)")
 	rootCmd.AddCommand(versionCmd)
 }
 
@@ -56,7 +59,9 @@ func getClient() *lansenger.LansengerClient {
 	if creds["app_id"] == "" || creds["app_secret"] == "" {
 		cfg, envErr := lansenger.ConfigFromEnv()
 		if envErr == nil && cfg.IsConfigured() {
-			return lansenger.NewClientWithConfig(cfg)
+			client := lansenger.NewClientWithConfig(cfg)
+			injectUserToken(client, store)
+			return client
 		}
 		fmt.Fprintf(os.Stderr, "Error: No credentials configured for profile '%s'. Run `lansenger config set` first, or set LANSENGER_APP_ID / LANSENGER_APP_SECRET env vars.\n", profileName)
 		os.Exit(1)
@@ -75,7 +80,60 @@ func getClient() *lansenger.LansengerClient {
 	if creds["callback_token"] != "" {
 		cfg.CallbackToken = creds["callback_token"]
 	}
-	return lansenger.NewClientWithConfig(cfg)
+	client := lansenger.NewClientWithConfig(cfg)
+	injectUserToken(client, store)
+	return client
+}
+
+func injectUserToken(client *lansenger.LansengerClient, store *lansenger.CredentialStore) {
+	if globalAsStaffID == "" {
+		return
+	}
+
+	tokens, err := store.LoadUserToken(globalAsStaffID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading user token for staff_id '%s': %v\n", globalAsStaffID, err)
+		os.Exit(1)
+	}
+
+	userToken := tokens["user_token"]
+	refreshToken := tokens["refresh_token"]
+
+	if userToken == "" {
+		fmt.Fprintf(os.Stderr, "Error: No user token found for staff_id '%s' in credential store. Run `lansenger oauth authorize` first.\n", globalAsStaffID)
+		os.Exit(1)
+	}
+
+	ctx := context.Background()
+
+	// Check if token is expired — refresh if needed
+	expiryStr := tokens["user_token_expiry"]
+	if expiryStr != "" {
+		exp, parseErr := strconv.ParseInt(expiryStr, 10, 64)
+		if parseErr == nil && exp <= 0 {
+			// No valid expiry, refresh
+			result, refreshErr := client.RefreshUserToken(ctx, refreshToken, "")
+			if refreshErr != nil {
+				fmt.Fprintf(os.Stderr, "Error refreshing user token for staff_id '%s': %v\n", globalAsStaffID, refreshErr)
+				os.Exit(1)
+			}
+			if !result.Success {
+				fmt.Fprintf(os.Stderr, "Error refreshing user token for staff_id '%s': %s\n", globalAsStaffID, result.Error)
+				os.Exit(1)
+			}
+			userToken = result.UserToken
+			if result.RefreshToken != "" {
+				refreshToken = result.RefreshToken
+			}
+			store.SaveUserToken(userToken, refreshToken, result.ExpiresIn, result.RefreshExpiresIn, globalAsStaffID)
+		}
+	}
+
+	// Register token with client's UserTokenManager for auto-refresh
+	client.SetUserTokens(userToken, refreshToken, 7200, globalAsStaffID, 0)
+
+	// Set default so WithUserToken falls back to this when userToken="" is passed
+	lansenger.SetDefaultUserToken(userToken)
 }
 
 func getStore() *lansenger.CredentialStore {

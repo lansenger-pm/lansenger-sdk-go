@@ -79,12 +79,12 @@ var (
 
 	oauthRefreshScope string
 
-	oauthLocalPort         int
-	oauthLocalScope        string
-	oauthLocalState        string
-	oauthLocalNoExchange   bool
-	oauthLocalTimeout      int
-	oauthLocalRedirectURI  string
+	oauthLocalPort        int
+	oauthLocalScope       string
+	oauthLocalState       string
+	oauthLocalNoExchange  bool
+	oauthLocalTimeout     int
+	oauthLocalRedirectURI string
 )
 
 func init() {

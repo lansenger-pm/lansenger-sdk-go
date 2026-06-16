@@ -51,11 +51,20 @@ var configDeleteProfileCmd = &cobra.Command{
 	Run:   runConfigDeleteProfile,
 }
 
+var configListUsersCmd = &cobra.Command{
+	Use:   "list-users",
+	Short: "List all users with stored user tokens in the current profile",
+	Args:  cobra.NoArgs,
+	Run:   runConfigListUsers,
+}
+
 var (
-	configSetProfile   string
-	configShowProfile  string
-	configClearProfile string
-	configClearAll     bool
+	configSetProfile       string
+	configShowProfile      string
+	configClearProfile     string
+	configClearAll         bool
+	configListUsersProfile string
+	configListUsersShowTokens bool
 )
 
 func init() {
@@ -63,12 +72,15 @@ func init() {
 	configShowCmd.Flags().StringVarP(&configShowProfile, "profile", "P", "", "Profile to show config for (overrides global --profile)")
 	configClearCmd.Flags().StringVarP(&configClearProfile, "profile", "P", "", "Profile to clear (overrides global --profile)")
 	configClearCmd.Flags().BoolVar(&configClearAll, "all", false, "Clear all profiles and delete state file")
+	configListUsersCmd.Flags().StringVarP(&configListUsersProfile, "profile", "P", "", "Profile to list users for (overrides global --profile)")
+	configListUsersCmd.Flags().BoolVarP(&configListUsersShowTokens, "show-tokens", "T", false, "Show user tokens (security warning)")
 
 	configCmd.AddCommand(configSetCmd)
 	configCmd.AddCommand(configShowCmd)
 	configCmd.AddCommand(configClearCmd)
 	configCmd.AddCommand(configDeleteProfileCmd)
 	configCmd.AddCommand(configListProfilesCmd)
+	configCmd.AddCommand(configListUsersCmd)
 	rootCmd.AddCommand(configCmd)
 }
 
@@ -92,6 +104,13 @@ func maskSecret(val string) string {
 		return "(empty)"
 	}
 	return "***"
+}
+
+func displayVal(val string) string {
+	if val == "" {
+		return "(empty)"
+	}
+	return val
 }
 
 func runConfigSet(cmd *cobra.Command, args []string) {
@@ -244,8 +263,8 @@ func runConfigDeleteProfile(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
 		os.Exit(1)
 	}
-	if err := store.DeleteProfileByName(name); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	if !store.DeleteProfileByName(name) {
+		fmt.Fprintf(os.Stderr, "Error: profile '%s' not found\n", name)
 		os.Exit(1)
 	}
 	activeProfile := store.GetActiveProfile()
@@ -320,4 +339,72 @@ func runConfigListProfiles(cmd *cobra.Command, args []string) {
 		})
 	}
 	outputResult(items)
+}
+
+func runConfigListUsers(cmd *cobra.Command, args []string) {
+	prof := resolveProfile(configListUsersProfile)
+	store, err := lansenger.NewCredentialStore("", prof)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
+		os.Exit(1)
+	}
+
+	users, err := store.ListUserTokens()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error listing users: %v\n", err)
+		os.Exit(1)
+	}
+
+	sort.Strings(users)
+
+	if !jsonOutput {
+		if len(users) == 0 {
+			fmt.Printf("No users found in profile '%s'.\n", prof)
+			return
+		}
+		fmt.Printf("Users in profile '%s':\n", prof)
+		for i, staffID := range users {
+			fmt.Printf("  %d. %s\n", i+1, staffID)
+			if configListUsersShowTokens {
+				tokenData, err := store.LoadUserToken(staffID)
+				if err != nil {
+					fmt.Printf("     (error loading token)\n")
+					continue
+				}
+				fmt.Printf("     user_token:          %s\n", displayVal(tokenData["user_token"]))
+			fmt.Printf("     refresh_token:       %s\n", displayVal(tokenData["refresh_token"]))
+			fmt.Printf("     expires_in:          %s\n", displayVal(tokenData["expires_in"]))
+			fmt.Printf("     refresh_expires_in:  %s\n", displayVal(tokenData["refresh_expires_in"]))
+			}
+		}
+		if !configListUsersShowTokens {
+			fmt.Println("Hint: Use --show-tokens to view user tokens")
+		}
+		return
+	}
+
+	result := map[string]interface{}{
+		"profile": prof,
+		"users":   users,
+	}
+
+	if configListUsersShowTokens {
+		tokens := make(map[string]map[string]string)
+		for _, staffID := range users {
+			tokenData, err := store.LoadUserToken(staffID)
+			if err != nil {
+				tokens[staffID] = map[string]string{}
+			} else {
+				tokens[staffID] = map[string]string{
+					"user_token":         tokenData["user_token"],
+					"refresh_token":      tokenData["refresh_token"],
+					"expires_in":         tokenData["expires_in"],
+					"refresh_expires_in": tokenData["refresh_expires_in"],
+				}
+			}
+		}
+		result["tokens"] = tokens
+	}
+
+	outputResult(result)
 }

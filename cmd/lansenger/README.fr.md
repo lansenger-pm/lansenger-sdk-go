@@ -74,7 +74,7 @@ lansenger message send-text staff001 "Hello from CLI!"
 
 | Groupe | Description | Sous-commandes |
 |--------|------|--------|
-| `config` | Gérer les identifiants | `set`, `show`, `clear`, `list-profiles`, `delete-profile` |
+| `config` | Gérer les identifiants | `set`, `show`, `clear`, `list-profiles`, `delete-profile`, `list-users` |
 | `message` | Envoyer et gérer les messages | `send-text`, `send-markdown`, `send-file`, `send-image-url`, `send-link-card`, `send-app-articles`, `send-app-card`, `send-oacard`, `send-bot-message`, `send-group-message`, `send-account-message`, `send-user-message`, `update-dynamic-card`, `revoke`, `query-groups`, `send-reminder` |
 | `group` | Gérer les groupes | `create`, `info`, `members`, `list`, `check`, `update`, `update-members`, `dismiss` |
 | `staff` | Interroger les infos du personnel | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
@@ -193,6 +193,7 @@ lansenger media download-to-file MEDIA_ID --output /path/to/save.pdf
 |------|------|
 | `--json` / `-j` | Sortie JSON brute au lieu de tableaux formatés |
 | `--profile` / `-P` | Utiliser un profil d'identifiants spécifique (défaut : `default`) |
+| `--as <staff_id>` | Charge et rafraîchit automatiquement le jeton utilisateur pour le staff_id spécifié depuis le stockage des identifiants |
 
 ## Profils multi-applications / multi-robots
 

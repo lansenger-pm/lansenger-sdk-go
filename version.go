@@ -1,3 +1,3 @@
 package lansenger
 
-const Version = "0.9.17"
+const Version = "0.9.18"

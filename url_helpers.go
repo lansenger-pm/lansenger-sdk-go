@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 )
 
 func BuildAPIURL(cfg *Config, category, endpoint, appToken string, opts ...URLOption) string {
@@ -35,10 +36,39 @@ type URLOption struct {
 	Apply func(v url.Values)
 }
 
+// defaultUserToken is set by CLI tools (e.g. `lansenger --as staff_id`)
+// to inject a user token into API requests when the explicit userToken
+// parameter is empty. Library users should prefer SetUserTokens().
+//
+// Access is protected by defaultUserTokenMu (RWMutex).
+// Use SetDefaultUserToken() / getDefaultUserToken() for thread-safe access.
+var (
+	defaultUserTokenMu sync.RWMutex
+	defaultUserToken   string
+)
+
+// SetDefaultUserToken sets the fallback user token for API requests
+// where no explicit userToken is provided. Thread-safe.
+func SetDefaultUserToken(token string) {
+	defaultUserTokenMu.Lock()
+	defaultUserToken = token
+	defaultUserTokenMu.Unlock()
+}
+
+func getDefaultUserToken() string {
+	defaultUserTokenMu.RLock()
+	defer defaultUserTokenMu.RUnlock()
+	return defaultUserToken
+}
+
 func WithUserToken(token string) URLOption {
 	return URLOption{Apply: func(v url.Values) {
-		if token != "" {
-			v.Set("user_token", token)
+		t := token
+		if t == "" {
+			t = getDefaultUserToken()
+		}
+		if t != "" {
+			v.Set("user_token", t)
 		}
 	}}
 }

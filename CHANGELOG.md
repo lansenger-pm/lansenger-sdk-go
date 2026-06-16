@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [0.9.18] - 2026-06-16
+
+### Added
+
+- **persistence**: `CredentialStore.ListUserTokens()` method to list all staffIDs with stored user tokens in the current profile.
+- **persistence**: `CredentialStore.HasFullConfig()` method to check if `app_id`, `app_secret`, and `api_gateway_url` are all present for the current profile. Matches Python SDK `has_full_config` and TS SDK `hasFullConfig`.
+- **client**: `GetUserTokenWithStaffID(ctx, staffID)` method to retrieve token for a specific user from CredentialStore with auto-refresh support. `GetUserToken(ctx)` maintains backward compatibility with single-user mode.
+- **client**: `SetDefaultUserToken()` and `getDefaultUserToken()` functions for thread-safe fallback user token injection when no explicit `userToken` is provided to API methods.
+- **cli**: `config list-users` command to list all users with stored tokens in the current profile.
+- **cli**: `config list-users --show-tokens` flag to display complete token information (user_token, refresh_token, expires_in, refresh_expires_in) for each stored user.
+- **cli**: `--as <staff_id>` global flag (short for "act as") that sets the default user token on the client via `SetDefaultUserToken()`, auto-loading and auto-refreshing user tokens from the CredentialStore. Works transparently — no command files were modified.
+- **tests**: Test suite for `ListUserTokens` (empty, single user, multiple users, profile isolation).
+- **tests**: Additional boundary tests for multi-user token isolation: auto-migration on save, no-staff_id fallback, and non-existent staff_id graceful degradation.
+
+### Changed
+
+- **persistence**: `CredentialStore.DeleteProfileByName(name)` now returns `bool` (`true` on success, `false` if not found) matching Python/TS SDK behavior, instead of `error`.
 
 ## [0.9.17] - 2026-06-16
 
@@ -39,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **persistence**: `CredentialStore.DeleteProfileByName(name)` method to delete a specific profile by name. Automatically falls back to `"default"` if the deleted profile was the active one. Returns an error if the profile does not exist.
+- **persistence**: `CredentialStore.DeleteProfileByName(name)` method to delete a specific profile by name. Automatically falls back to `"default"` if the deleted profile was the active one. Returns `true` on success, `false` if the profile does not exist.
 - **cli**: `config delete-profile` command to permanently remove a credential profile and all its data.
 
 ## [0.9.12] - 2026-06-12

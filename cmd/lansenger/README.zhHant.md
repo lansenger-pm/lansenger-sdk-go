@@ -74,7 +74,7 @@ lansenger message send-text staff001 "Hello from CLI!"
 
 | 命令組 | 說明 | 子命令 |
 |--------|------|--------|
-| `config` | 管理憑證設定 | `set`, `show`, `clear`, `list-profiles`, `delete-profile` |
+| `config` | 管理憑證設定 | `set`, `show`, `clear`, `list-profiles`, `delete-profile`, `list-users` |
 | `message` | 傳送與管理訊息 | `send-text`, `send-markdown`, `send-file`, `send-image-url`, `send-link-card`, `send-app-articles`, `send-app-card`, `send-oacard`, `send-bot-message`, `send-group-message`, `send-account-message`, `send-user-message`, `update-dynamic-card`, `revoke`, `query-groups`, `send-reminder` |
 | `group` | 管理群組 | `create`, `info`, `members`, `list`, `check`, `update`, `update-members`, `dismiss` |
 | `staff` | 查詢人員資訊 | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
@@ -190,6 +190,7 @@ lansenger media download-to-file MEDIA_ID --output /path/to/save.pdf
 |------|------|
 | `--json` / `-j` | 輸出原始 JSON 格式而非表格 |
 | `--profile` / `-P` | 使用指定的憑證 profile（預設：`default`） |
+| `--as <staff_id>` | 從憑證儲存中自動載入並自動刷新指定 staff_id 的 user token |
 
 ## 多應用/多機器人設定（Profile）
 

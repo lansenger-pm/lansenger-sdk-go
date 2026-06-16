@@ -66,6 +66,27 @@ func TestCredentialStoreHasCredentials(t *testing.T) {
 	}
 }
 
+func TestCredentialStoreHasFullConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+
+	if store.HasFullConfig() {
+		t.Error("expected HasFullConfig=false before saving")
+	}
+
+	// Missing api_gateway_url
+	store.SaveCredentials("app1", "secret1", "", "", "")
+	if store.HasFullConfig() {
+		t.Error("expected HasFullConfig=false without gateway URL")
+	}
+
+	// Full config
+	store.SaveCredentials("app1", "secret1", "https://gateway.example.com", "", "")
+	if !store.HasFullConfig() {
+		t.Error("expected HasFullConfig=true after saving full config")
+	}
+}
+
 func TestCredentialStoreAppToken(t *testing.T) {
 	tmpDir := t.TempDir()
 	store, err := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
@@ -222,9 +243,8 @@ func TestCredentialStoreDeleteProfileByName(t *testing.T) {
 	}
 
 	store.SaveCredentials("app1", "secret1", "", "", "")
-	err = store.DeleteProfileByName("default")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !store.DeleteProfileByName("default") {
+		t.Fatal("expected DeleteProfileByName to return true")
 	}
 
 	profiles, err := store.ListProfiles()
@@ -244,9 +264,8 @@ func TestCredentialStoreDeleteProfileByNameNotFound(t *testing.T) {
 	}
 
 	store.SaveCredentials("app1", "secret1", "", "", "")
-	err = store.DeleteProfileByName("ghost")
-	if err == nil {
-		t.Error("expected error for nonexistent profile, got nil")
+	if store.DeleteProfileByName("ghost") {
+		t.Error("expected false for nonexistent profile, got true")
 	}
 }
 
@@ -262,9 +281,8 @@ func TestCredentialStoreDeleteProfileByNamePreservesOthers(t *testing.T) {
 		t.Fatalf("expected 2 profiles before delete, got %d", len(profiles))
 	}
 
-	err := storeA.DeleteProfileByName("alpha")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !storeA.DeleteProfileByName("alpha") {
+		t.Fatal("expected DeleteProfileByName to return true")
 	}
 
 	profiles, _ = storeB.ListProfiles()
@@ -288,9 +306,8 @@ func TestCredentialStoreDeleteProfileByNameActiveFallback(t *testing.T) {
 		t.Fatalf("expected active=staging before delete")
 	}
 
-	err := store.DeleteProfileByName("staging")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !store.DeleteProfileByName("staging") {
+		t.Fatal("expected DeleteProfileByName to return true")
 	}
 
 	if store.GetActiveProfile() != DefaultProfile {
@@ -487,5 +504,180 @@ func TestUserTokenMigrationCleansStaleFlat(t *testing.T) {
 	sid, _ := profile["staff_id"]
 	if sid != nil && sid != "" {
 		t.Error("flat staff_id should be empty after migration")
+	}
+}
+
+// ── ListUserTokens ──────────────────────────────────────────────
+
+func TestListUserTokensEmpty(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+
+	users, err := store.ListUserTokens()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(users) != 0 {
+		t.Errorf("expected empty list, got %d", len(users))
+	}
+}
+
+func TestListUserTokensSingleUser(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+	store.SaveUserToken("token1", "rt1", 7200, 0, "staff1")
+
+	users, err := store.ListUserTokens()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(users) != 1 || users[0] != "staff1" {
+		t.Errorf("expected [staff1], got %v", users)
+	}
+}
+
+func TestListUserTokensMultipleUsers(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+	store.SaveUserToken("token1", "rt1", 7200, 0, "staff1")
+	store.SaveUserToken("token2", "rt2", 7200, 0, "staff2")
+	store.SaveUserToken("token3", "rt3", 7200, 0, "staff3")
+
+	users, err := store.ListUserTokens()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(users) != 3 {
+		t.Errorf("expected 3 users, got %d", len(users))
+	}
+
+	found := make(map[string]bool)
+	for _, u := range users {
+		found[u] = true
+	}
+	if !found["staff1"] || !found["staff2"] || !found["staff3"] {
+		t.Errorf("expected staff1, staff2, staff3, got %v", users)
+	}
+}
+
+func TestListUserTokensProfileIsolation(t *testing.T) {
+	tmpDir := t.TempDir()
+	storeAlpha, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "alpha")
+	storeBeta, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "beta")
+
+	storeAlpha.SaveCredentials("appA", "secA", "", "", "")
+	storeBeta.SaveCredentials("appB", "secB", "", "", "")
+
+	storeAlpha.SaveUserToken("t1", "rt1", 7200, 0, "staff-a")
+	storeBeta.SaveUserToken("t2", "rt2", 7200, 0, "staff-b")
+
+	alphaUsers, _ := storeAlpha.ListUserTokens()
+	betaUsers, _ := storeBeta.ListUserTokens()
+
+	if len(alphaUsers) != 1 || alphaUsers[0] != "staff-a" {
+		t.Errorf("alpha: expected [staff-a], got %v", alphaUsers)
+	}
+	if len(betaUsers) != 1 || betaUsers[0] != "staff-b" {
+		t.Errorf("beta: expected [staff-b], got %v", betaUsers)
+	}
+}
+
+func TestUserTokenAutoMigrationOnSave(t *testing.T) {
+	// Verify that saving with staff_id triggers auto-migration of flat fields.
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test_state.json")
+	now := time.Now().Unix()
+
+	// 1. Write legacy flat format
+	raw := map[string]interface{}{
+		"profiles": map[string]interface{}{
+			"default": map[string]interface{}{
+				"app_id":               "app1",
+				"app_secret":           "secret1",
+				"user_token":           "legacy-ut",
+				"staff_id":             "legacy-staff",
+				"user_token_expiry":    int(now + 7200),
+				"refresh_token_expiry": int(now + 2592000),
+			},
+		},
+		"active_profile": "default",
+	}
+	data, _ := json.MarshalIndent(raw, "", "  ")
+	os.WriteFile(path, data, 0600)
+
+	store, _ := NewCredentialStore(path, "default")
+
+	// 2. Flat is readable before migration
+	got, _ := store.LoadUserToken("")
+	if got["user_token"] != "legacy-ut" {
+		t.Errorf("expected legacy-ut, got %s", got["user_token"])
+	}
+
+	// 3. Save with staff_id for a *different* user — triggers migration
+	store.SaveUserToken("nested-ut", "nested-rt", 7200, 2592000, "nested-staff")
+
+	// 4. After migration, flat fields should be gone
+	sd, _ := store.LoadState()
+	profile := sd.Profiles["default"]
+	if profile.UserToken != "" {
+		t.Error("flat user_token should be cleaned after migration")
+	}
+	if profile.StaffID != "" {
+		t.Error("flat staff_id should be cleaned after migration")
+	}
+
+	// 5. Legacy user accessible via nested
+	legacy, _ := store.LoadUserToken("legacy-staff")
+	if legacy["user_token"] != "legacy-ut" {
+		t.Errorf("legacy: expected legacy-ut, got %s", legacy["user_token"])
+	}
+
+	// 6. New user accessible via nested
+	nested, _ := store.LoadUserToken("nested-staff")
+	if nested["user_token"] != "nested-ut" {
+		t.Errorf("nested: expected nested-ut, got %s", nested["user_token"])
+	}
+}
+
+func TestUserTokenNoStaffIDFallback(t *testing.T) {
+	// loadUserToken("") returns first available user from nested store
+	// when flat fields are empty (post-migration scenario).
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+
+	store.SaveUserToken("t1", "r1", 7200, 0, "staff1")
+	store.SaveUserToken("t2", "r2", 7200, 0, "staff2")
+
+	// No staff_id → falls back to first entry from nested
+	fallback, _ := store.LoadUserToken("")
+	if fallback["user_token"] != "t1" && fallback["user_token"] != "t2" {
+		t.Errorf("expected t1 or t2, got %s", fallback["user_token"])
+	}
+
+	// With exact staff_id, we get the specific one
+	one, _ := store.LoadUserToken("staff1")
+	two, _ := store.LoadUserToken("staff2")
+	if one["user_token"] != "t1" {
+		t.Errorf("staff1: expected t1, got %s", one["user_token"])
+	}
+	if two["user_token"] != "t2" {
+		t.Errorf("staff2: expected t2, got %s", two["user_token"])
+	}
+}
+
+func TestUserTokenNonexistentStaffID(t *testing.T) {
+	// loadUserToken with a non-existent staff_id falls back to available tokens.
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+
+	store.SaveUserToken("t1", "", 7200, 0, "staff1")
+	got, _ := store.LoadUserToken("ghost-staff")
+	// Fallback returns first available user (or empty)
+	if got["user_token"] != "" && got["user_token"] != "t1" {
+		t.Errorf("expected '' or 't1', got %s", got["user_token"])
 	}
 }

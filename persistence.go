@@ -514,6 +514,26 @@ func (cs *CredentialStore) HasCredentials() bool {
 	return creds["app_id"] != "" && creds["app_secret"] != ""
 }
 
+// HasFullConfig returns true if app_id, app_secret, and api_gateway_url
+// are all non-empty for the current profile.
+func (cs *CredentialStore) HasFullConfig() bool {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.ensureMigrated()
+
+	sd, err := cs.loadUnlocked()
+	if err != nil {
+		return false
+	}
+
+	profile, ok := sd.Profiles[cs.profile]
+	if !ok {
+		return false
+	}
+
+	return profile.AppID != "" && profile.AppSecret != "" && profile.APIGatewayURL != ""
+}
+
 func (cs *CredentialStore) ListProfiles() ([]string, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
@@ -529,6 +549,28 @@ func (cs *CredentialStore) ListProfiles() ([]string, error) {
 		profiles = append(profiles, k)
 	}
 	return profiles, nil
+}
+
+func (cs *CredentialStore) ListUserTokens() ([]string, error) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.ensureMigrated()
+
+	sd, err := cs.loadUnlocked()
+	if err != nil {
+		return nil, err
+	}
+
+	profile, ok := sd.Profiles[cs.profile]
+	if !ok || profile.UserTokens == nil {
+		return []string{}, nil
+	}
+
+	users := make([]string, 0, len(profile.UserTokens))
+	for k := range profile.UserTokens {
+		users = append(users, k)
+	}
+	return users, nil
 }
 
 func (cs *CredentialStore) ClearProfile() error {
@@ -547,24 +589,28 @@ func (cs *CredentialStore) ClearProfile() error {
 
 // DeleteProfileByName deletes a profile by name. If the deleted profile
 // is the active profile, it falls back to "default".
-func (cs *CredentialStore) DeleteProfileByName(name string) error {
+// Returns true if the profile was found and deleted, false if it did not exist.
+func (cs *CredentialStore) DeleteProfileByName(name string) bool {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 	cs.ensureMigrated()
 
 	sd, err := cs.loadUnlocked()
 	if err != nil {
-		return err
+		return false
 	}
 
 	if _, ok := sd.Profiles[name]; !ok {
-		return fmt.Errorf("profile '%s' not found", name)
+		return false
 	}
 	delete(sd.Profiles, name)
 	if sd.ActiveProfile == name {
 		sd.ActiveProfile = DefaultProfile
 	}
-	return cs.saveUnlocked(sd)
+	if err := cs.saveUnlocked(sd); err != nil {
+		return false
+	}
+	return true
 }
 
 func (cs *CredentialStore) Clear() error {
