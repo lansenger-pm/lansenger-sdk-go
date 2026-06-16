@@ -221,6 +221,72 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 - `config show` 对所有密钥类字段脱敏显示（`***`），仅 `api_gateway_url` 和 `passport_url` 明文展示
 - 支持环境变量 `LANSENGER_APP_ID` / `LANSENGER_APP_SECRET` / `LANSENGER_ENCODING_KEY` / `LANSENGER_CALLBACK_TOKEN`，适合 CI/CD 场景
 
+## 身份与权限
+
+### 身份能力矩阵
+
+蓝信平台有三种身份类型，各自拥有不同的 API 访问权限：
+
+| 命令域 | 个人机器人 | 组织应用（自建） | 组织应用 + 机器人 | 备注 |
+|--------|:---:|:---:|:---:|------|
+| `message send-text/markdown/file/...` (bot DM) | **Y** | N | **Y** | 仅机器人可发送机器人私聊消息 |
+| `message send-text --group` (群聊) | N* | N | **Y** | 个人机器人 API 支持，但暂不支持入群 |
+| `message send-group-message` | N* | N | **Y** | 同上 |
+| `message send-account-message` (公共号) | N | **Y** | **Y** | 需要公共号能力 |
+| `message send-user-message` (用户代发) | N | **Y** | **Y** | 需要 userToken + OAuth2 |
+| `message revoke` | **Y** | **Y** | **Y** | 撤回自己的消息 |
+| `staff *` (通讯录只读) | N | **Y** | **Y** | `search` 额外需要 userToken |
+| `department *` | N | **Y** | **Y** | 仅组织级应用 |
+| `calendar *` | N | **Y** | **Y** | 带 userToken = 用户身份；不带 = 机器人身份 |
+| `todo *` | N | **Y** | **Y** | 仅组织级应用 |
+| `chat list/messages` | N | **Y** | **Y** | 仅组织级应用 |
+| `group *` (群组管理 V2) | N | N | **Y** | 需要机器人已在群内 |
+| `media upload` | **Y** | **Y** | **Y** | 通用上传 |
+| `media upload-app` | N | **Y** | **Y** | 仅自建应用（非 ISV） |
+| `media download/path` | **Y** | **Y** | **Y** | 通用下载 |
+| `oauth *` | N | **Y** | **Y** | 仅组织级应用 |
+| `streaming *` | N | **Y** | **Y** | 仅组织级应用 |
+| `callback *` (事件解析) | N/A | N/A | N/A | 纯数据操作，与身份无关 |
+
+> \* **N\*** = API 能力存在，但入群功能暂未开放。
+
+> **个人机器人** 只能收发消息和上传/下载文件，无法访问通讯录、群组、日程或 OAuth2。
+>
+> **组织应用 vs 组织应用 + 机器人**：使用相同的 appID/appSecret。唯一区别在于消息通道 —— 仅机器人可以发送机器人私聊消息和群聊消息（因为只有机器人能加入群聊）。其他所有 API（通讯录、日程、待办、聊天记录、OAuth2、流式消息）两者完全一致。目前仅自建应用支持机器人能力。
+
+### 开发者中心权限
+
+除了身份类型，特定 API 调用还取决于蓝信开发者中心中的权限开关。组织可能限制开发者访问权限，需要管理员协助。
+
+**基础权限（默认开启）：**
+
+| 权限 | 说明 |
+|------|------|
+| Get basic user info | 获取人员基本信息，用于系统/应用登录 |
+| Send notification messages | 获取组织消息通道，向人员/群组发送消息 |
+
+**高级权限（默认关闭，需手动开启）：**
+
+| 权限 | 说明 |
+|------|------|
+| Contacts read-only | 通讯录只读访问 |
+| Contacts edit | 通讯录编辑访问（创建/更新/删除人员） |
+| Sensitive info - Phone | 访问用户手机号 |
+| Sensitive info - Email | 访问用户邮箱 |
+| Sensitive info - ID number | 访问用户身份证号 |
+| Sensitive info - Employee ID | 访问用户工号 |
+| Map unique attribute to staff ID | 将手机/邮箱/工号映射为人员 ID |
+| App edit | 创建及更新应用 |
+| Groups read-only | 群组只读访问 |
+| Groups edit | 群组编辑访问 |
+| Calendar read-only | 日程及日历只读访问 |
+| Calendar edit | 日程及日历编辑访问 |
+| Upload media | 媒体文件上传权限 |
+| Workbench template read | 工作台模板读取 |
+| Workbench template write | 工作台模板写入 |
+
+当遇到权限错误时，请先确认身份类型是否支持该操作，然后提示用户在开发者中心开启对应的高级权限（如无法访问请联系组织管理员）。
+
 ## CLI 兼容性
 
 本 Go CLI 与 Python 版、TypeScript 版命令语法完全一致：

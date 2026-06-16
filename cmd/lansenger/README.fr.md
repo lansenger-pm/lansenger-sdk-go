@@ -221,6 +221,72 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 - `config show` masque tous les champs secrets (`***`), seuls `api_gateway_url` et `passport_url` sont affichés en clair
 - Variables d'environnement `LANSENGER_APP_ID` / `LANSENGER_APP_SECRET` / `LANSENGER_ENCODING_KEY` / `LANSENGER_CALLBACK_TOKEN` supportées pour CI/CD
 
+## Identité et permissions
+
+### Matrice de capacités d'identité
+
+La plateforme Lansenger propose trois types d'identité avec différents accès API :
+
+| Domaine de commande | Bot personnel | App d'organisation (auto-hébergée) | App d'organisation + Bot | Remarques |
+|--------|:---:|:---:|:---:|------|
+| `message send-text/markdown/file/...` (bot DM) | **Y** | N | **Y** | Seuls les bots peuvent envoyer des DM bot |
+| `message send-text --group` (chat de groupe) | N* | N | **Y** | L'API bot personnel le supporte mais pas encore de fonction rejoindre-groupe |
+| `message send-group-message` | N* | N | **Y** | Idem ci-dessus |
+| `message send-account-message` (compte officiel) | N | **Y** | **Y** | Nécessite la capacité compte officiel |
+| `message send-user-message` (utilisateur à utilisateur) | N | **Y** | **Y** | Nécessite userToken + OAuth2 |
+| `message revoke` | **Y** | **Y** | **Y** | Révoquer ses propres messages |
+| `staff *` (contacts lecture seule) | N | **Y** | **Y** | `search` nécessite en plus userToken |
+| `department *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
+| `calendar *` | N | **Y** | **Y** | Avec userToken = identité utilisateur ; sans = identité bot |
+| `todo *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
+| `chat list/messages` | N | **Y** | **Y** | Applications niveau organisation uniquement |
+| `group *` (gestion de groupes V2) | N | N | **Y** | Nécessite que le bot soit dans le groupe |
+| `media upload` | **Y** | **Y** | **Y** | Upload général |
+| `media upload-app` | N | **Y** | **Y** | Apps auto-hébergées uniquement (pas ISV) |
+| `media download/path` | **Y** | **Y** | **Y** | Téléchargement général |
+| `oauth *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
+| `streaming *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
+| `callback *` (analyse d'événements) | N/A | N/A | N/A | Opération pure de données, aucune identité requise |
+
+> \* **N\*** = La capacité API existe, mais la fonction rejoindre-groupe n'est pas encore disponible.
+
+> **Bot personnel** peut uniquement envoyer/recevoir des messages et uploader/télécharger des fichiers. Impossible d'accéder aux contacts, groupes, calendriers ou OAuth2.
+>
+> **App d'organisation vs App d'organisation + Bot** : Même appID/appSecret. La seule différence concerne les canaux de messagerie — seuls les bots peuvent envoyer des DM bot et des messages de groupe (car seuls les bots peuvent rejoindre les groupes). Toutes les autres API (contacts, calendrier, todo, chat, OAuth2, streaming) fonctionnent de manière identique pour les deux. Actuellement, seules les apps auto-hébergées supportent la capacité bot.
+
+### Permissions du Centre développeur
+
+Au-delà du type d'identité, certains appels API dépendent également des permissions activées dans le Centre développeur Lansenger. L'organisation peut restreindre l'accès développeur, nécessitant l'assistance de l'administrateur.
+
+**Permissions de base (activées par défaut) :**
+
+| Permission | Description |
+|------|------|
+| Get basic user info | Obtenir les infos de base du personnel pour la connexion système/app |
+| Send notification messages | Obtenir les canaux de message d'organisation pour envoyer des messages aux personnes/groupes |
+
+**Permissions avancées (désactivées par défaut, doivent être activées manuellement) :**
+
+| Permission | Description |
+|------|------|
+| Contacts read-only | Accès en lecture aux contacts |
+| Contacts edit | Accès en édition aux contacts (créer/mettre à jour/supprimer du personnel) |
+| Sensitive info - Phone | Accéder aux numéros de téléphone des utilisateurs |
+| Sensitive info - Email | Accéder aux emails des utilisateurs |
+| Sensitive info - ID number | Accéder aux numéros d'identité des utilisateurs |
+| Sensitive info - Employee ID | Accéder aux identifiants employé des utilisateurs |
+| Map unique attribute to staff ID | Mapper téléphone/email/ID employé vers l'ID personnel |
+| App edit | Créer et mettre à jour des applications |
+| Groups read-only | Accès en lecture aux groupes |
+| Groups edit | Accès en édition aux groupes |
+| Calendar read-only | Accès en lecture au calendrier et aux planifications |
+| Calendar edit | Accès en édition au calendrier et aux planifications |
+| Upload media | Permission d'upload de fichiers média |
+| Workbench template read | Accès en lecture aux modèles de workbench |
+| Workbench template write | Accès en écriture aux modèles de workbench |
+
+En cas d'erreur de permission, vérifiez d'abord que le type d'identité supporte l'opération, puis invitez l'utilisateur à activer la permission avancée correspondante dans le Centre développeur (contactez l'administrateur d'organisation si l'accès est impossible).
+
 ## Compatibilité CLI
 
 Ce CLI Go partage la même syntaxe de commande que les versions Python et TypeScript :

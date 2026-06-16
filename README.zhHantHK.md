@@ -472,6 +472,72 @@ token, err := store.LoadAppToken()
 - **userToken + refreshToken** 可在 OAuth2 交換後儲存
 - **憑證 + URL** 一併儲存，完整恢復設定
 
+## 身份與權限
+
+### 身份能力矩陣
+
+藍信平台有三種身份類型，各自擁有不同的 API 存取權限：
+
+| 命令域 | 個人機器人 | 組織應用（自建） | 組織應用 + 機器人 | 備註 |
+|--------|:---:|:---:|:---:|------|
+| `message send-text/markdown/file/...` (bot DM) | **Y** | N | **Y** | 僅機器人可傳送機器人私聊訊息 |
+| `message send-text --group` (群聊) | N* | N | **Y** | 個人機器人 API 支援，但暫不支援入群 |
+| `message send-group-message` | N* | N | **Y** | 同上 |
+| `message send-account-message` (公共號) | N | **Y** | **Y** | 需要公共號能力 |
+| `message send-user-message` (使用者代發) | N | **Y** | **Y** | 需要 userToken + OAuth2 |
+| `message revoke` | **Y** | **Y** | **Y** | 撤回自己的訊息 |
+| `staff *` (通訊錄唯讀) | N | **Y** | **Y** | `search` 額外需要 userToken |
+| `department *` | N | **Y** | **Y** | 僅組織級應用 |
+| `calendar *` | N | **Y** | **Y** | 帶 userToken = 使用者身份；不帶 = 機器人身份 |
+| `todo *` | N | **Y** | **Y** | 僅組織級應用 |
+| `chat list/messages` | N | **Y** | **Y** | 僅組織級應用 |
+| `group *` (群組管理 V2) | N | N | **Y** | 需要機器人已在群內 |
+| `media upload` | **Y** | **Y** | **Y** | 通用上傳 |
+| `media upload-app` | N | **Y** | **Y** | 僅自建應用（非 ISV） |
+| `media download/path` | **Y** | **Y** | **Y** | 通用下載 |
+| `oauth *` | N | **Y** | **Y** | 僅組織級應用 |
+| `streaming *` | N | **Y** | **Y** | 僅組織級應用 |
+| `callback *` (事件解析) | N/A | N/A | N/A | 純資料操作，與身份無關 |
+
+> \* **N\*** = API 能力存在，但入群功能暫未開放。
+
+> **個人機器人** 只能收發訊息和上傳/下載檔案，無法存取通訊錄、群組、行事曆或 OAuth2。
+>
+> **組織應用 vs 組織應用 + 機器人**：使用相同的 appID/appSecret。唯一區別在於訊息通道 —— 僅機器人可以傳送機器人私聊訊息和群聊訊息（因為只有機器人能加入群聊）。其他所有 API（通訊錄、行事曆、待辦、聊天記錄、OAuth2、串流訊息）兩者完全一致。目前僅自建應用支援機器人能力。
+
+### 開發者中心權限
+
+除了身份類型，特定 API 調用還取決於藍信開發者中心中的權限開關。組織可能限制開發者存取權限，需要管理員協助。
+
+**基礎權限（預設開啟）：**
+
+| 權限 | 說明 |
+|------|------|
+| Get basic user info | 取得人員基本資訊，用於系統/應用登入 |
+| Send notification messages | 取得組織訊息通道，向人員/群組傳送訊息 |
+
+**進階權限（預設關閉，需手動開啟）：**
+
+| 權限 | 說明 |
+|------|------|
+| Contacts read-only | 通訊錄唯讀存取 |
+| Contacts edit | 通訊錄編輯存取（建立/更新/刪除人員） |
+| Sensitive info - Phone | 存取使用者手機號碼 |
+| Sensitive info - Email | 存取使用者電子郵件 |
+| Sensitive info - ID number | 存取使用者身份證號 |
+| Sensitive info - Employee ID | 存取使用者工號 |
+| Map unique attribute to staff ID | 將手機/電子郵件/工號對映為人員 ID |
+| App edit | 建立及更新應用 |
+| Groups read-only | 群組唯讀存取 |
+| Groups edit | 群組編輯存取 |
+| Calendar read-only | 行事曆及排程唯讀存取 |
+| Calendar edit | 行事曆及排程編輯存取 |
+| Upload media | 媒體檔案上傳權限 |
+| Workbench template read | 工作台範本讀取 |
+| Workbench template write | 工作台範本寫入 |
+
+遇到權限錯誤時，請先確認身份類型是否支援該操作，然後提示使用者在開發者中心開啟對應的進階權限（如無法存取請聯絡組織管理員）。
+
 ## 專案結構
 
 ```
