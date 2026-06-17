@@ -373,8 +373,8 @@ func runConfigListUsers(cmd *cobra.Command, args []string) {
 				}
 				fmt.Printf("     user_token:          %s\n", displayVal(tokenData["user_token"]))
 			fmt.Printf("     refresh_token:       %s\n", displayVal(tokenData["refresh_token"]))
-			fmt.Printf("     expires_in:          %s\n", displayVal(tokenData["expires_in"]))
-			fmt.Printf("     refresh_expires_in:  %s\n", displayVal(tokenData["refresh_expires_in"]))
+			fmt.Printf("     expires_in:          %s\n", displayVal(tokenData["user_token_expiry"]))
+			fmt.Printf("     refresh_expires_in:  %s\n", displayVal(tokenData["refresh_token_expiry"]))
 			}
 		}
 		if !configListUsersShowTokens {
@@ -398,8 +398,8 @@ func runConfigListUsers(cmd *cobra.Command, args []string) {
 				tokens[staffID] = map[string]string{
 					"user_token":         tokenData["user_token"],
 					"refresh_token":      tokenData["refresh_token"],
-					"expires_in":         tokenData["expires_in"],
-					"refresh_expires_in": tokenData["refresh_expires_in"],
+					"expires_in":         tokenData["user_token_expiry"],
+					"refresh_expires_in": tokenData["refresh_token_expiry"],
 				}
 			}
 		}
