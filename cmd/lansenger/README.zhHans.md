@@ -123,8 +123,20 @@ lansenger message send-text group123 "全员通知" --group --mention-all
 # 群内 @指定人
 lansenger message send-text group123 "请查看" --group --mention staff001
 
+# @提及群中的特定机器人
+lansenger message send-text group123 "Bot check" --group --mention-bot bot001 --mention-bot bot002
+
+# 回复消息（消息引用）
+lansenger message send-text group123 "Got it" --group --ref-msg-id 524288-xxx
+
 # 机器人通道发送消息
 lansenger message send-bot-message text '{"content":"通知内容"}' --chat-id user001 --chat-id user002
+
+# 机器人通道回复（消息引用）
+lansenger message send-bot-message text '{"content":"Reply"}' --chat-id user001 --ref-msg-id 524288-xxx
+
+# 查询群 ID 列表
+lansenger message query-groups --page 0 --size 100
 ```
 
 ### 群组管理
