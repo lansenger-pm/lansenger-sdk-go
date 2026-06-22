@@ -242,7 +242,7 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 | 命令域 | 个人机器人 | 组织应用（自建） | 组织应用 + 机器人 | 备注 |
 |--------|:---:|:---:|:---:|------|
 | `message send-text/markdown/file/...` (bot DM) | **Y** | N | **Y** | 仅机器人可发送机器人私聊消息 |
-| `message send-text --group` (群聊) | **Y** | N | **Y** | 个人机器人 API 支持 |
+| `message send-text --group` (群聊) | **Y** | N | **Y** | 个人机器人现已支持群聊 |
 | `message send-group-message` | **Y** | N | **Y** | 同上 |
 | `message send-account-message` (公共号) | N | **Y** | **Y** | 需要公共号能力 |
 | `message send-user-message` (用户代发) | N | **Y** | **Y** | 需要 userToken + OAuth2 |
