@@ -2,7 +2,7 @@ package lansenger
 
 import "context"
 
-func (c *LansengerClient) SendGroupMessage(ctx context.Context, groupID, msgType string, msgData map[string]interface{}, userToken, senderID string, outlines, uuid, entryID string) (*SendMessageResult, error) {
+func (c *LansengerClient) SendGroupMessage(ctx context.Context, groupID, msgType string, msgData map[string]interface{}, userToken, senderID string, outlines, uuid, entryID, refMsgID string) (*SendMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -28,6 +28,9 @@ func (c *LansengerClient) SendGroupMessage(ctx context.Context, groupID, msgType
 	}
 	if entryID != "" {
 		body["entryId"] = entryID
+	}
+	if refMsgID != "" {
+		body["refMsgId"] = refMsgID
 	}
 
 	result, err := c.doPost(ctx, url, body)

@@ -2,7 +2,7 @@ package lansenger
 
 import "context"
 
-func (c *LansengerClient) SendBotMessage(ctx context.Context, msgType string, msgData map[string]interface{}, chatIDs, departmentIDs []string, userToken, entryID string) (*BotMessageResult, error) {
+func (c *LansengerClient) SendBotMessage(ctx context.Context, msgType string, msgData map[string]interface{}, chatIDs, departmentIDs []string, userToken, entryID, refMsgID string) (*BotMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -24,6 +24,9 @@ func (c *LansengerClient) SendBotMessage(ctx context.Context, msgType string, ms
 	}
 	if entryID != "" {
 		body["entryId"] = entryID
+	}
+	if refMsgID != "" {
+		body["refMsgId"] = refMsgID
 	}
 
 	result, err := c.doPost(ctx, url, body)

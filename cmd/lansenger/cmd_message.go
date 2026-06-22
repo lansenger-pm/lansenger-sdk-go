@@ -131,20 +131,24 @@ var (
 	sendReminderTypes    []int
 	sendReminderUserIDs  []string
 
-	sendTextFile           string
-	sendTextMediaType      string
-	sendTextCoverImage     string
-	sendTextIsGroup        bool
-	sendTextReminderAll    bool
+	sendTextFile            string
+	sendTextMediaType       string
+	sendTextCoverImage      string
+	sendTextIsGroup         bool
+	sendTextReminderAll     bool
 	sendTextReminderUserIDs []string
-	sendTextUserToken      string
-	sendTextSenderID       string
+	sendTextRefMsgID        string
+	sendTextMentionBotIDs   []string
+	sendTextUserToken       string
+	sendTextSenderID        string
 
-	sendMarkdownIsGroup        bool
-	sendMarkdownReminderAll    bool
+	sendMarkdownIsGroup         bool
+	sendMarkdownReminderAll     bool
 	sendMarkdownReminderUserIDs []string
-	sendMarkdownUserToken      string
-	sendMarkdownSenderID       string
+	sendMarkdownRefMsgID        string
+	sendMarkdownMentionBotIDs   []string
+	sendMarkdownUserToken       string
+	sendMarkdownSenderID        string
 
 	sendFileContent     string
 	sendFileMediaType  string
@@ -214,15 +218,18 @@ var (
 	sendBotMessageDepartmentIDs []string
 	sendBotMessageUserToken     string
 	sendBotMessageEntryID       string
+	sendBotMessageRefMsgID      string
 	sendBotMessageIsGroup       bool
 
-	sendGroupMessageUserToken      string
-	sendGroupMessageSenderID       string
-	sendGroupMessageReminderAll    bool
+	sendGroupMessageUserToken       string
+	sendGroupMessageSenderID        string
+	sendGroupMessageReminderAll     bool
 	sendGroupMessageReminderUserIDs []string
-	sendGroupMessageOutlines       string
-	sendGroupMessageEntryID        string
-	sendGroupMessageUUID           string
+	sendGroupMessageRefMsgID        string
+	sendGroupMessageMentionBotIDs   []string
+	sendGroupMessageOutlines        string
+	sendGroupMessageEntryID         string
+	sendGroupMessageUUID            string
 
 	sendAccountMessageChatIDs       []string
 	sendAccountMessageDepartmentIDs []string
@@ -246,12 +253,16 @@ func init() {
 	sendTextCmd.Flags().BoolVarP(&sendTextIsGroup, "group", "g", false, "Send as group message")
 	sendTextCmd.Flags().BoolVar(&sendTextReminderAll, "mention-all", false, "@all in group")
 	sendTextCmd.Flags().StringArrayVar(&sendTextReminderUserIDs, "mention", nil, "User IDs to @mention")
+	sendTextCmd.Flags().StringVar(&sendTextRefMsgID, "ref-msg-id", "", "Reference message ID for reply")
+	sendTextCmd.Flags().StringArrayVar(&sendTextMentionBotIDs, "mention-bot", nil, "Reminder bot IDs")
 	sendTextCmd.Flags().StringVar(&sendTextUserToken, "user-token", "", "User token for private channel")
 	sendTextCmd.Flags().StringVar(&sendTextSenderID, "sender-id", "", "Sender staff ID for group message")
 
 	sendMarkdownCmd.Flags().BoolVarP(&sendMarkdownIsGroup, "group", "g", false, "Send as group message")
 	sendMarkdownCmd.Flags().BoolVar(&sendMarkdownReminderAll, "mention-all", false, "@all in group")
 	sendMarkdownCmd.Flags().StringArrayVar(&sendMarkdownReminderUserIDs, "mention", nil, "User IDs to @mention")
+	sendMarkdownCmd.Flags().StringVar(&sendMarkdownRefMsgID, "ref-msg-id", "", "Reference message ID for reply")
+	sendMarkdownCmd.Flags().StringArrayVar(&sendMarkdownMentionBotIDs, "mention-bot", nil, "Reminder bot IDs")
 	sendMarkdownCmd.Flags().StringVar(&sendMarkdownUserToken, "user-token", "", "User token for private channel")
 	sendMarkdownCmd.Flags().StringVar(&sendMarkdownSenderID, "sender-id", "", "Sender staff ID for group message")
 
@@ -326,12 +337,15 @@ func init() {
 	sendBotMessageCmd.Flags().StringArrayVar(&sendBotMessageDepartmentIDs, "dept", nil, "Department IDs (bot channel only)")
 	sendBotMessageCmd.Flags().StringVar(&sendBotMessageUserToken, "user-token", "", "User token")
 	sendBotMessageCmd.Flags().StringVar(&sendBotMessageEntryID, "entry-id", "", "App entry selector")
+	sendBotMessageCmd.Flags().StringVar(&sendBotMessageRefMsgID, "ref-msg-id", "", "Reference message ID for reply")
 	sendBotMessageCmd.Flags().BoolVarP(&sendBotMessageIsGroup, "group", "g", false, "Send to groups instead of users (uses /v1/messages/group/create)")
 
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageUserToken, "user-token", "", "User token")
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageSenderID, "sender-id", "", "Sender staff ID")
 	sendGroupMessageCmd.Flags().BoolVar(&sendGroupMessageReminderAll, "mention-all", false, "@all (text/formatText only)")
 	sendGroupMessageCmd.Flags().StringArrayVar(&sendGroupMessageReminderUserIDs, "mention", nil, "User IDs to @mention (text/formatText only)")
+	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageRefMsgID, "ref-msg-id", "", "Reference message ID for reply")
+	sendGroupMessageCmd.Flags().StringArrayVar(&sendGroupMessageMentionBotIDs, "mention-bot", nil, "Reminder bot IDs")
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageOutlines, "outlines", "", "Group notification digest")
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageEntryID, "entry-id", "", "App entry selector")
 	sendGroupMessageCmd.Flags().StringVar(&sendGroupMessageUUID, "uuid", "", "Message UUID for deduplication")
@@ -347,7 +361,7 @@ func init() {
 	sendUserMessageCmd.Flags().StringVar(&sendUserMessageCommon, "common", "", "Common data as JSON dict")
 	sendUserMessageCmd.Flags().StringVar(&sendUserMessageUUID, "uuid", "", "Deduplication UUID")
 
-	queryGroupsCmd.Flags().IntVarP(&queryGroupsPageOffset, "page", "p", 1, "Page offset")
+	queryGroupsCmd.Flags().IntVarP(&queryGroupsPageOffset, "page", "p", 0, "Page offset (starts from 0)")
 	queryGroupsCmd.Flags().IntVarP(&queryGroupsPageSize, "size", "s", 100, "Page size")
 
 	messageCmd.AddCommand(sendTextCmd)
@@ -378,7 +392,7 @@ func runSendText(cmd *cobra.Command, args []string) {
 		reminderUserIDs = sendTextReminderUserIDs
 	}
 
-	result, err := client.SendText(ctx, args[0], args[1], sendTextFile, sendTextMediaType, sendTextCoverImage, sendTextReminderAll, reminderUserIDs, sendTextIsGroup, sendTextUserToken, sendTextSenderID)
+	result, err := client.SendText(ctx, args[0], args[1], sendTextFile, sendTextMediaType, sendTextCoverImage, sendTextReminderAll, reminderUserIDs, sendTextMentionBotIDs, sendTextIsGroup, sendTextUserToken, sendTextSenderID, sendTextRefMsgID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id", "msg_type", "operation"})
 }
@@ -392,7 +406,7 @@ func runSendMarkdown(cmd *cobra.Command, args []string) {
 		reminderUserIDs = sendMarkdownReminderUserIDs
 	}
 
-	result, err := client.SendMarkdown(ctx, args[0], args[1], sendMarkdownReminderAll, reminderUserIDs, sendMarkdownIsGroup, sendMarkdownUserToken, sendMarkdownSenderID)
+	result, err := client.SendMarkdown(ctx, args[0], args[1], sendMarkdownReminderAll, reminderUserIDs, sendMarkdownMentionBotIDs, sendMarkdownIsGroup, sendMarkdownUserToken, sendMarkdownSenderID, sendMarkdownRefMsgID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id", "msg_type", "operation"})
 }
@@ -634,12 +648,12 @@ func runSendBotMessage(cmd *cobra.Command, args []string) {
 		// Route to group message endpoint (API 4.6.2 /v1/messages/group/create) for each chat ID
 		for _, gid := range sendBotMessageChatIDs {
 			result, err := client.SendGroupMessage(ctx, gid, args[0], msgDataMap,
-				sendBotMessageUserToken, "", "", "", sendBotMessageEntryID)
+				sendBotMessageUserToken, "", "", "", sendBotMessageEntryID, sendBotMessageRefMsgID)
 			checkError(err)
 			outputResultFields(result, []string{"message_id"})
 		}
 	} else {
-		result, err := client.SendBotMessage(ctx, args[0], msgDataMap, sendBotMessageChatIDs, sendBotMessageDepartmentIDs, sendBotMessageUserToken, sendBotMessageEntryID)
+		result, err := client.SendBotMessage(ctx, args[0], msgDataMap, sendBotMessageChatIDs, sendBotMessageDepartmentIDs, sendBotMessageUserToken, sendBotMessageEntryID, sendBotMessageRefMsgID)
 		checkError(err)
 		outputResultFields(result, []string{"message_id"})
 	}
@@ -659,21 +673,29 @@ func runSendGroupMessage(cmd *cobra.Command, args []string) {
 	}
 
 	// Inject reminder into msgData if mention flags are set
-	if sendGroupMessageReminderAll || len(sendGroupMessageReminderUserIDs) > 0 {
+	if sendGroupMessageReminderAll || len(sendGroupMessageReminderUserIDs) > 0 || len(sendGroupMessageMentionBotIDs) > 0 {
 		if textData, ok := msgDataMap["text"].(map[string]interface{}); ok {
-			textData["reminder"] = map[string]interface{}{
+			reminder := map[string]interface{}{
 				"all":     sendGroupMessageReminderAll,
 				"userIds": sendGroupMessageReminderUserIDs,
 			}
+			if len(sendGroupMessageMentionBotIDs) > 0 {
+				reminder["botIds"] = sendGroupMessageMentionBotIDs
+			}
+			textData["reminder"] = reminder
 		} else if ftData, ok := msgDataMap["formatText"].(map[string]interface{}); ok {
-			ftData["reminder"] = map[string]interface{}{
+			reminder := map[string]interface{}{
 				"all":     sendGroupMessageReminderAll,
 				"userIds": sendGroupMessageReminderUserIDs,
 			}
+			if len(sendGroupMessageMentionBotIDs) > 0 {
+				reminder["botIds"] = sendGroupMessageMentionBotIDs
+			}
+			ftData["reminder"] = reminder
 		}
 	}
 
-	result, err := client.SendGroupMessage(ctx, args[0], args[1], msgDataMap, sendGroupMessageUserToken, sendGroupMessageSenderID, sendGroupMessageOutlines, sendGroupMessageUUID, sendGroupMessageEntryID)
+	result, err := client.SendGroupMessage(ctx, args[0], args[1], msgDataMap, sendGroupMessageUserToken, sendGroupMessageSenderID, sendGroupMessageOutlines, sendGroupMessageUUID, sendGroupMessageEntryID, sendGroupMessageRefMsgID)
 	checkError(err)
 	outputResultFields(result, []string{"message_id"})
 }
