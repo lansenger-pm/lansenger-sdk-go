@@ -242,8 +242,8 @@ La plateforme Lansenger propose trois types d'identité avec différents accès 
 | Domaine de commande | Bot personnel | App d'organisation (auto-hébergée) | App d'organisation + Bot | Remarques |
 |--------|:---:|:---:|:---:|------|
 | `message send-text/markdown/file/...` (bot DM) | **Y** | N | **Y** | Seuls les bots peuvent envoyer des DM bot |
-| `message send-text --group` (chat de groupe) | N* | N | **Y** | L'API bot personnel le supporte mais pas encore de fonction rejoindre-groupe |
-| `message send-group-message` | N* | N | **Y** | Idem ci-dessus |
+| `message send-text --group` (chat de groupe) | **Y** | N | **Y** | L'API bot personnel le supporte mais pas encore de fonction rejoindre-groupe |
+| `message send-group-message` | **Y** | N | **Y** | Idem ci-dessus |
 | `message send-account-message` (compte officiel) | N | **Y** | **Y** | Nécessite la capacité compte officiel |
 | `message send-user-message` (utilisateur à utilisateur) | N | **Y** | **Y** | Nécessite userToken + OAuth2 |
 | `message revoke` | **Y** | **Y** | **Y** | Révoquer ses propres messages |
@@ -260,9 +260,8 @@ La plateforme Lansenger propose trois types d'identité avec différents accès 
 | `streaming *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
 | `callback *` (analyse d'événements) | N/A | N/A | N/A | Opération pure de données, aucune identité requise |
 
-> \* **N\*** = La capacité API existe, mais la fonction rejoindre-groupe n'est pas encore disponible.
 
-> **Bot personnel** peut uniquement envoyer/recevoir des messages et uploader/télécharger des fichiers. Impossible d'accéder aux contacts, groupes, calendriers ou OAuth2.
+> **Bot personnel** peut uniquement envoyer/recevoir des messages et uploader/télécharger des fichiers. Impossible d'accéder aux contacts, calendriers ou OAuth2.
 >
 > **App d'organisation vs App d'organisation + Bot** : Même appID/appSecret. La seule différence concerne les canaux de messagerie — seuls les bots peuvent envoyer des DM bot et des messages de groupe (car seuls les bots peuvent rejoindre les groupes). Toutes les autres API (contacts, calendrier, todo, chat, OAuth2, streaming) fonctionnent de manière identique pour les deux. Actuellement, seules les apps auto-hébergées supportent la capacité bot.
 

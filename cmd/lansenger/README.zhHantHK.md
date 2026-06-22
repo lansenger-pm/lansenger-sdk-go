@@ -239,8 +239,8 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 | 命令域 | 個人機器人 | 組織應用（自建） | 組織應用 + 機器人 | 備註 |
 |--------|:---:|:---:|:---:|------|
 | `message send-text/markdown/file/...` (bot DM) | **Y** | N | **Y** | 僅機器人可傳送機器人私聊訊息 |
-| `message send-text --group` (群聊) | N* | N | **Y** | 個人機器人 API 支援，但暫不支援入群 |
-| `message send-group-message` | N* | N | **Y** | 同上 |
+| `message send-text --group` (群聊) | **Y** | N | **Y** | 個人機器人 API 支援 |
+| `message send-group-message` | **Y** | N | **Y** | 同上 |
 | `message send-account-message` (公共號) | N | **Y** | **Y** | 需要公共號能力 |
 | `message send-user-message` (使用者代發) | N | **Y** | **Y** | 需要 userToken + OAuth2 |
 | `message revoke` | **Y** | **Y** | **Y** | 撤回自己的訊息 |
@@ -257,9 +257,8 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 | `streaming *` | N | **Y** | **Y** | 僅組織級應用 |
 | `callback *` (事件解析) | N/A | N/A | N/A | 純資料操作，與身份無關 |
 
-> \* **N\*** = API 能力存在，但入群功能暫未開放。
 
-> **個人機器人** 只能收發訊息和上傳/下載檔案，無法存取通訊錄、群組、行事曆或 OAuth2。
+> **個人機器人** 只能收發訊息和上傳/下載檔案，無法存取通訊錄、行事曆或 OAuth2。
 >
 > **組織應用 vs 組織應用 + 機器人**：使用相同的 appID/appSecret。唯一區別在於訊息通道 —— 僅機器人可以傳送機器人私聊訊息和群聊訊息（因為只有機器人能加入群聊）。其他所有 API（通訊錄、行事曆、待辦、聊天記錄、OAuth2、串流訊息）兩者完全一致。目前僅自建應用支援機器人能力。
 
