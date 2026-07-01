@@ -395,3 +395,62 @@ func (c *LansengerClient) UpdateScheduleAttendeeMeta(ctx context.Context, calend
 		RawResponse: result,
 	}, nil
 }
+
+func (c *LansengerClient) UpdateScheduleAttendees(ctx context.Context, calendarID, scheduleID string, addAttendees, deleteAttendees []string, reminderType, operationType string, currentTime int, userToken, userID string) (*ScheduleAttendeesUpdateResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "calendars", "schedules_members_update", token,
+		WithUserToken(userToken),
+		WithUserID(userID),
+		WithPathVar("calendar_id", calendarID),
+		WithPathVar("schedule_id", scheduleID),
+	)
+
+	body := map[string]interface{}{}
+	if len(addAttendees) > 0 {
+		body["addAttendees"] = addAttendees
+	}
+	if len(deleteAttendees) > 0 {
+		body["deleteAttendees"] = deleteAttendees
+	}
+	if reminderType != "" {
+		body["reminderType"] = reminderType
+	}
+	if operationType != "" {
+		body["operationType"] = operationType
+	}
+	if currentTime != 0 {
+		body["currentTime"] = currentTime
+	}
+
+	result, err := c.doPost(ctx, url, body)
+	if err != nil {
+		return &ScheduleAttendeesUpdateResult{Success: false, Error: err.Error()}, nil
+	}
+
+	data := extractData(result)
+	res := &ScheduleAttendeesUpdateResult{
+		Success:     true,
+		RawResponse: result,
+	}
+
+	if scheduleIDs, ok := data["scheduleIds"].([]interface{}); ok {
+		for _, id := range scheduleIDs {
+			if s, ok := id.(string); ok {
+				res.ScheduleIDs = append(res.ScheduleIDs, s)
+			}
+		}
+	}
+	if attendees, ok := data["attendees"].([]interface{}); ok {
+		for _, a := range attendees {
+			if s, ok := a.(string); ok {
+				res.FailedAttendees = append(res.FailedAttendees, s)
+			}
+		}
+	}
+
+	return res, nil
+}

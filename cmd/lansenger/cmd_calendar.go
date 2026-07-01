@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -146,6 +147,22 @@ var (
 	calAttendeeMetaUserID      string
 )
 
+// update-attendees (4.23.19)
+var calendarUpdateAttendeesCmd = &cobra.Command{
+	Use:   "update-attendees CALENDAR_ID SCHEDULE_ID",
+	Short: "Batch add/remove schedule attendees (4.23.19)",
+	Args:  cobra.ExactArgs(2),
+	Run:   runCalendarUpdateAttendees,
+}
+
+var calUpdateAttAdd string
+var calUpdateAttDel string
+var calUpdateAttReminder string
+var calUpdateAttOp string
+var calUpdateAttCurrentTime int
+var calUpdateAttUserToken string
+var calUpdateAttUserID string
+
 func init() {
 	calendarPrimaryCmd.Flags().StringVar(&calPrimaryUserToken, "user-token", "", "User token")
 	calendarPrimaryCmd.Flags().StringVar(&calPrimaryUserID, "user-id", "", "User ID")
@@ -207,6 +224,14 @@ func init() {
 	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaUserToken, "user-token", "", "User token")
 	calendarAttendeeMetaCmd.Flags().StringVar(&calAttendeeMetaUserID, "user-id", "", "User ID")
 
+	calendarUpdateAttendeesCmd.Flags().StringVar(&calUpdateAttAdd, "add", "", "Staff IDs to add (JSON array)")
+	calendarUpdateAttendeesCmd.Flags().StringVar(&calUpdateAttDel, "remove", "", "Staff IDs to remove (JSON array)")
+	calendarUpdateAttendeesCmd.Flags().StringVar(&calUpdateAttReminder, "reminder", "", "Reminder type: yes or no")
+	calendarUpdateAttendeesCmd.Flags().StringVar(&calUpdateAttOp, "op", "", "Operation: modify_current, modify_current_after, modify_all")
+	calendarUpdateAttendeesCmd.Flags().IntVar(&calUpdateAttCurrentTime, "current-time", 0, "Required when op != modify_all")
+	calendarUpdateAttendeesCmd.Flags().StringVar(&calUpdateAttUserToken, "user-token", "", "User token")
+	calendarUpdateAttendeesCmd.Flags().StringVar(&calUpdateAttUserID, "user-id", "", "User ID")
+
 	calendarCmd.AddCommand(calendarPrimaryCmd)
 	calendarCmd.AddCommand(calendarCreateScheduleCmd)
 	calendarCmd.AddCommand(calendarFetchScheduleCmd)
@@ -217,6 +242,7 @@ func init() {
 	calendarCmd.AddCommand(calendarDeleteAttendeesCmd)
 	calendarCmd.AddCommand(calendarUpdateScheduleCmd)
 	calendarCmd.AddCommand(calendarAttendeeMetaCmd)
+	calendarCmd.AddCommand(calendarUpdateAttendeesCmd)
 	rootCmd.AddCommand(calendarCmd)
 }
 
@@ -441,6 +467,29 @@ func runCalendarAttendeeMeta(cmd *cobra.Command, args []string) {
 	}
 
 	result, err := client.UpdateScheduleAttendeeMeta(ctx, args[0], args[1], params, calAttendeeMetaUserToken, calAttendeeMetaUserID)
+	checkError(err)
+	outputResult(result)
+}
+
+func runCalendarUpdateAttendees(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	var addAtt, delAtt []string
+	if calUpdateAttAdd != "" {
+		if err := json.Unmarshal([]byte(calUpdateAttAdd), &addAtt); err != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Error parsing --add JSON: %v\n", err)
+			return
+		}
+	}
+	if calUpdateAttDel != "" {
+		if err := json.Unmarshal([]byte(calUpdateAttDel), &delAtt); err != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Error parsing --remove JSON: %v\n", err)
+			return
+		}
+	}
+
+	result, err := client.UpdateScheduleAttendees(ctx, args[0], args[1], addAtt, delAtt, calUpdateAttReminder, calUpdateAttOp, calUpdateAttCurrentTime, calUpdateAttUserToken, calUpdateAttUserID)
 	checkError(err)
 	outputResult(result)
 }

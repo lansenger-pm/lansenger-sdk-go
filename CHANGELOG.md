@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [0.9.21] - 2026-07-01
+
+### Added
+
+- **config**: `Config.AppToken` and `Config.UserToken` fields for **external token mode**.
+- **auth**: `TokenManager` now supports **external mode** — `GetToken()` returns externally-provided token directly.
+- **messaging**: `SendApproveCard` and `UpdateApproveCard` for approveCard (审批卡片) messages (4.6.4.12/13).
+- **models**: `ApproveCardParams` and `ApproveCardUpdateParams` structs.
+- **calendars**: `UpdateScheduleAttendees` for batch add/delete of schedule attendees (4.23.19).
+- **bot_commands**: New module with `CreateBotCommands`, `FetchBotCommands`, `DeleteBotCommands` (4.37).
+- **personal_apps**: New module with CRUD + List methods for personal apps/bots (4.38).
+- **models**: `ScheduleAttendeesUpdateResult`, `BotCommandResult`, `BotCommandQueryResult`, `PersonalAppCreateResult`, `PersonalAppInfoResult`, `PersonalAppListResult` structs.
+- **cli**: `bot-command` (create/query/delete) and `personal-app` (create/update/info/delete/list) command groups.
+- **cli**: `calendar update-attendees` command for batch add/delete schedule attendees.
+- **cli**: `--app-token` and `--user-token` global flags for external token mode.
+- **tests**: Test suites for bot_commands, personal_apps, and update_schedule_attendees.
+
+### Changed
+
+- **docs**: READMEs updated to reflect personal bots support group chat.
+- **cli**: `--app-token` now triggers external mode — credential file is skipped entirely when provided.
+
+### Fixed
+
+- **auth**: `TokenManager` external mode prevents accidental auto-refresh of externally-provided tokens.
+
 ## [0.9.20] - 2026-06-17
 
 ### Added

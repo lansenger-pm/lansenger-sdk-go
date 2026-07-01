@@ -143,7 +143,20 @@ var APIEndpoints = map[string]map[string]string{
 		"schedules_members_fetch":       "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/fetch",
 		"schedules_members_create":      "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/create",
 		"schedules_members_delete":      "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/delete",
+		"schedules_members_update":      "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/update",
 		"schedules_members_meta_update": "/v1/calendars/{calendar_id}/schedules/{schedule_id}/members/meta/update",
+	},
+	"bot_commands": {
+		"create": "/v1/bot/commands/create",
+		"fetch":  "/v1/bot/commands/fetch",
+		"delete": "/v1/bot/commands/delete",
+	},
+	"personal_apps": {
+		"create":     "/v1/personal/apps/create",
+		"update":     "/v1/personal/apps/{app_id}/update",
+		"fetch":      "/v1/personal/apps/{app_id}/fetch",
+		"delete":     "/v1/personal/apps/{app_id}/delete",
+		"list_fetch": "/v1/personal/apps/list/fetch",
 	},
 	"todo": {
 		"create":                  "/xtra/task/unified/v1/todotask/create",

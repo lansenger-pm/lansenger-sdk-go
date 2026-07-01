@@ -214,3 +214,33 @@ func TestFetchPrimaryCalendarAPIError(t *testing.T) {
 		t.Error("expected Success=false for API error")
 	}
 }
+
+func TestUpdateScheduleAttendees(t *testing.T) {
+	server := newMuxBuilder().
+		handleToken("tok1").
+		handle("/v1/calendars/cal1/schedules/sch1/members/update", 0, "ok", map[string]interface{}{
+			"scheduleIds": []interface{}{"s1", "s2"},
+			"attendees":   []interface{}{"failed1"},
+		}).
+		build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.UpdateScheduleAttendees(
+		context.Background(), "cal1", "sch1",
+		[]string{"a1"}, []string{"a2"},
+		"yes", "modify_all", 0, "utok1", "uid1",
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success {
+		t.Errorf("expected Success=true, got %v", result.Success)
+	}
+	if len(result.ScheduleIDs) != 2 {
+		t.Errorf("expected 2 schedule IDs, got %d", len(result.ScheduleIDs))
+	}
+	if len(result.FailedAttendees) != 1 {
+		t.Errorf("expected 1 failed attendee, got %d", len(result.FailedAttendees))
+	}
+}

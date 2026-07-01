@@ -26,6 +26,60 @@ type StaffBasicInfoResult struct {
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
+type ScheduleAttendeesUpdateResult struct {
+	Success         bool                   `json:"success"`
+	ScheduleIDs     []string               `json:"schedule_ids"`
+	FailedAttendees []string               `json:"failed_attendees"`
+	Error           string                 `json:"error"`
+	RawResponse     map[string]interface{} `json:"raw_response"`
+}
+
+type BotCommandResult struct {
+	Success     bool                   `json:"success"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type BotCommandQueryResult struct {
+	Success     bool                     `json:"success"`
+	ScopeType   int                      `json:"scope_type"`
+	ChatID      string                   `json:"chat_id"`
+	ChatType    string                   `json:"chat_type"`
+	StaffID     string                   `json:"staff_id"`
+	Commands    []map[string]interface{} `json:"commands"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type PersonalAppCreateResult struct {
+	Success      bool                   `json:"success"`
+	AppID        string                 `json:"app_id"`
+	Secret       string                 `json:"secret"`
+	APIGWAddr    string                 `json:"apigw_addr"`
+	PassportAddr string                 `json:"passport_addr"`
+	Error        string                 `json:"error"`
+	RawResponse  map[string]interface{} `json:"raw_response"`
+}
+
+type PersonalAppInfoResult struct {
+	Success      bool                   `json:"success"`
+	AppID        string                 `json:"app_id"`
+	Name         string                 `json:"name"`
+	AvatarID     string                 `json:"avatar_id"`
+	Description  string                 `json:"description"`
+	APIGWAddr    string                 `json:"apigw_addr"`
+	PassportAddr string                 `json:"passport_addr"`
+	Error        string                 `json:"error"`
+	RawResponse  map[string]interface{} `json:"raw_response"`
+}
+
+type PersonalAppListResult struct {
+	Success     bool                     `json:"success"`
+	AppList     []map[string]interface{} `json:"app_list"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
 type StaffDetailResult struct {
 	Success                bool                   `json:"success"`
 	Name                   string                 `json:"name"`
@@ -205,6 +259,50 @@ type DynamicCardUpdateParams struct {
 	HeadStatusInfo map[string]interface{} `json:"head_status_info"`
 	Links          []map[string]interface{} `json:"links"`
 	IsLastUpdate   bool                   `json:"is_last_update"`
+}
+
+type ApproveCardParams struct {
+	ChatID      string `json:"chat_id"`
+	BodyTitle   string `json:"body_title"`
+	BodyContent string `json:"body_content"`
+
+	HeadTitle         string `json:"head_title"`
+	HeadIconLink      string `json:"head_icon_link"`
+	HeadIconID        string `json:"head_icon_id"`
+	HeadStatusDescribe string `json:"head_status_describe"`
+	HeadStatusIcon     int    `json:"head_status_icon"`
+	HeadStatusIconLink string `json:"head_status_icon_link"`
+	HeadStatusColour   string `json:"head_status_colour"`
+
+	BodyFormatType int                   `json:"body_format_type"`
+	Fields          []map[string]string  `json:"fields"`
+
+	ReminderAll     bool     `json:"reminder_all"`
+	ReminderUserIDs []string `json:"reminder_user_ids"`
+	ReminderBotIDs  []string `json:"reminder_bot_ids"`
+
+	CardLink       string `json:"card_link"`
+	CardLinkForPC  string `json:"card_link_for_pc"`
+	CardLinkForPad string `json:"card_link_for_pad"`
+
+	Buttons []map[string]interface{} `json:"buttons"`
+
+	ExpireTime int `json:"expire_time"`
+
+	IsGroup   bool   `json:"is_group"`
+	UserToken string `json:"user_token"`
+	SenderID  string `json:"sender_id"`
+}
+
+type ApproveCardUpdateParams struct {
+	MsgID string `json:"msg_id"`
+
+	HeadStatusDescribe string `json:"head_status_describe"`
+	HeadStatusIcon      int    `json:"head_status_icon"`
+	HeadStatusIconLink  string `json:"head_status_icon_link"`
+	HeadStatusColour    string `json:"head_status_colour"`
+
+	Buttons []map[string]interface{} `json:"buttons"`
 }
 
 type SysMsgParams struct {
