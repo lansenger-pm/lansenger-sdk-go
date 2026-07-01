@@ -14,7 +14,7 @@ func TestCreateBotCommands(t *testing.T) {
 
 	c := newTestClient(server)
 	cmds := []map[string]interface{}{
-		{"command": "/add", "description": "add something"},
+		{"command": "add", "description": "add something"},
 	}
 	result, err := c.CreateBotCommands(context.Background(), 7, cmds, "", "", "")
 	if err != nil {
@@ -34,7 +34,7 @@ func TestCreateBotCommandsWithChat(t *testing.T) {
 
 	c := newTestClient(server)
 	cmds := []map[string]interface{}{
-		{"command": "/add"},
+		{"command": "add"},
 	}
 	result, err := c.CreateBotCommands(context.Background(), 1, cmds, "524288-xxx", "group", "524288-yyy")
 	if err != nil {
@@ -54,7 +54,7 @@ func TestCreateBotCommandsAPIError(t *testing.T) {
 
 	c := newTestClient(server)
 	cmds := []map[string]interface{}{
-		{"command": "/test"},
+		{"command": "test"},
 	}
 	result, err := c.CreateBotCommands(context.Background(), 7, cmds, "", "", "")
 	if err != nil {
@@ -72,7 +72,7 @@ func TestFetchBotCommands(t *testing.T) {
 			"scopeType": float64(7),
 			"chatId":    "c1",
 			"commands": []interface{}{
-				map[string]interface{}{"command": "/add", "description": "desc"},
+				map[string]interface{}{"command": "add", "description": "desc"},
 			},
 		}).
 		build()
