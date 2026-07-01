@@ -25,6 +25,12 @@ func NewTokenManager(cfg *Config, httpClient *http.Client) *TokenManager {
 }
 
 func (tm *TokenManager) GetToken(ctx context.Context) (string, error) {
+	// External mode: when AppToken is explicitly provided, return it directly.
+	// No expiry check, no refresh — the caller manages the token lifecycle.
+	if tm.config.AppToken != "" {
+		return tm.config.AppToken, nil
+	}
+
 	tm.mu.Lock()
 	if tm.token != "" && time.Now().Before(tm.expiresAt) {
 		token := tm.token

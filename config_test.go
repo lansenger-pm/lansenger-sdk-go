@@ -83,8 +83,58 @@ func TestConfigFromEnv(t *testing.T) {
 func TestConfigFromEnvMissing(t *testing.T) {
 	os.Unsetenv("LANSENGER_APP_ID")
 	os.Unsetenv("LANSENGER_APP_SECRET")
+	os.Unsetenv("LANSENGER_APP_TOKEN")
 	_, err := ConfigFromEnv()
 	if err == nil {
-		t.Error("expected error for missing env vars")
+		t.Error("expected error for missing env vars and no app_token")
+	}
+}
+
+func TestConfigFromEnvExternalMode(t *testing.T) {
+	os.Setenv("LANSENGER_APP_TOKEN", "ext_env_token")
+	defer os.Unsetenv("LANSENGER_APP_TOKEN")
+	os.Unsetenv("LANSENGER_APP_ID")
+	os.Unsetenv("LANSENGER_APP_SECRET")
+
+	cfg, err := ConfigFromEnv()
+	if err != nil {
+		t.Fatalf("unexpected error in external mode: %v", err)
+	}
+	if cfg.AppToken != "ext_env_token" {
+		t.Errorf("expected AppToken=ext_env_token, got %s", cfg.AppToken)
+	}
+	if !cfg.IsExternalMode() {
+		t.Error("expected IsExternalMode=true with app_token")
+	}
+	if cfg.IsConfigured() {
+		t.Error("expected IsConfigured=false in external mode (no app_id/app_secret)")
+	}
+}
+
+func TestConfigExternalModeFlags(t *testing.T) {
+	cfg := NewConfig("", "")
+	cfg.AppToken = "direct_token"
+	if !cfg.IsExternalMode() {
+		t.Error("IsExternalMode should be true when AppToken is set")
+	}
+	if cfg.IsConfigured() {
+		t.Error("IsConfigured should be false when no app_id/app_secret in external mode")
+	}
+}
+
+func TestConfigUserToken(t *testing.T) {
+	os.Setenv("LANSENGER_USER_TOKEN", "env_user_tok")
+	defer os.Unsetenv("LANSENGER_USER_TOKEN")
+	os.Setenv("LANSENGER_APP_ID", "app")
+	os.Setenv("LANSENGER_APP_SECRET", "sec")
+	defer os.Unsetenv("LANSENGER_APP_ID")
+	defer os.Unsetenv("LANSENGER_APP_SECRET")
+
+	cfg, err := ConfigFromEnv()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.UserToken != "env_user_tok" {
+		t.Errorf("expected UserToken=env_user_tok, got %s", cfg.UserToken)
 	}
 }

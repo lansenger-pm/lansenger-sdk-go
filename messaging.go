@@ -346,6 +346,183 @@ func (c *LansengerClient) SendOaCardWithParams(ctx context.Context, params *OaCa
 	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, params.UserToken, "")
 }
 
+func (c *LansengerClient) SendApproveCard(ctx context.Context, chatID, bodyTitle, bodyContent, headTitle, headIconLink, headIconID, headStatusDescribe string, headStatusIcon int, headStatusIconLink, headStatusColour string, bodyFormatType int, fields []map[string]string, reminderAll bool, reminderUserIDs, reminderBotIDs []string, cardLink, cardLinkForPC, cardLinkForPad string, buttons []map[string]interface{}, expireTime int, isGroup bool, userToken, senderID string) (*SendMessageResult, error) {
+	params := &ApproveCardParams{
+		ChatID:             chatID,
+		BodyTitle:          bodyTitle,
+		BodyContent:        bodyContent,
+		HeadTitle:          headTitle,
+		HeadIconLink:       headIconLink,
+		HeadIconID:         headIconID,
+		HeadStatusDescribe: headStatusDescribe,
+		HeadStatusIcon:     headStatusIcon,
+		HeadStatusIconLink: headStatusIconLink,
+		HeadStatusColour:   headStatusColour,
+		BodyFormatType:     bodyFormatType,
+		Fields:             fields,
+		ReminderAll:        reminderAll,
+		ReminderUserIDs:    reminderUserIDs,
+		ReminderBotIDs:     reminderBotIDs,
+		CardLink:           cardLink,
+		CardLinkForPC:      cardLinkForPC,
+		CardLinkForPad:     cardLinkForPad,
+		Buttons:            buttons,
+		ExpireTime:         expireTime,
+		IsGroup:            isGroup,
+		UserToken:          userToken,
+		SenderID:           senderID,
+	}
+	return c.SendApproveCardWithParams(ctx, params)
+}
+
+func (c *LansengerClient) SendApproveCardWithParams(ctx context.Context, params *ApproveCardParams) (*SendMessageResult, error) {
+	head := map[string]interface{}{}
+	if params.HeadTitle != "" {
+		head["title"] = params.HeadTitle
+	}
+	if params.HeadIconLink != "" {
+		head["iconLink"] = params.HeadIconLink
+	}
+	if params.HeadIconID != "" {
+		head["iconId"] = params.HeadIconID
+	}
+	if params.HeadStatusDescribe != "" || params.HeadStatusIcon != 0 || params.HeadStatusIconLink != "" || params.HeadStatusColour != "" {
+		headStatus := map[string]interface{}{}
+		if params.HeadStatusDescribe != "" {
+			headStatus["describe"] = params.HeadStatusDescribe
+		}
+		if params.HeadStatusIcon != 0 {
+			headStatus["icon"] = params.HeadStatusIcon
+		}
+		if params.HeadStatusIconLink != "" {
+			headStatus["iconLink"] = params.HeadStatusIconLink
+		}
+		if params.HeadStatusColour != "" {
+			headStatus["colour"] = params.HeadStatusColour
+		}
+		head["status"] = headStatus
+	}
+
+	body := map[string]interface{}{
+		"title":   params.BodyTitle,
+		"content": params.BodyContent,
+	}
+	if params.BodyFormatType != 0 {
+		body["formatType"] = params.BodyFormatType
+	}
+	if len(params.Fields) > 0 {
+		body["fields"] = params.Fields
+	}
+
+	approveCardData := map[string]interface{}{
+		"head": head,
+		"body": body,
+	}
+
+	reminder := map[string]interface{}{}
+	if params.ReminderAll || len(params.ReminderUserIDs) > 0 || len(params.ReminderBotIDs) > 0 {
+		reminder["all"] = params.ReminderAll
+		if len(params.ReminderUserIDs) > 0 {
+			reminder["userIds"] = params.ReminderUserIDs
+		}
+		if len(params.ReminderBotIDs) > 0 {
+			reminder["botIds"] = params.ReminderBotIDs
+		}
+		approveCardData["reminder"] = reminder
+	}
+
+	cardLink := map[string]interface{}{}
+	if params.CardLink != "" || params.CardLinkForPC != "" || params.CardLinkForPad != "" {
+		if params.CardLink != "" {
+			cardLink["link"] = params.CardLink
+		}
+		if params.CardLinkForPC != "" {
+			cardLink["linkForPc"] = params.CardLinkForPC
+		}
+		if params.CardLinkForPad != "" {
+			cardLink["linkForPad"] = params.CardLinkForPad
+		}
+		approveCardData["cardLink"] = cardLink
+	}
+
+	if len(params.Buttons) > 0 {
+		approveCardData["buttons"] = params.Buttons
+	}
+
+	if params.ExpireTime > 0 {
+		approveCardData["expireTime"] = params.ExpireTime
+	}
+
+	msgData := map[string]interface{}{
+		"approveCard": approveCardData,
+	}
+
+	msgType := "approveCard"
+	if params.IsGroup {
+		return c.SendGroupMessage(ctx, params.ChatID, msgType, msgData, params.UserToken, params.SenderID, "", "", "", "")
+	}
+
+	return c.sendBotPrivate(ctx, params.ChatID, msgType, msgData, params.UserToken, "")
+}
+
+func (c *LansengerClient) UpdateApproveCard(ctx context.Context, params *ApproveCardUpdateParams) (*SendMessageResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "messages", "dynamic_update", token)
+
+	msgData := map[string]interface{}{}
+
+	headStatus := map[string]interface{}{}
+	if params.HeadStatusDescribe != "" {
+		headStatus["describe"] = params.HeadStatusDescribe
+	}
+	if params.HeadStatusIcon != 0 {
+		headStatus["icon"] = params.HeadStatusIcon
+	}
+	if params.HeadStatusIconLink != "" {
+		headStatus["iconLink"] = params.HeadStatusIconLink
+	}
+	if params.HeadStatusColour != "" {
+		headStatus["colour"] = params.HeadStatusColour
+	}
+	if len(headStatus) > 0 {
+		msgData["headStatus"] = headStatus
+	}
+
+	if len(params.Buttons) > 0 {
+		msgData["buttons"] = params.Buttons
+	}
+
+	body := map[string]interface{}{
+		"msgId":   params.MsgID,
+		"msgType": "approveCard",
+		"msgData": map[string]interface{}{
+			"approveCardUpdateMsg": msgData,
+		},
+	}
+
+	result, err := c.doPost(ctx, url, body)
+	if err != nil {
+		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+	}
+
+	data := extractData(result)
+
+	res := &SendMessageResult{
+		Success:     true,
+		Platform:    "lansenger",
+		Operation:   "update_approve_card",
+		RawResponse: result,
+	}
+	if data != nil {
+		res.MessageID = strFromMap(data, "msgId")
+	}
+	return res, nil
+}
+
 func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *DynamicCardUpdateParams) (*SendMessageResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {

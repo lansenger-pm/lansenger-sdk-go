@@ -14,6 +14,8 @@ type Config struct {
 	HTTPTimeout   float64
 	EncodingKey   string
 	CallbackToken string
+	AppToken      string
+	UserToken     string
 }
 
 func NewConfig(appID, appSecret string) *Config {
@@ -29,8 +31,11 @@ func NewConfig(appID, appSecret string) *Config {
 func ConfigFromEnv() (*Config, error) {
 	appID := os.Getenv("LANSENGER_APP_ID")
 	appSecret := os.Getenv("LANSENGER_APP_SECRET")
+	appToken := os.Getenv("LANSENGER_APP_TOKEN")
 	if appID == "" || appSecret == "" {
-		return nil, NewConfigError("LANSENGER_APP_ID and LANSENGER_APP_SECRET environment variables are required")
+		if appToken == "" {
+			return nil, NewConfigError("LANSENGER_APP_ID and LANSENGER_APP_SECRET environment variables are required")
+		}
 	}
 	cfg := &Config{
 		AppID:         appID,
@@ -41,6 +46,8 @@ func ConfigFromEnv() (*Config, error) {
 		HTTPTimeout:   30.0,
 		EncodingKey:   os.Getenv("LANSENGER_ENCODING_KEY"),
 		CallbackToken: os.Getenv("LANSENGER_CALLBACK_TOKEN"),
+		AppToken:      appToken,
+		UserToken:     os.Getenv("LANSENGER_USER_TOKEN"),
 	}
 	timeoutStr := os.Getenv("LANSENGER_HTTP_TIMEOUT")
 	if timeoutStr != "" {
@@ -54,6 +61,10 @@ func ConfigFromEnv() (*Config, error) {
 
 func (c *Config) IsConfigured() bool {
 	return c.AppID != "" && c.AppSecret != "" && c.APIGatewayURL != ""
+}
+
+func (c *Config) IsExternalMode() bool {
+	return c.AppToken != ""
 }
 
 func (c *Config) HasPassportURL() bool {

@@ -372,6 +372,8 @@ func init() {
 	messageCmd.AddCommand(sendAppArticlesCmd)
 	messageCmd.AddCommand(sendAppCardCmd)
 	messageCmd.AddCommand(sendOaCardCmd)
+	messageCmd.AddCommand(messageApproveCardCmd)
+	messageCmd.AddCommand(messageUpdateApproveCardCmd)
 	messageCmd.AddCommand(updateDynamicCardCmd)
 	messageCmd.AddCommand(sendReminderCmd)
 	messageCmd.AddCommand(revokeCmd)

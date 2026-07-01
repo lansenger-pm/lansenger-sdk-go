@@ -126,3 +126,43 @@ func TestTokenManagerAPIError(t *testing.T) {
 		t.Error("expected error for API error response")
 	}
 }
+
+func TestTokenManagerExternalMode(t *testing.T) {
+	// External mode: when AppToken is set, GetToken returns it directly
+	// without calling the API at all.
+	apiCalled := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiCalled = true
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"errCode": 0,
+			"data":    map[string]interface{}{"appToken": "api_token", "expiresIn": 7200},
+		})
+	}))
+	defer server.Close()
+
+	cfg := NewConfig("app", "secret")
+	cfg.APIGatewayURL = server.URL
+	cfg.AppToken = "external_direct_token"
+
+	tm := NewTokenManager(cfg, server.Client())
+	token, err := tm.GetToken(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error in external mode: %v", err)
+	}
+	if token != "external_direct_token" {
+		t.Errorf("expected token=external_direct_token, got %s", token)
+	}
+	if apiCalled {
+		t.Error("external mode should NOT call the token API")
+	}
+
+	// Second call should also return the same token directly
+	token2, err := tm.GetToken(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error on second call: %v", err)
+	}
+	if token2 != "external_direct_token" {
+		t.Errorf("expected second call to return external_direct_token, got %s", token2)
+	}
+}

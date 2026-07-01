@@ -17,6 +17,8 @@ var (
 	jsonOutput      bool
 	profileName     string
 	globalAsStaffID string
+	globalAppToken  string
+	globalUserToken string
 )
 
 var versionCmd = &cobra.Command{
@@ -38,6 +40,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Output raw JSON instead of formatted tables")
 	rootCmd.PersistentFlags().StringVarP(&profileName, "profile", "P", "default", "Credential profile to use")
 	rootCmd.PersistentFlags().StringVar(&globalAsStaffID, "as", "", "Act as the given staff_id (auto-loads user token from credential store)")
+	rootCmd.PersistentFlags().StringVar(&globalAppToken, "app-token", "", "App access token (external mode — no auto-refresh)")
+	rootCmd.PersistentFlags().StringVar(&globalUserToken, "user-token", "", "User access token (external mode — no auto-refresh)")
 	rootCmd.AddCommand(versionCmd)
 }
 
@@ -46,6 +50,17 @@ func main() {
 }
 
 func getClient() *lansenger.LansengerClient {
+	// External mode: when --app-token is provided, skip credential file entirely.
+	// The caller manages token lifecycle; no auto-refresh.
+	if globalAppToken != "" {
+		cfg := &lansenger.Config{
+			APIGatewayURL: getEnvOrDefault("LANSENGER_API_GATEWAY_URL", "https://open.e.lanxin.cn/open/apigw"),
+			AppToken:      globalAppToken,
+			UserToken:     globalUserToken,
+		}
+		return lansenger.NewClientWithConfig(cfg)
+	}
+
 	store, err := lansenger.NewCredentialStore("", profileName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
@@ -63,7 +78,7 @@ func getClient() *lansenger.LansengerClient {
 			injectUserToken(client, store)
 			return client
 		}
-		fmt.Fprintf(os.Stderr, "Error: No credentials configured for profile '%s'. Run `lansenger config set` first, or set LANSENGER_APP_ID / LANSENGER_APP_SECRET env vars.\n", profileName)
+		fmt.Fprintf(os.Stderr, "Error: No credentials configured for profile '%s'. Run `lansenger config set` first, or set LANSENGER_APP_ID / LANSENGER_APP_SECRET env vars, or use --app-token for external token mode.\n", profileName)
 		os.Exit(1)
 		return nil
 	}
@@ -80,9 +95,20 @@ func getClient() *lansenger.LansengerClient {
 	if creds["callback_token"] != "" {
 		cfg.CallbackToken = creds["callback_token"]
 	}
+	if globalAppToken != "" {
+		cfg.AppToken = globalAppToken
+	}
 	client := lansenger.NewClientWithConfig(cfg)
 	injectUserToken(client, store)
 	return client
+}
+
+func getEnvOrDefault(key, defaultVal string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultVal
+	}
+	return val
 }
 
 func injectUserToken(client *lansenger.LansengerClient, store *lansenger.CredentialStore) {
