@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"syscall"
 	"time"
 
@@ -121,6 +122,22 @@ func runOAuthAuthorizeURL(cmd *cobra.Command, args []string) {
 		return
 	}
 	fmt.Println(url)
+
+	// Copy to clipboard (no extra dependencies)
+	var copyCmd *exec.Cmd
+	switch {
+	default:
+		copyCmd = exec.Command("pbcopy")
+	}
+	stdin, err := copyCmd.StdinPipe()
+	if err == nil {
+		_, _ = stdin.Write([]byte(url))
+		stdin.Close()
+		err = copyCmd.Run()
+		if err == nil {
+			fmt.Println("  (copied to clipboard)")
+		}
+	}
 }
 
 func runOAuthExchangeCode(cmd *cobra.Command, args []string) {
