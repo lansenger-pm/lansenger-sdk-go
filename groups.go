@@ -74,7 +74,7 @@ func (c *LansengerClient) FetchGroupInfo(ctx context.Context, groupID, userToken
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "info_fetch", token,
+	url := BuildAPIURL(c.config, "groups", "info_fetch", token,
 		WithUserToken(userToken),
 		WithPathVar("group_id", groupID),
 	)
@@ -123,7 +123,7 @@ func (c *LansengerClient) FetchGroupMembers(ctx context.Context, groupID, userTo
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "members_fetch", token,
+	url := BuildAPIURL(c.config, "groups", "members_fetch", token,
 		WithUserToken(userToken),
 		WithPathVar("group_id", groupID),
 		WithPageOffset(pageOffset),
@@ -162,7 +162,7 @@ func (c *LansengerClient) FetchGroupList(ctx context.Context, userToken string, 
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "list_fetch", token,
+	url := BuildAPIURL(c.config, "groups", "list_fetch", token,
 		WithUserToken(userToken),
 		WithPageOffset(pageOffset),
 		WithPageSize(pageSize),
@@ -193,7 +193,7 @@ func (c *LansengerClient) CheckIsInGroup(ctx context.Context, groupID, userToken
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "is_in_group", token,
+	url := BuildAPIURL(c.config, "groups", "is_in_group", token,
 		WithUserToken(userToken),
 		WithPathVar("group_id", groupID),
 		WithStaffID(staffID),
@@ -222,7 +222,7 @@ func (c *LansengerClient) UpdateGroupInfo(ctx context.Context, groupID string, p
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "info_update", token,
+	url := BuildAPIURL(c.config, "groups", "info_update", token,
 		WithUserToken(userToken),
 		WithPathVar("group_id", groupID),
 	)
@@ -244,7 +244,7 @@ func (c *LansengerClient) UpdateGroupMembers(ctx context.Context, groupID string
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "members_update", token,
+	url := BuildAPIURL(c.config, "groups", "members_update", token,
 		WithUserToken(userToken),
 		WithPathVar("group_id", groupID),
 	)
@@ -309,7 +309,7 @@ func (c *LansengerClient) CreateGroupShareID(ctx context.Context, groupID, creat
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "groups_v2", "share_create", token,
+	url := BuildAPIURL(c.config, "groups", "share_create", token,
 		WithUserToken(userToken),
 		WithPathVar("group_id", groupID),
 	)
