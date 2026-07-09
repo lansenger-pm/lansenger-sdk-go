@@ -185,6 +185,98 @@ func DecryptCallbackPayload(encryptedData, encodingKey string, knownAppID string
 		return nil, fmt.Errorf("PKCS7 unpadding: %w", err)
 	}
 
+	// Try JSON format first: some platforms return a JSON object instead of binary structure
+	var jsonPayload struct {
+		Random string          `json:"random"`
+		OrgID  string          `json:"orgId"`
+		AppID  string          `json:"appId"`
+		Events json.RawMessage `json:"events"`
+		Length json.Number     `json:"length"`
+		Len    json.Number     `json:"len"`
+		OrgID2 string          `json:"org_id"`
+		AppID2 string          `json:"app_id"`
+	}
+	if err := json.Unmarshal(raw, &jsonPayload); err == nil && jsonPayload.Events != nil {
+		var eventsData []interface{}
+		if err := json.Unmarshal(jsonPayload.Events, &eventsData); err != nil {
+			var singleEvent interface{}
+			if err2 := json.Unmarshal(jsonPayload.Events, &singleEvent); err2 != nil {
+				// Not valid JSON events, fall through to binary format
+				goto binaryFormat
+			}
+			eventsData = []interface{}{singleEvent}
+		}
+
+		orgID := jsonPayload.OrgID
+		if orgID == "" {
+			orgID = jsonPayload.OrgID2
+		}
+		appID := jsonPayload.AppID
+		if appID == "" {
+			appID = jsonPayload.AppID2
+		}
+
+		events := []CallbackEvent{}
+		for _, entry := range eventsData {
+			entryMap, ok := entry.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			eventType := ""
+			if t, ok := entryMap["eventType"].(string); ok {
+				eventType = t
+			} else if t, ok := entryMap["type"].(string); ok {
+				eventType = t
+			}
+			category := CallbackEventTypes[eventType]
+			rawData, _ := entryMap["data"].(map[string]interface{})
+			parsedData := parseEventData(eventType, rawData)
+			eventID := ""
+			if id, ok := entryMap["eventId"].(string); ok {
+				eventID = id
+			} else if id, ok := entryMap["id"].(string); ok {
+				eventID = id
+			} else if id, ok := entryMap["eventId"].(float64); ok {
+				eventID = fmt.Sprintf("%v", id)
+			} else if id, ok := entryMap["id"].(float64); ok {
+				eventID = fmt.Sprintf("%v", id)
+			}
+			entryAppID, _ := entryMap["appId"].(string)
+			entryOrgID, _ := entryMap["orgId"].(string)
+			if entryAppID == "" {
+				entryAppID = appID
+			}
+			if entryOrgID == "" {
+				entryOrgID = orgID
+			}
+			events = append(events, CallbackEvent{
+				EventID:   eventID,
+				EventType: eventType,
+				Category:  category,
+				Data:      parsedData,
+				RawData:   rawData,
+				AppID:     entryAppID,
+				OrgID:     entryOrgID,
+			})
+		}
+
+		lengthVal := 0
+		if l, err := jsonPayload.Length.Int64(); err == nil {
+			lengthVal = int(l)
+		} else if l, err := jsonPayload.Len.Int64(); err == nil {
+			lengthVal = int(l)
+		}
+
+		return &DecryptedCallbackPayload{
+			Random: jsonPayload.Random,
+			OrgID:  orgID,
+			AppID:  appID,
+			Events: events,
+			Length: uint32(lengthVal),
+		}, nil
+	}
+
+binaryFormat:
 	if len(raw) < 20 {
 		return nil, fmt.Errorf("decrypted data too short: %d bytes (minimum 20)", len(raw))
 	}

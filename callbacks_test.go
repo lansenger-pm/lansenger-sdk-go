@@ -741,5 +741,106 @@ func TestParseCallbackPayloadBotGroupMessage(t *testing.T) {
 	}
 }
 
+func testEncryptPayloadJSON(eventsJSON string, orgID string, appID string, encodingKey string) string {
+	// Encrypt a JSON-structured payload (as opposed to binary format)
+	aesKey, _ := base64.StdEncoding.DecodeString(encodingKey)
+	iv := aesKey[:16]
+
+	jsonPayload := map[string]interface{}{
+		"random": "random16bytes!!!",
+		"orgId":  orgID,
+		"appId":  appID,
+		"events": json.RawMessage(eventsJSON),
+		"length": len(eventsJSON),
+	}
+	payloadBytes, _ := json.Marshal(jsonPayload)
+
+	padLen := 32 - (len(payloadBytes) % 32)
+	for i := 0; i < padLen; i++ {
+		payloadBytes = append(payloadBytes, byte(padLen))
+	}
+
+	block, _ := aes.NewCipher(aesKey)
+	mode := cipher.NewCBCEncrypter(block, iv)
+	ciphertext := make([]byte, len(payloadBytes))
+	mode.CryptBlocks(ciphertext, payloadBytes)
+
+	return base64.StdEncoding.EncodeToString(ciphertext)
+}
+
+func TestDecryptCallbackPayloadJSONFormat(t *testing.T) {
+	eventsJSON := `[{"eventType":"bot_private_message","data":{"from":"staff1","entryId":"entry1","msgType":"text","msgData":{"content":"hello"}}}]`
+	orgID := "2285568"
+	appID := "2285568-13320448"
+
+	encrypted := testEncryptPayloadJSON(eventsJSON, orgID, appID, testAESKeyB64)
+
+	result, err := DecryptCallbackPayload(encrypted, testAESKeyB64, appID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.OrgID != orgID {
+		t.Errorf("expected orgId=%s, got %s", orgID, result.OrgID)
+	}
+	if result.AppID != appID {
+		t.Errorf("expected appId=%s, got %s", appID, result.AppID)
+	}
+	if len(result.Events) != 1 {
+		t.Fatalf("expected 1 event, got %d", len(result.Events))
+	}
+
+	event := result.Events[0]
+	if event.EventType != "bot_private_message" {
+		t.Errorf("expected eventType=bot_private_message, got %s", event.EventType)
+	}
+	if event.Data["from_id"] != "staff1" {
+		t.Errorf("expected data.from_id=staff1, got %v", event.Data["from_id"])
+	}
+}
+
+func TestDecryptCallbackPayloadJSONFormatSnakeCase(t *testing.T) {
+	eventsJSON := `[{"eventType":"staff_modify","data":{"staffId":"s001"}}]`
+	orgID := "3211264"
+	appID := "2285568-12042496"
+
+	// Test with snake_case field names (org_id, app_id instead of orgId, appId)
+	aesKey, _ := base64.StdEncoding.DecodeString(testAESKeyB64)
+	iv := aesKey[:16]
+
+	jsonPayload := map[string]interface{}{
+		"random":  "random16bytes!!!",
+		"org_id":  orgID,
+		"app_id":  appID,
+		"events":  json.RawMessage(eventsJSON),
+		"length":  len(eventsJSON),
+	}
+	payloadBytes, _ := json.Marshal(jsonPayload)
+
+	padLen := 32 - (len(payloadBytes) % 32)
+	for i := 0; i < padLen; i++ {
+		payloadBytes = append(payloadBytes, byte(padLen))
+	}
+
+	block, _ := aes.NewCipher(aesKey)
+	mode := cipher.NewCBCEncrypter(block, iv)
+	ciphertext := make([]byte, len(payloadBytes))
+	mode.CryptBlocks(ciphertext, payloadBytes)
+
+	encrypted := base64.StdEncoding.EncodeToString(ciphertext)
+
+	result, err := DecryptCallbackPayload(encrypted, testAESKeyB64, appID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.OrgID != orgID {
+		t.Errorf("expected orgId=%s, got %s", orgID, result.OrgID)
+	}
+	if result.AppID != appID {
+		t.Errorf("expected appId=%s, got %s", appID, result.AppID)
+	}
+}
+
 // Silence the unused import warning for fmt
 var _ = fmt.Sprintf
