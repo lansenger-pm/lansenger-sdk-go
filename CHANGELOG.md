@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [0.9.22] - 2026-07-09
+
+### Added
+
+- **oauth**: `authorize-url` command now auto-copies the URL to clipboard.
+
+### Fixed
+
+- **groups**: corrected API routing from `groups_v2` to `groups` in groups.go.
+- **callbacks**: `bot_group_message` events now correctly extract `isAtMe`, `isAtAll`, `bots`, and `staffs` from the nested `reminder` object (was incorrectly reading from top-level, per OpenAPI 4.10.1.3 update).
+- **callbacks**: `bot_group_message` parsing now maps the `magic` field.
+- **callbacks**: `staff_info` field map now includes `employeeId` alias (alongside `employId`).
+- **streaming**: `FetchStreamMessage` request body field corrected from `model` to `msgId` (per OpenAPI 4.6.16).
+
 ## [0.9.21] - 2026-07-01
 
 ### Added

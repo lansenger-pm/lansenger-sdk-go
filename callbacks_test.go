@@ -703,7 +703,7 @@ func TestVerifyCallbackSignatureEmptyDataEncrypt(t *testing.T) {
 }
 
 func TestParseCallbackPayloadBotGroupMessage(t *testing.T) {
-	input := `{"events":[{"eventType":"bot_group_message","data":{"from":"staff1","groupId":"g1","msgType":"text","msgData":{"content":"hello"},"isAtMe":true,"isAtAll":false}}]}`
+	input := `{"events":[{"eventType":"bot_group_message","data":{"from":"staff1","groupId":"g1","msgType":"text","msgData":{"content":"hello"},"reminder":{"isAtMe":true,"isAtAll":false,"bots":[{"botId":"b1","botName":"BotA"}],"staffs":[{"staffId":"s2","staffName":"张三"}]},"magic":"11"}}]}`
 	events, err := ParseCallbackPayload(input)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -724,6 +724,20 @@ func TestParseCallbackPayloadBotGroupMessage(t *testing.T) {
 	}
 	if event.Data["is_at_me"] != true {
 		t.Errorf("expected is_at_me=true, got %v", event.Data["is_at_me"])
+	}
+	if event.Data["is_at_all"] != false {
+		t.Errorf("expected is_at_all=false, got %v", event.Data["is_at_all"])
+	}
+	if event.Data["magic"] != "11" {
+		t.Errorf("expected magic=11, got %v", event.Data["magic"])
+	}
+	bots, ok := event.Data["bots"].([]interface{})
+	if !ok || len(bots) != 1 {
+		t.Errorf("expected bots to have 1 entry")
+	}
+	staffs, ok := event.Data["staffs"].([]interface{})
+	if !ok || len(staffs) != 1 {
+		t.Errorf("expected staffs to have 1 entry")
 	}
 }
 

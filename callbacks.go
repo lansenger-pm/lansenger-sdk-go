@@ -358,7 +358,7 @@ func splitOrgAppID(middleStr string, knownAppID string) (string, string) {
 var callbackFieldMaps = map[string]map[string]string{
 	"account_subscribe":    {"staffId": "staff_id", "createTime": "create_time"},
 	"account_unsubscribe":  {"staffId": "staff_id", "createTime": "create_time"},
-	"staff_info":           {"staffId": "staff_id", "name": "name", "mobile": "mobile", "state": "state", "sex": "sex", "email": "email", "employId": "employee_id", "avatarId": "avatar_id", "timestamp": "timestamp"},
+	"staff_info":           {"staffId": "staff_id", "name": "name", "mobile": "mobile", "state": "state", "sex": "sex", "email": "email", "employId": "employee_id", "employeeId": "employee_id", "avatarId": "avatar_id", "timestamp": "timestamp"},
 	"staff_modify":         {"staffId": "staff_id", "timestamp": "timestamp"},
 	"staff_create":         {"staffId": "staff_id", "timestamp": "timestamp"},
 	"staff_delete":         {"staffId": "staff_id", "timestamp": "timestamp"},
@@ -374,7 +374,7 @@ var callbackFieldMaps = map[string]map[string]string{
 	"user_logout":          {"staffId": "staff_id", "deviceId": "device_id", "timestamp": "timestamp"},
 	"data_scope":           {"deptIds": "dept_ids", "timestamp": "timestamp"},
 	"bot_private_message":  {"from": "from_id", "entryId": "entry_id", "msgType": "msg_type", "msgData": "msg_data", "msgId": "msg_id", "referenceMsg": "reference_msg"},
-	"bot_group_message":    {"from": "from_id", "entryId": "entry_id", "msgType": "msg_type", "msgData": "msg_data", "groupId": "group_id", "fromType": "from_type", "groupName": "group_name", "botCreator": "bot_creator", "msgId": "msg_id", "botId": "bot_id", "isAtMe": "is_at_me", "isAtAll": "is_at_all", "referenceMsg": "reference_msg"},
+	"bot_group_message":    {"from": "from_id", "entryId": "entry_id", "msgType": "msg_type", "msgData": "msg_data", "groupId": "group_id", "fromType": "from_type", "groupName": "group_name", "botCreator": "bot_creator", "msgId": "msg_id", "botId": "bot_id", "referenceMsg": "reference_msg", "magic": "magic"},
 	"wb_visible_config":    {"entryId": "entry_id", "departmentIds": "department_ids", "staffIds": "staff_ids", "timestamp": "timestamp", "isTestModeOn": "is_test_mode_on"},
 	"group_create_approve": {"applyRequestId": "apply_request_id", "groupId": "group_id", "timestamp": "timestamp"},
 	"schedule_modify":      {"primaryScheduleId": "primary_schedule_id", "scheduleId": "schedule_id", "summary": "summary", "description": "description", "operationType": "operation_type", "currentTime": "current_time", "repeatType": "repeat_type", "expireDateType": "expire_date_type", "allDay": "all_day", "rule": "rule", "ruleStartTime": "rule_start_time", "ruleEndTime": "rule_end_time", "startTime": "start_time", "endTime": "end_time", "operator": "operator", "attendees": "attendees", "timestamp": "timestamp"},
@@ -407,6 +407,10 @@ func parseEventData(eventType string, rawData map[string]interface{}) map[string
 			}
 		}
 		return result
+	}
+
+	if eventType == "bot_group_message" {
+		return parseBotGroupMessageData(rawData)
 	}
 
 	if len(fieldMap) == 0 {
@@ -460,5 +464,43 @@ func parseTelephoneTrackCaller(raw map[string]interface{}) map[string]interface{
 		result["country_code"] = phone["countryCode"]
 		result["number"] = phone["number"]
 	}
+	return result
+}
+
+func parseBotGroupMessageData(rawData map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{
+		"from_id":       rawData["from"],
+		"entry_id":      rawData["entryId"],
+		"msg_type":      rawData["msgType"],
+		"msg_data":      rawData["msgData"],
+		"group_id":      rawData["groupId"],
+		"from_type":     rawData["fromType"],
+		"group_name":    rawData["groupName"],
+		"bot_creator":   rawData["botCreator"],
+		"msg_id":        rawData["msgId"],
+		"bot_id":        rawData["botId"],
+		"reference_msg": rawData["referenceMsg"],
+		"magic":         rawData["magic"],
+		"is_at_me":      false,
+		"is_at_all":     false,
+		"bots":          []interface{}{},
+		"staffs":        []interface{}{},
+	}
+
+	if reminder, ok := rawData["reminder"].(map[string]interface{}); ok {
+		if v, ok := reminder["isAtMe"].(bool); ok {
+			result["is_at_me"] = v
+		}
+		if v, ok := reminder["isAtAll"].(bool); ok {
+			result["is_at_all"] = v
+		}
+		if bots, ok := reminder["bots"].([]interface{}); ok {
+			result["bots"] = bots
+		}
+		if staffs, ok := reminder["staffs"].([]interface{}); ok {
+			result["staffs"] = staffs
+		}
+	}
+
 	return result
 }
