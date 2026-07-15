@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ import (
 
 var (
 	jsonOutput      bool
+	verbose         bool
 	profileName     string
 	globalAsStaffID string
 	globalAppToken  string
@@ -30,6 +32,12 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+func debugLog(format string, args ...interface{}) {
+	if verbose {
+		log.Printf("[DEBUG] "+format, args...)
+	}
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "lansenger",
 	Short: "Lansenger (蓝信) CLI — interact with Lansenger APIs from the command line",
@@ -38,6 +46,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.Version = lansenger.Version
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Output raw JSON instead of formatted tables")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable debug logging")
 	rootCmd.PersistentFlags().StringVarP(&profileName, "profile", "P", "default", "Credential profile to use")
 	rootCmd.PersistentFlags().StringVar(&globalAsStaffID, "as", "", "Act as the given staff_id (auto-loads user token from credential store)")
 	rootCmd.PersistentFlags().StringVar(&globalAppToken, "app-token", "", "App access token (external mode — no auto-refresh)")
@@ -50,11 +59,15 @@ func main() {
 }
 
 func getClient() *lansenger.LansengerClient {
+	if verbose {
+		lansenger.DebugLogger = debugLog
+	}
+
 	// External mode: when --app-token is provided, skip credential file entirely.
 	// The caller manages token lifecycle; no auto-refresh.
 	if globalAppToken != "" {
 		cfg := &lansenger.Config{
-			APIGatewayURL: getEnvOrDefault("LANSENGER_API_GATEWAY_URL", "https://open.e.lanxin.cn/open/apigw"),
+			APIGatewayURL: getEnvOrDefault("LANSENGER_API_GATEWAY_URL", ""),
 			AppToken:      globalAppToken,
 			UserToken:     globalUserToken,
 		}

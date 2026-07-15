@@ -28,17 +28,27 @@ func (tm *TokenManager) GetToken(ctx context.Context) (string, error) {
 	// External mode: when AppToken is explicitly provided, return it directly.
 	// No expiry check, no refresh — the caller manages the token lifecycle.
 	if tm.config.AppToken != "" {
+		if DebugLogger != nil {
+			DebugLogger("GetToken: using external app token")
+		}
 		return tm.config.AppToken, nil
 	}
 
 	tm.mu.Lock()
 	if tm.token != "" && time.Now().Before(tm.expiresAt) {
 		token := tm.token
+		expiresAt := tm.expiresAt
 		tm.mu.Unlock()
+		if DebugLogger != nil {
+			DebugLogger("GetToken: using cached app token (expires at %s)", expiresAt.Format(time.RFC3339))
+		}
 		return token, nil
 	}
 	tm.mu.Unlock()
 
+	if DebugLogger != nil {
+		DebugLogger("GetToken: refreshing app token")
+	}
 	return tm.refreshToken(ctx)
 }
 
@@ -97,6 +107,9 @@ func (tm *TokenManager) refreshToken(ctx context.Context) (string, error) {
 	tm.token = appToken
 	tm.expiresAt = time.Now().Add(time.Duration(expiresIn-margin) * time.Second)
 
+	if DebugLogger != nil {
+		DebugLogger("GetToken: app token refreshed (expires at %s)", tm.expiresAt.Format(time.RFC3339))
+	}
 	return tm.token, nil
 }
 

@@ -386,7 +386,7 @@ All credentials are persisted per profile in `~/.lansenger/sdk_state.json` (0600
 |-------------|----------|---------|-------------|
 | App ID | ✓ | `app_id` | Lansenger app/bot ID |
 | App Secret | ✓ | `app_secret` | Lansenger app/bot secret |
-| API Gateway URL | ✓ | `api_gateway_url` | API gateway endpoint (default: `https://open.e.lanxin.cn/open/apigw`) |
+| API Gateway URL | ✓ | `api_gateway_url` | API gateway endpoint |
 | Passport URL | OAuth2 only | `passport_url` | OAuth2 authorize page URL |
 | Redirect URI | OAuth2 only | `redirect_uri` | OAuth2 callback redirect URI (default: `http://localhost:8765`) |
 | Encoding Key | Callbacks only | `encoding_key` | AES-256-CBC key for callback decryption |
@@ -398,10 +398,10 @@ All credentials are persisted per profile in `~/.lansenger/sdk_state.json` (0600
 # Step 1: Set required credentials
 lansenger config set app_id YOUR_APP_ID
 lansenger config set app_secret YOUR_APP_SECRET
-lansenger config set api_gateway_url https://open.e.lanxin.cn/open/apigw
+lansenger config set api_gateway_url https://your-gateway.example.com
 
 # Step 2 (optional): Set OAuth2 passport URL (needed for userToken)
-lansenger config set passport_url https://passport.lx.qianxin.com
+lansenger config set passport_url https://your-passport.example.com
 lansenger config set redirect_uri http://localhost:8765   # OAuth2 redirect URI (default)
 
 # Step 3 (optional): Set callback credentials (needed for webhook decryption)
@@ -438,7 +438,7 @@ client := lansenger.NewClientWithConfig(cfg)
 |----------|----------|-------------|---------|
 | `LANSENGER_APP_ID` | ✓ | App/Bot ID | — |
 | `LANSENGER_APP_SECRET` | ✓ | App/Bot Secret | — |
-| `LANSENGER_API_GATEWAY_URL` | ✗ | API Gateway URL | `https://open.e.lanxin.cn/open/apigw` |
+| `LANSENGER_API_GATEWAY_URL` | ✓ | API Gateway URL | — |
 | `LANSENGER_PASSPORT_URL` | ✗ | Passport URL (for OAuth2) | — |
 | `LANSENGER_REDIRECT_URI` | ✗ | OAuth2 redirect URI | `http://localhost:8765` |
 | `LANSENGER_ENCODING_KEY` | ✗ | Encoding key for callback decryption | — |
@@ -456,7 +456,7 @@ By default, credentials and tokens stay in memory only (lost on process exit). E
 ```go
 // Auto-persist to ~/.lansenger/sdk_state.json (0600 permissions)
 store := lansenger.NewCredentialStore("", "default")
-store.SaveCredentials("app_id", "app_secret", "https://apigw.lx.qianxin.com", "https://passport.lx.qianxin.com")
+store.SaveCredentials("app_id", "app_secret", "https://your-gateway.example.com", "https://your-passport.example.com")
 store.SaveCallbackConfig("encoding_key", "callback_token")
 
 // Save tokens

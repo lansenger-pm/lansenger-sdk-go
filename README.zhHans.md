@@ -386,7 +386,7 @@ msgs, err := client.FetchChatMessages(ctx, "ut", 10, "", "", "g001", "", "", "")
 |------|------|----------|------|
 | App ID | ✓ | `app_id` | 蓝信应用/机器人 ID |
 | App Secret | ✓ | `app_secret` | 蓝信应用/机器人密钥 |
-| API Gateway URL | ✓ | `api_gateway_url` | API 网关地址（默认：`https://open.e.lanxin.cn/open/apigw`） |
+| API Gateway URL | ✓ | `api_gateway_url` | API 网关地址 |
 | Passport URL | 仅 OAuth2 | `passport_url` | OAuth2 授权页地址 |
 | Redirect URI | 仅 OAuth2 | `redirect_uri` | OAuth2 回调地址（默认：`http://localhost:8765`） |
 | Encoding Key | 仅回调 | `encoding_key` | AES-256-CBC 解密密钥 |
@@ -398,10 +398,10 @@ msgs, err := client.FetchChatMessages(ctx, "ut", 10, "", "", "g001", "", "", "")
 # 第1步：设置必填凭证
 lansenger config set app_id YOUR_APP_ID
 lansenger config set app_secret YOUR_APP_SECRET
-lansenger config set api_gateway_url https://open.e.lanxin.cn/open/apigw
+lansenger config set api_gateway_url https://your-gateway.example.com
 
 # 第2步（可选）：设置 OAuth2 授权页地址（获取 userToken 需要）
-lansenger config set passport_url https://passport.lx.qianxin.com
+lansenger config set passport_url https://your-passport.example.com
 lansenger config set redirect_uri http://localhost:8765   # OAuth2 回调地址（默认值）
 
 # 第3步（可选）：设置回调凭证（接收 Webhook 回调需要）
@@ -438,7 +438,7 @@ client := lansenger.NewClientWithConfig(cfg)
 |------|------|------|--------|
 | `LANSENGER_APP_ID` | ✓ | 应用/机器人 ID | — |
 | `LANSENGER_APP_SECRET` | ✓ | 应用/机器人密钥 | — |
-| `LANSENGER_API_GATEWAY_URL` | ✗ | API 网关地址 | `https://open.e.lanxin.cn/open/apigw` |
+| `LANSENGER_API_GATEWAY_URL` | ✓ | API 网关地址 | — |
 | `LANSENGER_PASSPORT_URL` | ✗ | 授权页地址（OAuth2） | — |
 | `LANSENGER_REDIRECT_URI` | ✗ | OAuth2 回调地址 | `http://localhost:8765` |
 | `LANSENGER_ENCODING_KEY` | ✗ | 回调解密密钥 | — |
@@ -456,7 +456,7 @@ client, err := lansenger.NewClientFromEnv()
 ```go
 // 自动持久化到 ~/.lansenger/sdk_state.json（0600 权限）
 store := lansenger.NewCredentialStore("", "default")
-store.SaveCredentials("app_id", "app_secret", "https://apigw.lx.qianxin.com", "https://passport.lx.qianxin.com")
+store.SaveCredentials("app_id", "app_secret", "https://your-gateway.example.com", "https://your-passport.example.com")
 store.SaveCallbackConfig("encoding_key", "callback_token")
 
 // 保存令牌

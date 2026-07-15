@@ -3,8 +3,8 @@ package lansenger
 import "strings"
 
 const (
-	DefaultAPIGatewayURL = "https://open.e.lanxin.cn/open/apigw"
-	DefaultPassportURL   = "https://passport.e.lanxin.cn"
+	DefaultAPIGatewayURL = ""
+	DefaultPassportURL   = ""
 	DefaultStateDir      = "~/.lansenger"
 	DefaultStateFile     = "sdk_state.json"
 	DefaultProfile       = "default"

@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var DebugLogger func(format string, args ...interface{})
+
 type LansengerClient struct {
 	config       *Config
 	httpClient   *http.Client
@@ -73,7 +75,20 @@ func NewClientFromStore(store *CredentialStore) (*LansengerClient, error) {
 }
 
 func (c *LansengerClient) GetToken(ctx context.Context) (string, error) {
-	return c.tokenMgr.GetToken(ctx)
+	if DebugLogger != nil {
+		DebugLogger("GetToken: requesting app token")
+	}
+	token, err := c.tokenMgr.GetToken(ctx)
+	if err != nil {
+		if DebugLogger != nil {
+			DebugLogger("GetToken: error: %v", err)
+		}
+		return "", err
+	}
+	if DebugLogger != nil {
+		DebugLogger("GetToken: got token (len=%d)", len(token))
+	}
+	return token, nil
 }
 
 func (c *LansengerClient) InvalidateToken() {
@@ -143,6 +158,10 @@ func (c *LansengerClient) doGetRaw(ctx context.Context, url string) ([]byte, err
 }
 
 func (c *LansengerClient) doPost(ctx context.Context, url string, body interface{}) (map[string]interface{}, error) {
+	if DebugLogger != nil {
+		DebugLogger("POST %s", url)
+	}
+
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling request body: %w", err)
@@ -156,11 +175,17 @@ func (c *LansengerClient) doPost(ctx context.Context, url string, body interface
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		if DebugLogger != nil {
+			DebugLogger("POST %s error: %v", url, err)
+		}
 		return nil, NewNetworkError("POST request failed: " + err.Error())
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		if DebugLogger != nil {
+			DebugLogger("POST %s error: HTTP %d", url, resp.StatusCode)
+		}
 		return nil, NewNetworkError(fmt.Sprintf("POST request returned HTTP %d", resp.StatusCode))
 	}
 
@@ -177,9 +202,15 @@ func (c *LansengerClient) doPost(ctx context.Context, url string, body interface
 	errCode, _ := result["errCode"].(float64)
 	if errCode != 0 {
 		errMsg, _ := result["errMsg"].(string)
+		if DebugLogger != nil {
+			DebugLogger("POST %s error: errCode=%d errMsg=%s", url, int(errCode), errMsg)
+		}
 		return nil, NewAPIError(errMsg, int(errCode))
 	}
 
+	if DebugLogger != nil {
+		DebugLogger("POST %s success", url)
+	}
 	return result, nil
 }
 
