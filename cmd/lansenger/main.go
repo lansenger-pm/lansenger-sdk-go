@@ -173,6 +173,9 @@ func injectUserToken(client *lansenger.LansengerClient, store *lansenger.Credent
 
 	// Set default so WithUserToken falls back to this when userToken="" is passed
 	lansenger.SetDefaultUserToken(userToken)
+
+	// Auto-inject user_id from staff_id so WithUserID falls back when userID="" is passed
+	lansenger.SetDefaultUserID(globalAsStaffID)
 }
 
 func getStore() *lansenger.CredentialStore {

@@ -73,10 +73,36 @@ func WithUserToken(token string) URLOption {
 	}}
 }
 
+// defaultUserID is set by CLI tools (e.g. `lansenger --as staff_id`)
+// to inject user_id into API requests when the explicit userID
+// parameter is empty. Set via SetDefaultUserID().
+var (
+	defaultUserIDMu sync.RWMutex
+	defaultUserID   string
+)
+
+// SetDefaultUserID sets the fallback user ID for API requests
+// where no explicit userID is provided. Thread-safe.
+func SetDefaultUserID(id string) {
+	defaultUserIDMu.Lock()
+	defaultUserID = id
+	defaultUserIDMu.Unlock()
+}
+
+func getDefaultUserID() string {
+	defaultUserIDMu.RLock()
+	defer defaultUserIDMu.RUnlock()
+	return defaultUserID
+}
+
 func WithUserID(id string) URLOption {
 	return URLOption{Apply: func(v url.Values) {
-		if id != "" {
-			v.Set("user_id", id)
+		d := id
+		if d == "" {
+			d = getDefaultUserID()
+		}
+		if d != "" {
+			v.Set("user_id", d)
 		}
 	}}
 }

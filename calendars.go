@@ -44,6 +44,10 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 		return nil, err
 	}
 
+	if userID == "" {
+		userID = getDefaultUserID()
+	}
+
 	url := BuildAPIURL(c.config, "calendars", "schedules_create", token,
 		WithUserToken(userToken),
 		WithUserID(userID),
