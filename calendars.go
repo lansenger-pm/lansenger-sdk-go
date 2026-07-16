@@ -55,9 +55,13 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 		"startTime": startTime,
 		"endTime":   endTime,
 	}
-	if len(attendees) > 0 {
-		body["attendees"] = attendees
+	if len(attendees) == 0 {
+		if userID == "" {
+			return &ScheduleCreateResult{Success: false, Error: "attendees is required (or provide user_id to auto-fill creator)"}, nil
+		}
+		attendees = []map[string]interface{}{{"staffId": userID, "attendeeFlag": "required"}}
 	}
+	body["attendees"] = attendees
 	if description != "" {
 		body["description"] = description
 	}
