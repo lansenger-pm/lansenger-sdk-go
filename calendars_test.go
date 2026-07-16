@@ -51,7 +51,7 @@ func TestCreateSchedule(t *testing.T) {
 	c := newTestClient(server)
 	result, err := c.CreateSchedule(context.Background(), "cal001",
 		"Team Meeting", map[string]interface{}{"time": 1000}, map[string]interface{}{"time": 2000},
-		nil, "", "no", "", nil, "", "no", "", "utok1", "")
+		nil, "", "no", "", nil, "", "no", "", "utok1", "uid1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -60,6 +60,54 @@ func TestCreateSchedule(t *testing.T) {
 	}
 	if result.ScheduleID != "sch001" {
 		t.Errorf("expected ScheduleID=sch001, got %s", result.ScheduleID)
+	}
+}
+
+func TestCreateScheduleAutoFillAttendees(t *testing.T) {
+	server := newMuxBuilder().
+		handleToken("tok1").
+		handle("/v1/calendars/cal001/schedules/create", 0, "ok", map[string]interface{}{
+			"scheduleId": "sch001",
+		}).
+		build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	// Pass nil attendees but provide a userID – the SDK should auto-fill
+	// attendees with [{staffId: userID, attendeeFlag: "required"}]
+	result, err := c.CreateSchedule(context.Background(), "cal001",
+		"Team Meeting", map[string]interface{}{"time": 1000}, map[string]interface{}{"time": 2000},
+		nil, "", "no", "", nil, "", "no", "", "utok1", "uid1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success {
+		t.Errorf("expected Success=true, got %v", result.Success)
+	}
+	if result.ScheduleID != "sch001" {
+		t.Errorf("expected ScheduleID=sch001, got %s", result.ScheduleID)
+	}
+}
+
+func TestCreateScheduleMissingAttendees(t *testing.T) {
+	// Only the token endpoint is needed; validation fails before the schedule API call.
+	server := newMuxBuilder().
+		handleToken("tok1").
+		build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.CreateSchedule(context.Background(), "cal001",
+		"Team Meeting", map[string]interface{}{"time": 1000}, map[string]interface{}{"time": 2000},
+		nil, "", "no", "", nil, "", "no", "", "utok1", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Success {
+		t.Error("expected Success=false when both attendees and userID are empty")
+	}
+	if result.Error == "" {
+		t.Error("expected a non-empty Error message")
 	}
 }
 
