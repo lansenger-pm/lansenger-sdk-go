@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [0.9.25] - 2026-07-16
+
+### Added
+
+- **calendars**: `CreateSchedule` now auto-fills attendees when empty and userID is provided.
+
+## [0.9.24] - 2026-07-16
+
+### Added
+
+- **logging**: `DebugLogger` package variable with nil-safe guards. CLI `--verbose` flag wired via `SetDefaultUserToken`/`SetDefaultUserID`.
+
+### Changed
+
+- **config**: Removed hardcoded `DefaultAPIGatewayURL`/`DefaultPassportURL` fallbacks. Both must now be explicitly provided.
+
+### Fixed
+
+- **auth**: Data race in `TokenManager.GetToken` — `expiresAt` now captured before unlock.
+
 ## [0.9.23] - 2026-07-09
 
 ### Fixed
