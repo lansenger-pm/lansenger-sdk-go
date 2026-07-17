@@ -608,36 +608,21 @@ func (c *LansengerClient) RevokeMessage(ctx context.Context, messageIDs []string
 	}, nil
 }
 
+// Deprecated: Use FetchGroupList from groups.go instead.
 func (c *LansengerClient) QueryGroups(ctx context.Context, pageOffset, pageSize int) (*QueryGroupsResult, error) {
-	token, err := c.GetToken(ctx)
+	result, err := c.FetchGroupList(ctx, "", pageOffset, pageSize)
 	if err != nil {
 		return nil, err
 	}
-
-	url := BuildAPIURL(c.config, "groups", "list_fetch", token,
-		WithPageOffset(pageOffset),
-		WithPageSize(pageSize),
-	)
-
-	result, err := c.doGet(ctx, url)
-	if err != nil {
-		return &QueryGroupsResult{Success: false, Error: err.Error()}, nil
-	}
-
-	data := extractData(result)
-	if data == nil {
-		return &QueryGroupsResult{Success: false, Error: "no data in response", RawResponse: result}, nil
-	}
-
-	res := &QueryGroupsResult{
-		Success:       true,
-		TotalGroupIDs: intFromMap(data, "totalGroupIds"),
+	return &QueryGroupsResult{
+		Success:       result.Success,
+		TotalGroupIDs: result.TotalGroupIDs,
+		GroupIDs:      result.GroupIDs,
+		Error:         result.Error,
 		Platform:      "lansenger",
 		Operation:     "query_groups",
-		RawResponse:   result,
-	}
-	res.GroupIDs = stringArrayFromMap(data, "groupIds")
-	return res, nil
+		RawResponse:   result.RawResponse,
+	}, nil
 }
 
 func (c *LansengerClient) SendReminder(ctx context.Context, msgID string, reminderTypes []int, userIDList []string) (*SendMessageResult, error) {
