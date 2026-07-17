@@ -23,20 +23,28 @@ func TestNewConfig(t *testing.T) {
 
 func TestConfigIsConfigured(t *testing.T) {
 	cfg := NewConfig("app1", "secret1")
+	cfg.APIGatewayURL = "https://gateway.example.com"
 	if !cfg.IsConfigured() {
 		t.Error("expected IsConfigured=true with valid credentials")
 	}
 
 	cfg2 := NewConfig("", "")
+	cfg2.APIGatewayURL = "https://gateway.example.com"
 	if cfg2.IsConfigured() {
 		t.Error("expected IsConfigured=false with empty credentials")
+	}
+
+	// missing gateway URL
+	cfg3 := NewConfig("app1", "secret1")
+	if cfg3.IsConfigured() {
+		t.Error("expected IsConfigured=false when api_gateway_url is empty")
 	}
 }
 
 func TestConfigHasPassportURL(t *testing.T) {
 	cfg := NewConfig("app1", "secret1")
-	if !cfg.HasPassportURL() {
-		t.Error("expected HasPassportURL=true with default passport URL")
+	if cfg.HasPassportURL() {
+		t.Error("expected HasPassportURL=false without passport URL set")
 	}
 
 	cfg.PassportURL = "https://passport.example.com"
