@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	lansenger "github.com/lansenger-pm/lansenger-sdk-go"
 
@@ -65,7 +66,7 @@ func init() {
 	messageApproveCardCmd.Flags().StringVar(&sendApproveCardHeadStatusIconLink, "head-status-icon-link", "", "Head status icon URL")
 	messageApproveCardCmd.Flags().StringVar(&sendApproveCardHeadStatusColour, "head-status-colour", "", "Head status DOT colour (hex)")
 	messageApproveCardCmd.Flags().IntVar(&sendApproveCardBodyFormatType, "format-type", 0, "Body format type")
-	messageApproveCardCmd.Flags().StringVar(&sendApproveCardFields, "fields", "", "Body fields as JSON array, e.g. '[{\"key\":\"k\",\"value\":\"v\"}]'")
+	messageApproveCardCmd.Flags().StringVar(&sendApproveCardFields, "fields", "", "Body fields as JSON array, e.g. '[{\"key\":\"k\",\"value\":\"v\"}]', or comma-separated key=value pairs, e.g. 'k1=v1,k2=v2'")
 	messageApproveCardCmd.Flags().StringVar(&sendApproveCardCardLink, "card-link", "", "Card link URL")
 	messageApproveCardCmd.Flags().StringVar(&sendApproveCardCardLinkPC, "card-link-pc", "", "PC card link URL")
 	messageApproveCardCmd.Flags().StringVar(&sendApproveCardCardLinkPad, "card-link-pad", "", "Pad card link URL")
@@ -96,9 +97,31 @@ func runSendApproveCard(cmd *cobra.Command, args []string) {
 
 	var fields []map[string]string
 	if sendApproveCardFields != "" {
-		if err := json.Unmarshal([]byte(sendApproveCardFields), &fields); err != nil {
-			fmt.Fprintf(os.Stderr, "Error parsing --fields JSON: %v\n", err)
-			return
+		trimmed := strings.TrimSpace(sendApproveCardFields)
+		if strings.HasPrefix(trimmed, "[") {
+			if err := json.Unmarshal([]byte(trimmed), &fields); err != nil {
+				fmt.Fprintf(os.Stderr, "Error parsing --fields JSON: %v\n", err)
+				return
+			}
+		} else {
+			// key=value fallback: comma-separated pairs, e.g. "k1=v1,k2=v2"
+			for _, pair := range strings.Split(trimmed, ",") {
+				pair = strings.TrimSpace(pair)
+				if pair == "" {
+					continue
+				}
+				m := parseFieldOrJSON(pair, "key")
+				if m == nil {
+					return
+				}
+				field := make(map[string]string, len(m))
+				for k, v := range m {
+					if s, ok := v.(string); ok {
+						field[k] = s
+					}
+				}
+				fields = append(fields, field)
+			}
 		}
 	}
 

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.29] - 2026-07-29
+
+### Added
+
+- **cli**: `parseFieldOrJSON()` helper — parses `--fields` values as JSON with automatic `key=value` fallback, fixing PowerShell quoting issues.
+
+### Fixed
+
+- **cli**: `send-approve-card` now accepts `key=value` format for `--fields` parameter in addition to JSON array.
+
+## [0.9.28] - 2026-07-20
+
+### Added
+
+- **auth**: `UserTokenManager` now supports **external mode** — when `config.UserToken` is set, `GetToken()` returns the provided token directly without expiry checks or auto-refresh.
+- **client**: `NewClientWithConfig` now auto-initializes `UserTokenManager` when `cfg.UserToken` is non-empty, enabling external user token support.
+- **cli**: External mode now auto-injects `--user-token` via `SetDefaultUserToken()` for transparent command usage.
+- **docs**: All READMEs updated with external mode documentation (5 languages).
+
 ## [0.9.27] - 2026-07-17
 
 ### Changed

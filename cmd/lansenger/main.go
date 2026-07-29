@@ -71,7 +71,11 @@ func getClient() *lansenger.LansengerClient {
 			AppToken:      globalAppToken,
 			UserToken:     globalUserToken,
 		}
-		return lansenger.NewClientWithConfig(cfg)
+		client := lansenger.NewClientWithConfig(cfg)
+		if globalUserToken != "" {
+			lansenger.SetDefaultUserToken(globalUserToken)
+		}
+		return client
 	}
 
 	store, err := lansenger.NewCredentialStore("", profileName)
@@ -344,6 +348,22 @@ func parseJSONRaw(s string) (interface{}, error) {
 		return nil, err
 	}
 	return v, nil
+}
+
+func parseFieldOrJSON(raw string, keyName string) map[string]interface{} {
+	var result map[string]interface{}
+	if err := json.Unmarshal([]byte(raw), &result); err == nil {
+		return result
+	}
+	if idx := strings.Index(raw, "="); idx > 0 {
+		key := strings.TrimSpace(raw[:idx])
+		val := strings.TrimSpace(raw[idx+1:])
+		if key != "" {
+			return map[string]interface{}{keyName: key, "value": val}
+		}
+	}
+	fmt.Fprintf(os.Stderr, "Error parsing field: cannot parse '%s' as JSON or %s=value\n", raw, keyName)
+	return nil
 }
 
 func checkError(err error) {
