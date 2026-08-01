@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -48,6 +49,20 @@ var mediaUploadAppCmd = &cobra.Command{
 	Run:   runMediaUploadApp,
 }
 
+var mediaUploadAppV2Cmd = &cobra.Command{
+	Use:   "upload-app-v2 FILE_PATH",
+	Short: "Upload app/bot media V2 (4.5.5 endpoint, requires user token)",
+	Args:  cobra.ExactArgs(1),
+	Run:   runMediaUploadAppV2,
+}
+
+var mediaDownloadShareCmd = &cobra.Command{
+	Use:   "download-share SHARE_ID",
+	Short: "Download media by share ID (4.5.6)",
+	Args:  cobra.ExactArgs(1),
+	Run:   runMediaDownloadShare,
+}
+
 var (
 	mediaUploadType         int
 	mediaUploadUserToken    string
@@ -59,6 +74,17 @@ var (
 	mediaUploadAppWidth    int
 	mediaUploadAppHeight   int
 	mediaUploadAppDuration int
+)
+
+var (
+	mediaUploadAppV2Type      string
+	mediaUploadAppV2UserToken string
+	mediaUploadAppV2Width     int
+	mediaUploadAppV2Height    int
+	mediaUploadAppV2Duration  int
+
+	mediaDownloadShareOutput    string
+	mediaDownloadShareUserToken string
 )
 
 func init() {
@@ -75,11 +101,22 @@ func init() {
 	mediaUploadAppCmd.Flags().IntVar(&mediaUploadAppHeight, "height", 0, "Height (for video/image)")
 	mediaUploadAppCmd.Flags().IntVar(&mediaUploadAppDuration, "duration", 0, "Duration in seconds (for video/audio)")
 
+	mediaUploadAppV2Cmd.Flags().StringVarP(&mediaUploadAppV2Type, "media-type", "t", "file", "Media type: file, video, image, audio")
+	mediaUploadAppV2Cmd.Flags().StringVar(&mediaUploadAppV2UserToken, "user-token", "", "User token (required)")
+	mediaUploadAppV2Cmd.Flags().IntVar(&mediaUploadAppV2Width, "width", 0, "Width (for video/image)")
+	mediaUploadAppV2Cmd.Flags().IntVar(&mediaUploadAppV2Height, "height", 0, "Height (for video/image)")
+	mediaUploadAppV2Cmd.Flags().IntVar(&mediaUploadAppV2Duration, "duration", 0, "Duration in seconds (for video/audio)")
+
+	mediaDownloadShareCmd.Flags().StringVarP(&mediaDownloadShareOutput, "output", "o", "", "Target file path")
+	mediaDownloadShareCmd.Flags().StringVar(&mediaDownloadShareUserToken, "user-token", "", "User token")
+
 	mediaCmd.AddCommand(mediaUploadCmd)
 	mediaCmd.AddCommand(mediaDownloadCmd)
 	mediaCmd.AddCommand(mediaDownloadToFileCmd)
 	mediaCmd.AddCommand(mediaPathCmd)
 	mediaCmd.AddCommand(mediaUploadAppCmd)
+	mediaCmd.AddCommand(mediaUploadAppV2Cmd)
+	mediaCmd.AddCommand(mediaDownloadShareCmd)
 	rootCmd.AddCommand(mediaCmd)
 }
 
@@ -168,4 +205,43 @@ func runMediaUploadApp(cmd *cobra.Command, args []string) {
 	result, err := client.UploadAppMedia(ctx, args[0], mediaUploadAppType, mediaUploadAppWidth, mediaUploadAppHeight, mediaUploadAppDuration)
 	checkError(err)
 	outputResultFields(result, []string{"media_id"})
+}
+
+func runMediaUploadAppV2(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	result, err := client.UploadAppMediaV2(ctx, args[0], mediaUploadAppV2Type, mediaUploadAppV2UserToken, mediaUploadAppV2Width, mediaUploadAppV2Height, mediaUploadAppV2Duration)
+	checkError(err)
+	outputResultFields(result, []string{"media_id"})
+}
+
+func runMediaDownloadShare(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	result, err := client.DownloadMediaByShareID(ctx, args[0], mediaDownloadShareUserToken)
+	checkError(err)
+
+	if jsonOutput {
+		m := map[string]interface{}{
+			"success": result.Success,
+			"size":    len(result.Data),
+			"error":   result.Error,
+		}
+		outputJSON(m)
+		return
+	}
+
+	if result.Success {
+		if mediaDownloadShareOutput != "" {
+			err := os.WriteFile(mediaDownloadShareOutput, result.Data, 0644)
+			checkError(err)
+			fmt.Printf("Saved to: %s (%d bytes)\n", mediaDownloadShareOutput, len(result.Data))
+		} else {
+			fmt.Printf("Downloaded %d bytes\n", len(result.Data))
+		}
+	} else {
+		fmt.Printf("Error: %s\n", result.Error)
+	}
 }

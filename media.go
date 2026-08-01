@@ -66,6 +66,34 @@ func (c *LansengerClient) UploadAppMedia(ctx context.Context, filePath string, m
 	return res, nil
 }
 
+func (c *LansengerClient) UploadAppMediaV2(ctx context.Context, filePath string, mediaType string, userToken string, width, height, duration int) (*UploadAppMediaResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "app_medias_v2", "create", token,
+		WithUserToken(userToken),
+		WithMediaTypeString(mediaType),
+		WithIntParam("width", width),
+		WithIntParam("height", height),
+		WithIntParam("duration", duration),
+	)
+
+	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath)
+	if err != nil {
+		return &UploadAppMediaResult{Success: false, Error: err.Error()}, nil
+	}
+
+	data := extractData(result)
+
+	res := &UploadAppMediaResult{Success: true}
+	if data != nil {
+		res.MediaID = strFromMap(data, "mediaId")
+	}
+	return res, nil
+}
+
 func (c *LansengerClient) DownloadMedia(ctx context.Context, mediaID string) (*DownloadMediaResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -74,6 +102,51 @@ func (c *LansengerClient) DownloadMedia(ctx context.Context, mediaID string) (*D
 
 	url := BuildAPIURL(c.config, "medias", "fetch", token,
 		WithPathVar("media_id", mediaID),
+	)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating download request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return &DownloadMediaResult{Success: false, Error: NewNetworkError("download request failed: " + err.Error()).Error()}, nil
+	}
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading download response: %w", err)
+	}
+
+	if strings.HasPrefix(contentType, "application/json") {
+		var result map[string]interface{}
+		if json.Unmarshal(respBody, &result) == nil {
+			errCode, _ := result["errCode"].(float64)
+			if errCode != 0 {
+				errMsg, _ := result["errMsg"].(string)
+				return &DownloadMediaResult{Success: false, Error: NewAPIError(errMsg, int(errCode)).Error()}, nil
+			}
+		}
+	}
+
+	return &DownloadMediaResult{
+		Success: true,
+		Data:    respBody,
+	}, nil
+}
+
+func (c *LansengerClient) DownloadMediaByShareID(ctx context.Context, shareID string, userToken string) (*DownloadMediaResult, error) {
+	token, err := c.GetToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	url := BuildAPIURL(c.config, "media_share", "fetch", token,
+		WithUserToken(userToken),
+		WithPathVar("share_id", shareID),
 	)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

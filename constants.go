@@ -129,6 +129,12 @@ var APIEndpoints = map[string]map[string]string{
 	"app_medias": {
 		"create": "/v1/app/medias/create",
 	},
+	"app_medias_v2": {
+		"create": "/v2/app/medias/create",
+	},
+	"media_share": {
+		"fetch": "/v1/media/share/{share_id}/fetch",
+	},
 	"chats": {
 		"fetch":          "/v1/chats/fetch",
 		"messages_fetch": "/v1/messages/fetch",

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.10.0] - 2026-07-29
+
+### Added
+
+- **media**: `UploadAppMediaV2()` — 4.5.5 V2 app media upload with required `userToken`, coexists with V1 (`/v2/app/medias/create`).
+- **media**: `DownloadMediaByShareID()` — 4.5.6 download media by share ID (`/v1/media/share/{share_id}/fetch`).
+- **media**: Unit tests for both new APIs (6 tests).
+- **cli**: `upload-app-v2` and `download-share` media subcommands.
+
 ## [0.9.29] - 2026-07-29
 
 ### Added
