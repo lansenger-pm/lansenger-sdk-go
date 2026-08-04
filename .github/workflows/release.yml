@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  # Gate 1: version.go const must match the tag name.
+  # Fails if the tag doesn't point at a commit with the right Version.
+  verify-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - id: check
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/v}"
+          CONST=$(grep -m1 'const Version' version.go | sed 's/.*"\(.*\)".*/\1/')
+          echo "Tag:        $TAG"
+          echo "version.go: $CONST"
+          if [ "$TAG" != "$CONST" ]; then
+            echo "::error::Version mismatch — tag=v$TAG version.go=$CONST. Bump version.go to match the tag (see AGENTS.md)."
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+
+  # Gate 2: tests must be green. No release ships with a red suite.
+  test:
+    needs: verify-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go vet ./...
+      - run: go test ./...
+
+  # Go modules are consumed via the git tag directly (pkg.go.dev indexes the
+  # tag). There is no registry upload step — the tag itself IS the release.
+  # This job confirms the tag is consistent and tests pass; module proxy
+  # propagation happens automatically after the tag is public.
+  confirm:
+    needs: [verify-version, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Tag v${{ needs.verify-version.outputs.version }} verified: version.go matches, tests green."
+          echo "pkg.go.dev will index this tag automatically."
