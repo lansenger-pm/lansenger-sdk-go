@@ -109,6 +109,33 @@ newToken, err := client.RefreshUserToken(ctx, tokenResult.RefreshToken, "")
 userInfo, err := client.FetchUserInfo(ctx, tokenResult.UserToken)
 ```
 
+### External Mode (Direct Token Injection)
+
+For scenarios where you manage tokens externally (e.g., CI/CD pipelines, your own auth system), you can bypass the credential store entirely by providing `app_token` and `user_token` directly:
+
+```go
+// External mode — provide tokens directly, no credential file needed
+cfg := &lansenger.Config{
+    APIGatewayURL: "https://your-gateway.example.com",
+    AppToken:      "your-app-token",
+    UserToken:     "your-user-token",
+}
+client := lansenger.NewClientWithConfig(cfg)
+
+// Or use the convenience constructor (reads LANSENGER_API_GATEWAY_URL from env)
+client := lansenger.NewClientWithToken("your-app-token", "your-user-token")
+
+// Or using environment variables
+// LANSENGER_APP_TOKEN=your-app-token LANSENGER_USER_TOKEN=your-user-token
+client, err := lansenger.NewClientFromEnv()
+```
+
+**Behavior in external mode:**
+- `app_token` is used directly without calling the token refresh API
+- `user_token` is used directly without OAuth2 flow or refresh
+- No credential persistence — tokens are kept in memory only
+- You are responsible for keeping tokens valid
+
 ## 2. Organization & Departments
 
 ```go

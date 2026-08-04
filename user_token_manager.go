@@ -25,7 +25,11 @@ func NewUserTokenManager(client *LansengerClient, store *CredentialStore) *UserT
 		client: client,
 		store:  store,
 	}
-	utm.loadFromStore()
+	if client.config.UserToken == "" {
+		utm.loadFromStore()
+	} else {
+		utm.userToken = client.config.UserToken
+	}
 	return utm
 }
 
@@ -57,6 +61,10 @@ func (utm *UserTokenManager) loadFromStore() {
 }
 
 func (utm *UserTokenManager) GetToken(ctx context.Context) (string, error) {
+	if utm.client.config.UserToken != "" {
+		return utm.client.config.UserToken, nil
+	}
+
 	utm.mu.Lock()
 	if utm.userToken != "" && time.Now().Before(utm.expiresAt.Add(-time.Duration(UserTokenRefreshMargin)*time.Second)) {
 		token := utm.userToken

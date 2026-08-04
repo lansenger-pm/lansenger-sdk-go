@@ -109,6 +109,33 @@ newToken, err := client.RefreshUserToken(ctx, tokenResult.RefreshToken, "")
 userInfo, err := client.FetchUserInfo(ctx, tokenResult.UserToken)
 ```
 
+### Mode externe (Injection directe de jetons)
+
+Pour les scénarios où vous gérez les jetons externement (par exemple, pipelines CI/CD, votre propre système d'authentification), vous pouvez contourner complètement le stockage des identifiants en fournissant directement `app_token` et `user_token` :
+
+```go
+// Mode externe — fournir les jetons directement, pas de fichier d'identifiants nécessaire
+cfg := &lansenger.Config{
+    APIGatewayURL: "https://your-gateway.example.com",
+    AppToken:      "your-app-token",
+    UserToken:     "your-user-token",
+}
+client := lansenger.NewClientWithConfig(cfg)
+
+// Or use the convenience constructor (reads LANSENGER_API_GATEWAY_URL from env)
+client := lansenger.NewClientWithToken("your-app-token", "your-user-token")
+
+// Ou utiliser les variables d'environnement
+// LANSENGER_APP_TOKEN=your-app-token LANSENGER_USER_TOKEN=your-user-token
+client, err := lansenger.NewClientFromEnv()
+```
+
+**Comportement en mode externe :**
+- `app_token` est utilisé directement sans appeler l'API de rafraîchissement de jeton
+- `user_token` est utilisé directement sans passer par le flux OAuth2 ou le rafraîchissement
+- Aucune persistance des identifiants — les jetons sont uniquement conservés en mémoire
+- Vous êtes responsable de maintenir les jetons valides
+
 ## 2. Organisation & Départements
 
 ```go

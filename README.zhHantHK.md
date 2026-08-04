@@ -109,6 +109,33 @@ newToken, err := client.RefreshUserToken(ctx, tokenResult.RefreshToken, "")
 userInfo, err := client.FetchUserInfo(ctx, tokenResult.UserToken)
 ```
 
+### External 模式（直接注入 Token）
+
+對於需要自行管理 token 的場景（如 CI/CD 管線、自訂認證系統），可以直接傳入 `app_token` 和 `user_token`，完全繞過憑證儲存：
+
+```go
+// External 模式 — 直接傳入 token，無需憑證檔案
+cfg := &lansenger.Config{
+    APIGatewayURL: "https://your-gateway.example.com",
+    AppToken:      "your-app-token",
+    UserToken:     "your-user-token",
+}
+client := lansenger.NewClientWithConfig(cfg)
+
+// Or use the convenience constructor (reads LANSENGER_API_GATEWAY_URL from env)
+client := lansenger.NewClientWithToken("your-app-token", "your-user-token")
+
+// 或者使用環境變數
+// LANSENGER_APP_TOKEN=your-app-token LANSENGER_USER_TOKEN=your-user-token
+client, err := lansenger.NewClientFromEnv()
+```
+
+**External 模式行為：**
+- `app_token` 直接使用，不呼叫 token 刷新 API
+- `user_token` 直接使用，不經過 OAuth2 流程或刷新
+- 不持久化憑證 — token 僅保存在記憶體中
+- 您需要自行保持 token 有效
+
 ## 2. 組織與部門
 
 ```go

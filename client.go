@@ -28,11 +28,30 @@ func NewClientWithConfig(cfg *Config) *LansengerClient {
 	httpClient := &http.Client{
 		Timeout: time.Duration(cfg.HTTPTimeout * float64(time.Second)),
 	}
-	return &LansengerClient{
+	client := &LansengerClient{
 		config:     cfg,
 		httpClient: httpClient,
 		tokenMgr:   NewTokenManager(cfg, httpClient),
 	}
+	if cfg.UserToken != "" {
+		client.userTokenMgr = NewUserTokenManager(client, nil)
+	}
+	return client
+}
+
+// NewClientWithToken creates a client in external (pass-through) mode.
+//
+// The caller manages the appToken lifecycle; the SDK does not auto-refresh.
+// Pass an optional userToken for user-scoped operations. This is equivalent
+// to building a Config with AppToken set and calling NewClientWithConfig.
+func NewClientWithToken(appToken, userToken string) *LansengerClient {
+	cfg := &Config{
+		APIGatewayURL: getEnvOrDefault("LANSENGER_API_GATEWAY_URL", ""),
+		AppToken:      appToken,
+		UserToken:     userToken,
+		HTTPTimeout:   30.0,
+	}
+	return NewClientWithConfig(cfg)
 }
 
 func NewClientFromEnv() (*LansengerClient, error) {
