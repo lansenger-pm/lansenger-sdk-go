@@ -41,6 +41,13 @@ If you tag before bumping `version.go`, delete and recreate the tag on the corre
 failure is just a version string", not "I'll fix it in the next release". A red test
 run means the release is not ready.
 
+### CI-driven publishing
+
+Releases are published exclusively by pushing a git tag (`vx.y.z`). The
+`Release` GitHub Actions workflow verifies `version.go` matches the tag and
+runs `go test ./...`; pkg.go.dev indexes the tag automatically. There is no
+manual upload step for Go modules — the tag itself IS the release.
+
 ### Pass-through (external token) mode
 
 - `NewClientWithConfig(cfg)` accepts a `Config` with `AppToken` set — used by the CLI
@@ -55,4 +62,4 @@ run means the release is not ready.
 
 ## Current status
 
-v0.10.1 released. Added `NewClientWithToken`; `UserTokenManager` honors external userToken.
+v0.11.0. High-risk write gate (exit 10 + `--yes`/`--dry-run`) added to CLI; `NewClientWithToken`; `UserTokenManager` honors external userToken.
