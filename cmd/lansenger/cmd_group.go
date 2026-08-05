@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	lansenger "github.com/lansenger-pm/lansenger-sdk-go"
@@ -111,8 +112,12 @@ var (
 	groupUpdateMembersRemove []string
 	groupUpdateMembersAddDept []string
 	groupUpdateMembersToken  string
+	groupUpdateMembersYes    bool
+	groupUpdateMembersDryRun bool
 
 	groupDismissUserToken string
+	groupDismissYes    bool
+	groupDismissDryRun bool
 )
 
 func init() {
@@ -156,8 +161,12 @@ func init() {
 	groupUpdateMembersCmd.Flags().StringArrayVar(&groupUpdateMembersRemove, "remove", nil, "Staff IDs to remove (repeatable)")
 	groupUpdateMembersCmd.Flags().StringArrayVar(&groupUpdateMembersAddDept, "add-dept", nil, "Department IDs to add (repeatable)")
 	groupUpdateMembersCmd.Flags().StringVar(&groupUpdateMembersToken, "user-token", "", "User token")
+	groupUpdateMembersCmd.Flags().BoolVarP(&groupUpdateMembersYes, "yes", "y", false, "Confirm member removal before executing")
+	groupUpdateMembersCmd.Flags().BoolVar(&groupUpdateMembersDryRun, "dry-run", false, "Validate inputs without changing members")
 
 	groupDismissCmd.Flags().StringVar(&groupDismissUserToken, "user-token", "", "User token")
+	groupDismissCmd.Flags().BoolVarP(&groupDismissYes, "yes", "y", false, "Confirm group dismissal before executing")
+	groupDismissCmd.Flags().BoolVar(&groupDismissDryRun, "dry-run", false, "Validate inputs without dismissing")
 
 	groupCmd.AddCommand(groupCreateCmd)
 	groupCmd.AddCommand(groupInfoCmd)
@@ -291,6 +300,10 @@ func runGroupUpdate(cmd *cobra.Command, args []string) {
 }
 
 func runGroupDismiss(cmd *cobra.Command, args []string) {
+	confirmHighRisk("dismiss", "group "+args[0], groupDismissYes, groupDismissDryRun)
+	if groupDismissDryRun {
+		return
+	}
 	client := getClient()
 	ctx := context.Background()
 
@@ -300,6 +313,12 @@ func runGroupDismiss(cmd *cobra.Command, args []string) {
 }
 
 func runGroupUpdateMembers(cmd *cobra.Command, args []string) {
+	if len(groupUpdateMembersRemove) > 0 {
+		confirmHighRisk("remove", fmt.Sprintf("members %v from group %s", groupUpdateMembersRemove, args[0]), groupUpdateMembersYes, groupUpdateMembersDryRun)
+		if groupUpdateMembersDryRun {
+			return
+		}
+	}
 	client := getClient()
 	ctx := context.Background()
 

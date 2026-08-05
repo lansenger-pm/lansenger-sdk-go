@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -111,6 +112,8 @@ var (
 
 	todoDeleteStaffID   string
 	todoDeleteUserToken string
+	todoDeleteYes        bool
+	todoDeleteDryRun     bool
 
 	todoListUserToken string
 	todoListAppIDs    string
@@ -135,6 +138,8 @@ var (
 
 	todoDelExecutorsTaskID   string
 	todoDelExecutorsUserToken string
+	todoDelExecutorsYes       bool
+	todoDelExecutorsDryRun    bool
 
 	todoExecutorListStaffID   string
 	todoExecutorListStatus    string
@@ -156,6 +161,8 @@ func init() {
 
 	todoDeleteCmd.Flags().StringVar(&todoDeleteStaffID, "staff-id", "", "Staff ID")
 	todoDeleteCmd.Flags().StringVar(&todoDeleteUserToken, "user-token", "", "User token")
+	todoDeleteCmd.Flags().BoolVarP(&todoDeleteYes, "yes", "y", false, "Confirm todo deletion before executing")
+	todoDeleteCmd.Flags().BoolVar(&todoDeleteDryRun, "dry-run", false, "Validate inputs without deleting")
 
 	todoListCmd.Flags().StringVar(&todoListUserToken, "user-token", "", "User token")
 	todoListCmd.Flags().StringVar(&todoListAppIDs, "app-ids", "", "App IDs (comma-separated)")
@@ -180,6 +187,8 @@ func init() {
 
 	todoDeleteExecutorsCmd.Flags().StringVar(&todoDelExecutorsTaskID, "task-id", "", "Todo task ID")
 	todoDeleteExecutorsCmd.Flags().StringVar(&todoDelExecutorsUserToken, "user-token", "", "User token")
+	todoDeleteExecutorsCmd.Flags().BoolVarP(&todoDelExecutorsYes, "yes", "y", false, "Confirm executor removal before executing")
+	todoDeleteExecutorsCmd.Flags().BoolVar(&todoDelExecutorsDryRun, "dry-run", false, "Validate inputs without deleting executors")
 
 	todoExecutorListCmd.Flags().StringVar(&todoExecutorListStaffID, "staff-id", "", "Staff ID")
 	todoExecutorListCmd.Flags().StringVar(&todoExecutorListStatus, "status", "", "Status filter (comma-separated)")
@@ -238,6 +247,10 @@ func runTodoUpdateStatus(cmd *cobra.Command, args []string) {
 }
 
 func runTodoDelete(cmd *cobra.Command, args []string) {
+	confirmHighRisk("delete", "todo "+args[0], todoDeleteYes, todoDeleteDryRun)
+	if todoDeleteDryRun {
+		return
+	}
 	client := getClient()
 	ctx := context.Background()
 
@@ -337,10 +350,17 @@ func runTodoAddExecutors(cmd *cobra.Command, args []string) {
 }
 
 func runTodoDeleteExecutors(cmd *cobra.Command, args []string) {
+	executorIDs := splitCommaList(args[0])
+	label := todoDelExecutorsTaskID
+	if label == "" {
+		label = args[1]
+	}
+	confirmHighRisk("delete", fmt.Sprintf("executors %v from todo %s", executorIDs, label), todoDelExecutorsYes, todoDelExecutorsDryRun)
+	if todoDelExecutorsDryRun {
+		return
+	}
 	client := getClient()
 	ctx := context.Background()
-
-	executorIDs := splitCommaList(args[0])
 
 	result, err := client.DeleteExecutors(ctx, executorIDs, args[1], todoDelExecutorsTaskID, todoDelExecutorsUserToken)
 	checkError(err)

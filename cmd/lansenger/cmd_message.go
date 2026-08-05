@@ -213,6 +213,8 @@ var (
 
 	revokeChatType string
 	revokeSenderID string
+	revokeYes     bool
+	revokeDryRun  bool
 
 	sendBotMessageChatIDs       []string
 	sendBotMessageDepartmentIDs []string
@@ -332,6 +334,8 @@ func init() {
 
 	revokeCmd.Flags().StringVar(&revokeChatType, "chat-type", "bot", "staff, group, notification, account, or bot")
 	revokeCmd.Flags().StringVar(&revokeSenderID, "sender-id", "", "Sender staff ID (required for staff/group)")
+	revokeCmd.Flags().BoolVarP(&revokeYes, "yes", "y", false, "Confirm high-risk revoke before executing")
+	revokeCmd.Flags().BoolVar(&revokeDryRun, "dry-run", false, "Validate inputs without revoking")
 
 	sendBotMessageCmd.Flags().StringArrayVar(&sendBotMessageChatIDs, "chat-id", nil, "Chat IDs (or group IDs if --group)")
 	sendBotMessageCmd.Flags().StringArrayVar(&sendBotMessageDepartmentIDs, "dept", nil, "Department IDs (bot channel only)")
@@ -625,6 +629,10 @@ func runUpdateDynamicCard(cmd *cobra.Command, args []string) {
 }
 
 func runRevoke(cmd *cobra.Command, args []string) {
+	confirmHighRisk("revoke", fmt.Sprintf("messages %v", args), revokeYes, revokeDryRun)
+	if revokeDryRun {
+		return
+	}
 	client := getClient()
 	ctx := context.Background()
 

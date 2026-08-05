@@ -201,6 +201,7 @@ func outputJSON(data interface{}) {
 }
 
 func outputResult(data interface{}) {
+	checkResultSuccess(data)
 	if jsonOutput {
 		outputJSON(data)
 		return
@@ -214,6 +215,7 @@ func outputResult(data interface{}) {
 }
 
 func outputResultFields(data interface{}, fields []string) {
+	checkResultSuccess(data)
 	if jsonOutput {
 		outputJSON(data)
 		return
@@ -369,6 +371,86 @@ func parseFieldOrJSON(raw string, keyName string) map[string]interface{} {
 func checkError(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		os.Exit(ExitError)
+	}
+}
+
+// Exit codes — stable contract for agents/scripts.
+const (
+	ExitOK              = 0
+	ExitError           = 1  // generic / parameter / API failure
+	ExitConfirmRequired = 10 // high-risk write without --yes
+)
+
+// confirmHighRisk gates high-risk write operations. When --yes is not supplied it
+// prints a structured confirmation request and exits with ExitConfirmRequired
+// (10). When --dry-run is set it prints the planned action and exits 0 without
+// performing the call (the caller should return immediately afterwards).
+func confirmHighRisk(action, resource string, yes, dryRun bool) {
+	riskLabel := strings.TrimSpace(fmt.Sprintf("%s %s", action, resource))
+	if dryRun {
+		payload := map[string]interface{}{
+			"ok":            true,
+			"dry_run":       true,
+			"would_perform": riskLabel,
+			"message":       fmt.Sprintf("Dry run: would %s. No action taken.", riskLabel),
+		}
+		if jsonOutput {
+			outputJSON(payload)
+		} else {
+			fmt.Printf("DRY RUN — would %s (no action taken).\n", riskLabel)
+		}
+		return
+	}
+	if yes {
+		return
+	}
+	payload := map[string]interface{}{
+		"ok": false,
+		"error": map[string]interface{}{
+			"type":    "confirmation_required",
+			"message": fmt.Sprintf("High-risk operation requires confirmation: %s.", riskLabel),
+			"hint":    "add --yes to confirm and proceed.",
+			"risk": map[string]interface{}{
+				"level":  "high-risk-write",
+				"action": riskLabel,
+			},
+		},
+	}
+	if jsonOutput {
+		b, _ := json.MarshalIndent(payload, "", "  ")
+		fmt.Fprintln(os.Stderr, string(b))
+	} else {
+		fmt.Fprintf(os.Stderr, "Confirmation required — %s\n", riskLabel)
+		fmt.Fprintln(os.Stderr, "Re-run with --yes to confirm and proceed.")
+	}
+	os.Exit(ExitConfirmRequired)
+}
+
+// checkResultSuccess inspects a result struct for a Success field; when the API
+// call reported failure (success=false) it prints the error and exits non-zero.
+// This closes the gap where a failed API result was printed but exited 0.
+func checkResultSuccess(data interface{}) {
+	m := structToMap(data)
+	if m == nil {
+		return
+	}
+	success, ok := m["success"].(bool)
+	if ok && !success {
+		if jsonOutput {
+			outputJSON(data)
+		} else {
+			errMsg, _ := m["error"].(string)
+			if errMsg == "" {
+				errMsg = "Unknown error"
+			}
+			retryable, _ := m["retryable"].(bool)
+			hint := ""
+			if retryable {
+				hint = " — retry may succeed"
+			}
+			fmt.Fprintf(os.Stderr, "Error: %s%s\n", errMsg, hint)
+		}
+		os.Exit(ExitError)
 	}
 }

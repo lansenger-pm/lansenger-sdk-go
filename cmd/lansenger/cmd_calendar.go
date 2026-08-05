@@ -106,6 +106,8 @@ var (
 
 	calDeleteUserToken string
 	calDeleteUserID    string
+	calDeleteYes       bool
+	calDeleteDryRun    bool
 
 	calListUserToken string
 	calListUserID    string
@@ -122,6 +124,8 @@ var (
 	calDelAttendeesReminderType string
 	calDelAttendeesUserToken    string
 	calDelAttendeesUserID       string
+	calDelAttendeesYes          bool
+	calDelAttendeesDryRun       bool
 
 	calUpdateSummary       string
 	calUpdateDesc          string
@@ -184,6 +188,8 @@ func init() {
 
 	calendarDeleteScheduleCmd.Flags().StringVar(&calDeleteUserToken, "user-token", "", "User token")
 	calendarDeleteScheduleCmd.Flags().StringVar(&calDeleteUserID, "user-id", "", "User ID")
+	calendarDeleteScheduleCmd.Flags().BoolVarP(&calDeleteYes, "yes", "y", false, "Confirm schedule deletion before executing")
+	calendarDeleteScheduleCmd.Flags().BoolVar(&calDeleteDryRun, "dry-run", false, "Validate inputs without deleting")
 
 	calendarListSchedulesCmd.Flags().StringVar(&calListUserToken, "user-token", "", "User token")
 	calendarListSchedulesCmd.Flags().StringVar(&calListUserID, "user-id", "", "User ID")
@@ -200,6 +206,8 @@ func init() {
 	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesReminderType, "reminder", "", "Reminder type (yes/no)")
 	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesUserToken, "user-token", "", "User token")
 	calendarDeleteAttendeesCmd.Flags().StringVar(&calDelAttendeesUserID, "user-id", "", "User ID")
+	calendarDeleteAttendeesCmd.Flags().BoolVarP(&calDelAttendeesYes, "yes", "y", false, "Confirm attendee removal before executing")
+	calendarDeleteAttendeesCmd.Flags().BoolVar(&calDelAttendeesDryRun, "dry-run", false, "Validate inputs without deleting attendees")
 
 	calendarUpdateScheduleCmd.Flags().StringVar(&calUpdateSummary, "summary", "", "New schedule summary")
 	calendarUpdateScheduleCmd.Flags().StringVarP(&calUpdateDesc, "desc", "d", "", "New description")
@@ -309,6 +317,10 @@ func runCalendarFetchSchedule(cmd *cobra.Command, args []string) {
 }
 
 func runCalendarDeleteSchedule(cmd *cobra.Command, args []string) {
+	confirmHighRisk("delete", "schedule "+args[1], calDeleteYes, calDeleteDryRun)
+	if calDeleteDryRun {
+		return
+	}
 	client := getClient()
 	ctx := context.Background()
 
@@ -372,10 +384,13 @@ func runCalendarAddAttendees(cmd *cobra.Command, args []string) {
 }
 
 func runCalendarDeleteAttendees(cmd *cobra.Command, args []string) {
+	attendees := parseStringList(args[2])
+	confirmHighRisk("delete", fmt.Sprintf("attendees %v from schedule %s", attendees, args[1]), calDelAttendeesYes, calDelAttendeesDryRun)
+	if calDelAttendeesDryRun {
+		return
+	}
 	client := getClient()
 	ctx := context.Background()
-
-	attendees := parseStringList(args[2])
 
 	result, err := client.DeleteScheduleAttendees(ctx, args[0], args[1], attendees, calDelAttendeesReminderType, "", "", calDelAttendeesUserToken, calDelAttendeesUserID)
 	checkError(err)
