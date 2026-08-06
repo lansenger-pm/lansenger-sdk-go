@@ -2,3 +2,9 @@
 cmd/lansenger/lansenger
 *.exe.DS_Store
 .DS_Store
+
+# Agent/IDE local files
+.trae/
+.claude/
+.cursor/
+.codex/
