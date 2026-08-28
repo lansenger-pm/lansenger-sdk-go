@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.12.0] - 2026-08-28
+
+### Added
+
+- **persistence**: CredentialStore 支持 `identity_type` 身份类型持久化（`ValidIdentityTypes` / `LoadIdentityType` / `SaveIdentityType`）；CLI `config set identity_type` 命令，`config show` / `config list-profiles` 显示身份类型——用于区分个人机器人与组织应用凭证。
+
+
 ## [0.10.0] - 2026-07-29
 
 ### Added

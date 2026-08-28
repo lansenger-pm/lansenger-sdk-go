@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -679,5 +680,128 @@ func TestUserTokenNonexistentStaffID(t *testing.T) {
 	// Fallback returns first available user (or empty)
 	if got["user_token"] != "" && got["user_token"] != "t1" {
 		t.Errorf("expected '' or 't1', got %s", got["user_token"])
+	}
+}
+
+// ── Identity type persistence ──────────────────────────────────────
+
+func TestIdentityTypeMissingReturnsEmpty(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+
+	idType, err := store.LoadIdentityType()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if idType != "" {
+		t.Errorf("expected empty identity type when missing, got %s", idType)
+	}
+}
+
+func TestIdentityTypeRoundTrip(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+
+	if err := store.SaveIdentityType("personal-bot"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	idType, err := store.LoadIdentityType()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if idType != "personal-bot" {
+		t.Errorf("expected personal-bot, got %s", idType)
+	}
+
+	if err := store.SaveIdentityType("org-bot"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	idType, _ = store.LoadIdentityType()
+	if idType != "org-bot" {
+		t.Errorf("expected org-bot after overwrite, got %s", idType)
+	}
+}
+
+func TestIdentityTypeTrimmedOnSave(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+
+	if err := store.SaveIdentityType("  org-app "); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	idType, _ := store.LoadIdentityType()
+	if idType != "org-app" {
+		t.Errorf("expected trimmed org-app, got %s", idType)
+	}
+}
+
+func TestIdentityTypeInvalidRejected(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+
+	err := store.SaveIdentityType("bogus")
+	if err == nil {
+		t.Fatal("expected error for invalid identity type")
+	}
+
+	idType, _ := store.LoadIdentityType()
+	if idType != "" {
+		t.Errorf("expected empty identity type after rejected save, got %s", idType)
+	}
+}
+
+func TestIdentityTypeClearWithEmptyString(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test_state.json")
+	store, _ := NewCredentialStore(path, "default")
+
+	if err := store.SaveIdentityType("org-bot"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := store.SaveIdentityType(""); err != nil {
+		t.Fatalf("unexpected error clearing: %v", err)
+	}
+
+	idType, _ := store.LoadIdentityType()
+	if idType != "" {
+		t.Errorf("expected cleared identity type, got %s", idType)
+	}
+
+	raw, _ := os.ReadFile(path)
+	if strings.Contains(string(raw), "identity_type") {
+		t.Error("identity_type key should be removed from state file after clearing")
+	}
+}
+
+func TestIdentityTypeInLoadCredentials(t *testing.T) {
+	tmpDir := t.TempDir()
+	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
+	store.SaveCredentials("app1", "secret1", "", "", "")
+	store.SaveIdentityType("personal-bot")
+
+	creds, err := store.LoadCredentials()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if creds["identity_type"] != "personal-bot" {
+		t.Errorf("expected identity_type=personal-bot, got %s", creds["identity_type"])
+	}
+}
+
+func TestIdentityTypeProfileIsolation(t *testing.T) {
+	tmpDir := t.TempDir()
+	storeAlpha, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "alpha")
+	storeBeta, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "beta")
+
+	storeAlpha.SaveIdentityType("personal-bot")
+
+	alphaType, _ := storeAlpha.LoadIdentityType()
+	betaType, _ := storeBeta.LoadIdentityType()
+	if alphaType != "personal-bot" {
+		t.Errorf("alpha: expected personal-bot, got %s", alphaType)
+	}
+	if betaType != "" {
+		t.Errorf("beta: expected empty identity type, got %s", betaType)
 	}
 }

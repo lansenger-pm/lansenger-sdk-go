@@ -32,6 +32,8 @@ const (
 	TodoTypeApproval     = 2
 )
 
+var ValidIdentityTypes = []string{"personal-bot", "org-app", "org-bot"}
+
 var AppToMsgMediaType = map[string]int{
 	AppMediaTypeVideo: MediaTypeVideo, // "video" → 1
 	AppMediaTypeImage: MediaTypeImage, // "image" → 2

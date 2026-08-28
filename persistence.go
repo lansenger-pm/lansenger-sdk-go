@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -61,6 +62,7 @@ type profileData struct {
 	UserTokenExpiresAt    int64                     `json:"user_token_expiry"`
 	RefreshTokenExpiresAt int64                     `json:"refresh_token_expiry"`
 	StaffID               string                    `json:"staff_id"`
+	IdentityType          string                    `json:"identity_type,omitempty"`
 	UserTokens            map[string]userTokenEntry `json:"user_tokens,omitempty"`
 }
 
@@ -79,6 +81,7 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 		UserToken             string                    `json:"user_token"`
 		RefreshToken          string                    `json:"refresh_token"`
 		StaffID               string                    `json:"staff_id"`
+		IdentityType          string                    `json:"identity_type"`
 		UserTokens            map[string]userTokenEntry `json:"user_tokens"`
 		UserTokenExpiry       *int64                    `json:"user_token_expiry"`
 		UserTokenExpiresAt    *int64                    `json:"user_token_expires_at"`
@@ -104,6 +107,7 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 	p.UserToken = raw.UserToken
 	p.RefreshToken = raw.RefreshToken
 	p.StaffID = raw.StaffID
+	p.IdentityType = raw.IdentityType
 	if raw.UserTokens != nil {
 		p.UserTokens = raw.UserTokens
 	}
@@ -303,6 +307,7 @@ func (cs *CredentialStore) LoadCredentials() (map[string]string, error) {
 		"redirect_uri":    profile.RedirectURI,
 		"encoding_key":    profile.EncodingKey,
 		"callback_token":  profile.CallbackToken,
+		"identity_type":   profile.IdentityType,
 	}, nil
 }
 
@@ -341,6 +346,56 @@ func (cs *CredentialStore) SaveCallbackConfig(encodingKey, callbackToken string)
 	profile := sd.Profiles[cs.profile]
 	profile.EncodingKey = encodingKey
 	profile.CallbackToken = callbackToken
+	sd.Profiles[cs.profile] = profile
+	sd.ActiveProfile = cs.profile
+
+	return cs.saveUnlocked(sd)
+}
+
+func isValidIdentityType(identityType string) bool {
+	for _, t := range ValidIdentityTypes {
+		if t == identityType {
+			return true
+		}
+	}
+	return false
+}
+
+func (cs *CredentialStore) LoadIdentityType() (string, error) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.ensureMigrated()
+
+	sd, err := cs.loadUnlocked()
+	if err != nil {
+		return "", err
+	}
+
+	profile, ok := sd.Profiles[cs.profile]
+	if !ok {
+		return "", nil
+	}
+
+	return profile.IdentityType, nil
+}
+
+func (cs *CredentialStore) SaveIdentityType(identityType string) error {
+	identityType = strings.TrimSpace(identityType)
+	if identityType != "" && !isValidIdentityType(identityType) {
+		return fmt.Errorf("invalid identity_type %q, valid values: %s", identityType, strings.Join(ValidIdentityTypes, ", "))
+	}
+
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.ensureMigrated()
+
+	sd, err := cs.loadUnlocked()
+	if err != nil {
+		sd = &storeData{Profiles: map[string]profileData{}, ActiveProfile: DefaultProfile}
+	}
+
+	profile := sd.Profiles[cs.profile]
+	profile.IdentityType = identityType
 	sd.Profiles[cs.profile] = profile
 	sd.ActiveProfile = cs.profile
 

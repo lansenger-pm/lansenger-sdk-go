@@ -484,6 +484,7 @@ client, err := lansenger.NewClientFromEnv()
 // 自動持久化到 ~/.lansenger/sdk_state.json（0600 權限）
 store := lansenger.NewCredentialStore("", "default")
 store.SaveCredentials("app_id", "app_secret", "https://your-gateway.example.com", "https://your-passport.example.com")
+store.SaveIdentityType("personal-bot")  // 可選：憑證身份類型 — personal-bot（個人機器人）/ org-app（組織應用）/ org-bot（組織機器人）
 store.SaveCallbackConfig("encoding_key", "callback_token")
 
 // 儲存令牌

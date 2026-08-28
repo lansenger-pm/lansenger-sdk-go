@@ -126,9 +126,10 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 		"encoding_key":    true,
 		"callback_token":  true,
 		"redirect_uri":    true,
+		"identity_type":   true,
 	}
 	if !validKeys[key] {
-		fmt.Fprintf(os.Stderr, "Error: Invalid config key '%s'. Valid keys: app_id, app_secret, api_gateway_url, passport_url, redirect_uri, encoding_key, callback_token\n", key)
+		fmt.Fprintf(os.Stderr, "Error: Invalid config key '%s'. Valid keys: app_id, app_secret, api_gateway_url, passport_url, redirect_uri, encoding_key, callback_token, identity_type\n", key)
 		os.Exit(1)
 	}
 
@@ -137,6 +138,27 @@ func runConfigSet(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "Error creating credential store: %v\n", err)
 		os.Exit(1)
 	}
+
+	if key == "identity_type" {
+		trimmed := strings.TrimSpace(value)
+		if trimmed != "" && !validIdentityType(trimmed) {
+			fmt.Fprintf(os.Stderr, "Error: Invalid identity_type '%s'. Valid values: %s\n", trimmed, strings.Join(lansenger.ValidIdentityTypes, ", "))
+			os.Exit(1)
+		}
+		if err := store.SaveIdentityType(trimmed); err != nil {
+			fmt.Fprintf(os.Stderr, "Error saving identity type: %v\n", err)
+			os.Exit(1)
+		}
+		result := map[string]interface{}{
+			"profile": prof,
+			"key":     key,
+			"value":   trimmed,
+			"status":  "set",
+		}
+		outputResult(result)
+		return
+	}
+
 	creds, err := store.LoadCredentials()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading credentials: %v\n", err)
@@ -173,6 +195,15 @@ func maskIfSecret(key, value string) string {
 	return value
 }
 
+func validIdentityType(val string) bool {
+	for _, t := range lansenger.ValidIdentityTypes {
+		if t == val {
+			return true
+		}
+	}
+	return false
+}
+
 func runConfigShow(cmd *cobra.Command, args []string) {
 	prof := resolveProfile(configShowProfile)
 	store, err := lansenger.NewCredentialStore("", prof)
@@ -199,13 +230,14 @@ func runConfigShow(cmd *cobra.Command, args []string) {
 		"passport_url":       creds["passport_url"],
 		"encoding_key":       maskSecret(creds["encoding_key"]),
 		"callback_token":     maskSecret(creds["callback_token"]),
+		"identity_type":      creds["identity_type"],
 		"store_path":         storePath,
 	}
 
 	if !jsonOutput {
 		fmt.Printf("%-20s %s\n", "Field", "Value")
 		fmt.Printf("%-20s %s\n", strings.Repeat("━", 20), strings.Repeat("━", 60))
-		keys := []string{"profile", "has_credentials", "app_id", "app_secret", "api_gateway_url", "passport_url", "encoding_key", "callback_token", "store_path"}
+		keys := []string{"profile", "has_credentials", "app_id", "app_secret", "api_gateway_url", "passport_url", "encoding_key", "callback_token", "identity_type", "store_path"}
 		for _, k := range keys {
 			v := result[k]
 			fmt.Printf("%-20s %s\n", k, fmtVal(v))
@@ -298,8 +330,8 @@ func runConfigListProfiles(cmd *cobra.Command, args []string) {
 			fmt.Println("No profiles found.")
 			return
 		}
-		fmt.Printf("%-4s  %-20s  %-8s  %-50s  %-50s\n", "Act", "Profile", "Creds", "App ID", "API Gateway URL")
-		fmt.Printf("%-4s  %-20s  %-8s  %-50s  %-50s\n", strings.Repeat("━", 4), strings.Repeat("━", 20), strings.Repeat("━", 8), strings.Repeat("━", 50), strings.Repeat("━", 50))
+		fmt.Printf("%-4s  %-20s  %-8s  %-18s  %-50s  %-50s\n", "Act", "Profile", "Creds", "Type", "App ID", "API Gateway URL")
+		fmt.Printf("%-4s  %-20s  %-8s  %-18s  %-50s  %-50s\n", strings.Repeat("━", 4), strings.Repeat("━", 20), strings.Repeat("━", 8), strings.Repeat("━", 18), strings.Repeat("━", 50), strings.Repeat("━", 50))
 		for _, p := range profiles {
 			pStore, storeErr := lansenger.NewCredentialStore("", p)
 			if storeErr != nil {
@@ -316,7 +348,12 @@ func runConfigListProfiles(cmd *cobra.Command, args []string) {
 			}
 			appID := creds["app_id"]
 			gwURL := creds["api_gateway_url"]
-			fmt.Printf("%-4s  %-20s  %-8s  %-50s  %-50s\n", active, p, hasCreds, appID, gwURL)
+			idType := creds["identity_type"]
+			typeCol := "type=-"
+			if idType != "" {
+				typeCol = "type=" + idType
+			}
+			fmt.Printf("%-4s  %-20s  %-8s  %-18s  %-50s  %-50s\n", active, p, hasCreds, typeCol, appID, gwURL)
 		}
 		return
 	}
@@ -330,10 +367,16 @@ func runConfigListProfiles(cmd *cobra.Command, args []string) {
 		creds, _ := pStore.LoadCredentials()
 		isActive := p == activeProfile
 		hasCreds := pStore.HasCredentials()
+		idType := creds["identity_type"]
+		typeVal := idType
+		if typeVal == "" {
+			typeVal = "-"
+		}
 		items = append(items, map[string]interface{}{
 			"profile":          p,
 			"active":           isActive,
 			"has_credentials":  hasCreds,
+			"type":             typeVal,
 			"app_id":           creds["app_id"],
 			"api_gateway_url":  creds["api_gateway_url"],
 		})

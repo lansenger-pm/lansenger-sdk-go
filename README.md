@@ -484,6 +484,7 @@ By default, credentials and tokens stay in memory only (lost on process exit). E
 // Auto-persist to ~/.lansenger/sdk_state.json (0600 permissions)
 store := lansenger.NewCredentialStore("", "default")
 store.SaveCredentials("app_id", "app_secret", "https://your-gateway.example.com", "https://your-passport.example.com")
+store.SaveIdentityType("personal-bot")  // optional: credential identity type — personal-bot / org-app / org-bot
 store.SaveCallbackConfig("encoding_key", "callback_token")
 
 // Save tokens
