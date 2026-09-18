@@ -180,6 +180,10 @@ var APIEndpoints = map[string]map[string]string{
 		"executor_delete":         "/xtra/task/unified/v1/todotask/executor/delete",
 		"executor_list_fetch":     "/xtra/task/unified/v1/todotask/executor/list/fetch",
 	},
+	"notices": {
+		"send":           "/xtra/notice/server/openapi/v1/send",
+		"accounts_fetch": "/xtra/notice/server/openapi/v1/notice/account",
+	},
 	"websocket": {
 		"endpoint": "/v1/ws/endpoint/create",
 	},

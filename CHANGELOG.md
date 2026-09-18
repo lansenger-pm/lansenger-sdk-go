@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.13.0] - 2026-09-17
+
+### Added
+
+- **notices**: `SendNotice(ctx, *NoticeSendParams)` — 通知系统 `/xtra/notice/server/openapi/v1/send`，通过官方账号发送通知。`NoticeSendParams` 覆盖文本/链接内容、手机号（≤10）/staffId+部门（≤200）投放、三态标志（`*int`：nil=省略，服务端默认生效）与提醒策略。
+- **notices**: `FetchNoticeAccounts(ctx, orgID, userToken)` — 查询组织官方账号列表（`code` 字段即发送所需的 accountCode）。
+- **cli**: `notice send` / `notice accounts` 子命令（`cmd_notice.go`）；JSON 参数走 `parseJSONRaw`，三态 flag 以 `-1` 为省略哨兵。
+- **notices**: 实测（stage 2026-09-17）服务端对缺失 `remindStatus`、以及 range 对象内缺失/为 null 的 `ccRangeList` 均无空值保护（报 `errCode=-1 unknown exception`），SDK 自动兜底：`remindStatus=0`、`ccRangeList=[]` 强制下发（nil 切片归一为空数组）。
+- **test**: `notices_test.go` 4 个用例（手机号/OPENID 成功、API 错误、账号列表）+ `mockJSONArrayHandler` 测试助手。
+
+---
+
 ## [0.12.0] - 2026-08-28
 
 ### Added

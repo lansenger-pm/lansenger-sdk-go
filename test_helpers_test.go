@@ -44,6 +44,19 @@ func mockAPIResponseHandler(errCode int, errMsg string, data map[string]interfac
 	}
 }
 
+// mockJSONArrayHandler mirrors mockAPIResponseHandler for endpoints whose
+// `data` field is a JSON array rather than an object.
+func mockJSONArrayHandler(errCode int, errMsg string, data []interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"errCode": errCode,
+			"errMsg":  errMsg,
+			"data":    data,
+		})
+	}
+}
+
 func mockErrorHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)

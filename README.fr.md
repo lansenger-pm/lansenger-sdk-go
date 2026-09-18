@@ -36,6 +36,7 @@ Les trois types de robots utilisent le même mécanisme d'authentification : `ap
 - **Groupes V2** — créer, infos, membres, liste, vérification de membership, mise à jour des paramètres & membres, dissoudre
 - **Calendrier & planification** — calendrier principal, CRUD de planification, gestion des participants, mise à jour des métadonnées des participants, update_schedule_attendees()
 - **Todo unifié** — créer, mettre à jour, supprimer, interroger, gestion des exécutants, comptes de statut
+- **Notices (通知系统)** — envoyer des notifications via un compte officiel (texte/lien, ciblage téléphone/staff, confirmation/rappels, pièces jointes), lister les comptes officiels
 - **Commandes de bot** — créer/gérer les entrées de commande de bot
 - **Applications personnelles** — gérer les bots personnels
 - **Événements de callback** — 24 types d'événements, analyse de données structurées, vérification de signature
@@ -593,6 +594,7 @@ lansenger-sdk-go/
 ├── streaming.go         # Messages en streaming SSE
 ├── media.go             # Upload/download de fichiers & images
 ├── todos.go             # Todo unifié (4.33) — 12 endpoints
+├── notices.go             # Notifications (通知系统)
 ├── calendars.go         # Calendrier & planification (4.23) — 10 endpoints
 ├── callbacks.go         # Analyse d'événements de callback + déchiffrement AES-256-CBC + vérification de signature SHA1
 ├── persistence.go       # CredentialStore — persistance dans fichier JSON

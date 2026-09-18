@@ -673,3 +673,29 @@ type ChatMessagesResult struct {
 	Error       string                 `json:"error"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
+
+type NoticeSendResult struct {
+	Success         bool                   `json:"success"`
+	NoticeCode      string                 `json:"notice_code"`
+	NoticeID        int                    `json:"notice_id"`
+	Title           string                 `json:"title"`
+	NoticeType      int                    `json:"notice_type"`
+	ContentType     int                    `json:"content_type"`
+	ContentAbstract string                 `json:"content_abstract"`
+	NoticeLink      string                 `json:"notice_link"`
+	NoticeStatus    int                    `json:"notice_status"`
+	ConfirmStatus   int                    `json:"confirm_status"`
+	PublishTime     int64                  `json:"publish_time"`
+	PublishUserID   string                 `json:"publish_user_id"`
+	PublishUserName string                 `json:"publish_user_name"`
+	Error           string                 `json:"error"`
+	RawResponse     map[string]interface{} `json:"raw_response"`
+}
+
+type NoticeAccountListResult struct {
+	Success     bool                     `json:"success"`
+	Total       int                      `json:"total"`
+	Accounts    []map[string]interface{} `json:"accounts"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
