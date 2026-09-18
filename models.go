@@ -699,3 +699,133 @@ type NoticeAccountListResult struct {
 	Error       string                   `json:"error"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
+
+type QuestionnaireSaveResult struct {
+	Success           bool                   `json:"success"`
+	QuestionnaireCode string                 `json:"questionnaire_code"`
+	Error             string                 `json:"error"`
+	RawResponse       map[string]interface{} `json:"raw_response"`
+}
+
+type QuestionnaireQuestionSaveResult struct {
+	Success     bool                   `json:"success"`
+	SavedCount  int                    `json:"saved_count"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type QuestionnaireQuestionDeleteResult struct {
+	Success     bool                   `json:"success"`
+	Deleted     bool                   `json:"deleted"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type QuestionnaireOpResult struct {
+	Success     bool                   `json:"success"`
+	Done        bool                   `json:"done"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type QuestionnaireDetailResult struct {
+	Success         bool                     `json:"success"`
+	QuestionnaireID int                      `json:"questionnaire_id"`
+	Code            string                   `json:"code"`
+	Title           string                   `json:"title"`
+	Status          int                      `json:"status"`
+	AccountType     int                      `json:"account_type"`
+	AccountCode     string                   `json:"account_code"`
+	AnswerUserCount int                      `json:"answer_user_count"`
+	AnswerUserTimes int                      `json:"answer_user_times"`
+	QuestionCount   int                      `json:"question_count"`
+	Questions       []map[string]interface{} `json:"questions"`
+	PublishTime     int64                    `json:"publish_time"`
+	PublishUserName string                   `json:"publish_user_name"`
+	CreateUserName  string                   `json:"create_user_name"`
+	CreateTime      int64                    `json:"create_time"`
+	Error           string                   `json:"error"`
+	RawResponse     map[string]interface{}   `json:"raw_response"`
+}
+
+type QuestionnaireAnswerUrlResult struct {
+	Success     bool                   `json:"success"`
+	URL         string                 `json:"url"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type QuestionnaireCopyResult struct {
+	Success     bool                   `json:"success"`
+	NewCode     string                 `json:"new_code"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type QuestionnaireQueryListResult struct {
+	Success     bool                     `json:"success"`
+	Total       int                      `json:"total"`
+	Items       []map[string]interface{} `json:"items"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type QuestionnaireAccountListResult struct {
+	Success     bool                     `json:"success"`
+	Total       int                      `json:"total"`
+	Accounts    []map[string]interface{} `json:"accounts"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type QuestionnairePageResult struct {
+	Success     bool                     `json:"success"`
+	PageNo      int                      `json:"page_no"`
+	PageSize    int                      `json:"page_size"`
+	Pages       int                      `json:"pages"`
+	Total       int                      `json:"total"`
+	HasMore     bool                     `json:"has_more"`
+	Items       []map[string]interface{} `json:"items"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type QuestionnaireAnswerDetailResult struct {
+	Success             bool                     `json:"success"`
+	AnswerCode          string                   `json:"answer_code"`
+	AnswerUserID        string                   `json:"answer_user_id"`
+	AnswerUserName      string                   `json:"answer_user_name"`
+	AnswerStatus        int                      `json:"answer_status"`
+	AnswerType          int                      `json:"answer_type"`
+	AnswerUseTime       int64                    `json:"answer_use_time"`
+	AnswerQuestionCount int                      `json:"answer_question_count"`
+	AnswerCommitTime    int64                    `json:"answer_commit_time"`
+	Questionnaire       map[string]interface{}   `json:"questionnaire"`
+	Questions           []map[string]interface{} `json:"questions"`
+	Answers             map[string]interface{}   `json:"answers"`
+	Error               string                   `json:"error"`
+	RawResponse         map[string]interface{}   `json:"raw_response"`
+}
+
+type QuestionnaireRecordResult struct {
+	Success             bool                   `json:"success"`
+	RecordID            int                    `json:"record_id"`
+	RecordCode          string                 `json:"record_code"`
+	AnswerUserID        string                 `json:"answer_user_id"`
+	AnswerUserName      string                 `json:"answer_user_name"`
+	AnswerStatus        int                    `json:"answer_status"`
+	AnswerType          int                    `json:"answer_type"`
+	AnswerUseTime       int64                  `json:"answer_use_time"`
+	AnswerQuestionCount int                    `json:"answer_question_count"`
+	AnswerCommitTime    int64                  `json:"answer_commit_time"`
+	StatsStatus         int                    `json:"stats_status"`
+	Error               string                 `json:"error"`
+	RawResponse         map[string]interface{} `json:"raw_response"`
+}
+
+type QuestionnaireUploadUrlResult struct {
+	Success     bool                   `json:"success"`
+	URL         string                 `json:"url"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}

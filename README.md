@@ -37,6 +37,7 @@ All three bot types use the same auth mechanism: `appToken` is required for ever
 - **Calendar & schedule** — primary calendar, schedule CRUD, attendee management, attendee metadata update, update_schedule_attendees()
 - **Unified todo** — create, update, delete, query, executor management, status counts
 - **Notices (通知系统)** — send official-account notices (text/link content, phone/staff targeting, confirm/forward/reply flags, reminder policies, attachments), query org official accounts
+- **Questionnaires (问卷系统)** — create/update/publish/withdraw/finish/delete questionnaires, batch question management, office-account & created/participated lists (paged), answer records and export, presigned upload URL
 - **Bot slash commands** (4.37) — create/query/delete Command entries for bot interaction menus
 - **Personal apps** (4.38) — create/update/query/delete/list personal bots with user token
 - **Callback events** — 24 event types, structured data parsing, signature verification
@@ -595,6 +596,7 @@ lansenger-sdk-go/
 ├── media.go             # Upload/download files & images
 ├── todos.go             # Unified todo (4.33) — 12 endpoints
 ├── notices.go             # Notice (通知系统)
+├── questionnaires.go      # Questionnaire (问卷系统)
 ├── calendars.go         # Calendar & schedule (4.23) — 10 endpoints
 ├── callbacks.go         # Callback event parsing + AES-256-CBC decryption + SHA1 signature verification
 ├── persistence.go       # CredentialStore — JSON file persistence

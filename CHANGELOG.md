@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.0] - 2026-09-18
+
+### Added
+
+- **questionnaires**: 问卷系统 `/xtra/questionnaire/server/openapi/v1/` 全部 22 个端点 — `SaveQuestionnaire(ctx, *QuestionnaireSaveParams)`、`SaveQuestionnaireQuestions`（16 题型 dict 透传）、`PublishQuestionnaire(ctx, *QuestionnairePublishParams)`、生命周期（withdraw/finish/delete）、详情与批量查询、官方账号与三个分页列表、答卷分析五件套、预签名上传地址（PUT + Content-MD5）。
+- **cli**: `questionnaire` 命令组 22 个子命令（`cmd_questionnaire.go`）；删除类接入 `confirmHighRisk`。
+- **test**: `questionnaires_test.go`（管理/分页/账号/上传 mock 用例）。
+
+---
+
 ## [0.13.0] - 2026-09-17
 
 ### Added
