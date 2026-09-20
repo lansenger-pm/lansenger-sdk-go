@@ -31,6 +31,7 @@ var (
 	pTodoResources       string
 	pTodoReminds         string
 	pTodoUserToken       string
+	pTodoCreateUserID    string
 	pTodoUpdateFields    string
 	pTodoSubject         string
 	pTodoAppID           string
@@ -91,6 +92,8 @@ var personalTodoUpdateCmd = &cobra.Command{
 			Description:  pTodoDescription,
 			DueTime:      int64PtrOrNil(pTodoDueTime),
 			Priority:     intPtrOrNil(pTodoPriority),
+			CreateUserID: pTodoCreateUserID,
+			AppID:        pTodoAppID,
 			Executors:    parseJSONListFlag(pTodoExecutors, "--executors"),
 			Copys:        parseJSONListFlag(pTodoCopys, "--copys"),
 			Resources:    parseJSONListFlag(pTodoResources, "--resources"),
@@ -193,6 +196,10 @@ func init() {
 	personalTodoUpdateCmd.Flags().StringVar(&pTodoUpdateFields, "update-fields", "", "Comma-separated fields to update")
 	personalTodoUpdateCmd.Flags().StringVar(&pTodoSubject, "subject", "", "New subject")
 	personalTodoUpdateCmd.Flags().StringVar(&pTodoDescription, "description", "", "New description")
+	personalTodoUpdateCmd.Flags().StringVar(&pTodoCreateUserID, "create-user-id", "", "Creator staff ID")
+	personalTodoUpdateCmd.Flags().StringVar(&pTodoAppID, "appid", "", "Application ID")
+	_ = personalTodoUpdateCmd.MarkFlagRequired("create-user-id")
+	_ = personalTodoUpdateCmd.MarkFlagRequired("appid")
 	personalTodoUpdateCmd.Flags().Int64Var(&pTodoDueTime, "due-time", -1, "New due time")
 	personalTodoUpdateCmd.Flags().IntVar(&pTodoPriority, "priority", -1, "New priority")
 	personalTodoUpdateCmd.Flags().StringVar(&pTodoExecutors, "executors", "", "JSON list of executors")

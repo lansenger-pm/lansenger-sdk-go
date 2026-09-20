@@ -116,7 +116,7 @@ func TestUpdatePersonalTodoTopLevelOrgID(t *testing.T) {
 
 	result, err := newTestClient(s).UpdatePersonalTodo(context.Background(), &PersonalTodoUpdateParams{
 		TodoCode: "TASK001", OrgID: "org1", UpdateFields: []string{"subject"},
-		Subject: "新主题",
+		Subject: "新主题", CreateUserID: "u1", AppID: "app1",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -130,6 +130,9 @@ func TestUpdatePersonalTodoTopLevelOrgID(t *testing.T) {
 	content, _ := body["updateContent"].(map[string]interface{})
 	if content["subject"] != "新主题" || content["orgId"] != nil {
 		t.Fatalf("unexpected update content: %+v", content)
+	}
+	if content["createUserId"] != "u1" || content["appid"] != "app1" {
+		t.Fatalf("identity fields missing from update content: %+v", content)
 	}
 }
 

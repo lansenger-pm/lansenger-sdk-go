@@ -182,6 +182,12 @@ func (c *LansengerClient) UpdatePersonalTodo(ctx context.Context, p *PersonalTod
 	if len(p.UpdateFields) == 0 {
 		return &PersonalTodoSaveResult{Success: false, Error: "update_fields is required"}, nil
 	}
+	if p.CreateUserID == "" {
+		return &PersonalTodoSaveResult{Success: false, Error: "create_user_id is required"}, nil
+	}
+	if p.AppID == "" {
+		return &PersonalTodoSaveResult{Success: false, Error: "appid is required"}, nil
+	}
 
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -224,18 +230,14 @@ func (c *LansengerClient) UpdatePersonalTodo(ctx context.Context, p *PersonalTod
 	if required("subscribeStatus") && p.SubscribeStatus != nil {
 		updateContent["subscribeStatus"] = *p.SubscribeStatus
 	}
-	if required("createUserId") && p.CreateUserID != "" {
-		updateContent["createUserId"] = p.CreateUserID
-	}
 	if required("groupId") && p.GroupID != "" {
 		updateContent["groupId"] = p.GroupID
 	}
 	if required("groupCategoryCode") && p.GroupCategoryCode != "" {
 		updateContent["groupCategoryCode"] = p.GroupCategoryCode
 	}
-	if required("appid") && p.AppID != "" {
-		updateContent["appid"] = p.AppID
-	}
+	updateContent["createUserId"] = p.CreateUserID
+	updateContent["appid"] = p.AppID
 	if required("executors") && len(p.Executors) > 0 {
 		updateContent["executors"] = p.Executors
 	}
