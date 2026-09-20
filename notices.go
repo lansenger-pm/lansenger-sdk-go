@@ -59,6 +59,16 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 	if p == nil {
 		return &NoticeSendResult{Success: false, Error: "params is required"}, nil
 	}
+
+	userToken := p.UserToken
+	if userToken == "" {
+		userToken = getDefaultUserToken()
+	}
+	createUserID := p.CreateUserID
+	if createUserID == "" {
+		createUserID = getDefaultUserID()
+	}
+
 	if p.Title == "" {
 		return &NoticeSendResult{Success: false, Error: "title is required"}, nil
 	}
@@ -84,7 +94,7 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 		if len(p.ReleasePhones) > 10 || len(p.CCPhones) > 10 {
 			return &NoticeSendResult{Success: false, Error: "release_phones and cc_phones allow at most 10 numbers"}, nil
 		}
-		if p.CreateMobile == "" && p.UserToken == "" {
+		if p.CreateMobile == "" && userToken == "" {
 			return &NoticeSendResult{Success: false, Error: "create_mobile is required when user_token is not provided"}, nil
 		}
 	}
@@ -95,7 +105,7 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 		if len(p.ReleaseRange) > 200 || len(p.CCStaffIDs) > 200 {
 			return &NoticeSendResult{Success: false, Error: "release_range and cc_staff_ids allow at most 200 entries"}, nil
 		}
-		if p.CreateUserID == "" && p.UserToken == "" {
+		if createUserID == "" && userToken == "" {
 			return &NoticeSendResult{Success: false, Error: "create_user_id is required when user_token is not provided"}, nil
 		}
 	}
@@ -105,7 +115,7 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "notices", "send", token, WithUserToken(p.UserToken))
+	url := BuildAPIURL(c.config, "notices", "send", token, WithUserToken(userToken))
 
 	body := map[string]interface{}{
 		"title":       p.Title,
@@ -153,8 +163,8 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 	if p.CreateMobile != "" {
 		body["createMobile"] = p.CreateMobile
 	}
-	if p.CreateUserID != "" {
-		body["createUserId"] = p.CreateUserID
+	if createUserID != "" {
+		body["createUserId"] = createUserID
 	}
 	if len(p.ResourceList) > 0 {
 		body["resourceList"] = p.ResourceList

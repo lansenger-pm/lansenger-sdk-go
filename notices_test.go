@@ -122,6 +122,57 @@ func TestSendNoticeDefaultRemindStatus(t *testing.T) {
 	}
 }
 
+func TestSendNoticeUsesDefaultIdentity(t *testing.T) {
+	previousToken := getDefaultUserToken()
+	previousID := getDefaultUserID()
+	defer func() {
+		SetDefaultUserToken(previousToken)
+		SetDefaultUserID(previousID)
+	}()
+	SetDefaultUserToken("default-user-token")
+	SetDefaultUserID("default-staff")
+
+	var gotToken string
+	var gotBody map[string]interface{}
+	b := newMuxBuilder().handleToken("tok1")
+	b.mux.HandleFunc("/xtra/notice/server/openapi/v1/send", func(w http.ResponseWriter, r *http.Request) {
+		gotToken = r.URL.Query().Get("user_token")
+		raw, _ := io.ReadAll(r.Body)
+		json.Unmarshal(raw, &gotBody)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"errCode": 0, "errMsg": "ok",
+			"data": map[string]interface{}{"code": "NTC_DEFAULT"},
+		})
+	})
+	server := b.build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.SendNotice(context.Background(), &NoticeSendParams{
+		Title:       "t",
+		ContentType: 1,
+		AccountCode: "ACC001",
+		UserType:    2,
+		Content:     "c",
+		ReleaseRange: []map[string]interface{}{
+			{"objId": "default-staff", "objName": "测试", "objType": 1},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success {
+		t.Fatalf("expected Success=true, got error=%s", result.Error)
+	}
+	if gotToken != "default-user-token" {
+		t.Fatalf("expected default user token in query, got %q", gotToken)
+	}
+	if gotBody["createUserId"] != "default-staff" {
+		t.Fatalf("expected default createUserId, got %v", gotBody["createUserId"])
+	}
+}
+
 func TestSendNoticeAPIError(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
@@ -131,13 +182,13 @@ func TestSendNoticeAPIError(t *testing.T) {
 
 	c := newTestClient(server)
 	result, err := c.SendNotice(context.Background(), &NoticeSendParams{
-		Title:        "t",
-		ContentType:  1,
-		AccountCode:  "ACC001",
-		UserType:     1,
-		Content:      "c",
+		Title:         "t",
+		ContentType:   1,
+		AccountCode:   "ACC001",
+		UserType:      1,
+		Content:       "c",
 		ReleasePhones: []string{"13800138000"},
-		CreateMobile: "13800138000",
+		CreateMobile:  "13800138000",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
