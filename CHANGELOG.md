@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.0] - 2026-09-18
+
+### Added
+
+- **boardrooms**: 会议室预定 V2 `/xtra/boardroom/server/openapi/v2/` 全部 11 个端点 — `FetchBoardroomList`（办公区/楼层/设备/时段筛选）、`FetchBoardroomDetail`、`FetchBoardroomSchedule`（当日预订+停用）、`FetchBoardroomReserveDetail`、`ReserveBoardroom` / `EditBoardroomReserve`（单次/重复）、`CancelBoardroomReserve` / `ConfirmBoardroomSign`、`FetchMyBoardroomReserves`、`FetchBoardroomGradings` / `FetchBoardroomAreaOffices`。
+- **cli**: `boardroom` 命令组 11 个子命令；`cancel` 接入 `confirmHighRisk`。
+- **test**: `boardrooms_test.go` mock 用例。
+
+---
+
 ## [0.14.0] - 2026-09-18
 
 ### Added

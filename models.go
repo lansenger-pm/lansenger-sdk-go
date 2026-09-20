@@ -829,3 +829,89 @@ type QuestionnaireUploadUrlResult struct {
 	Error       string                 `json:"error"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
+
+type BoardroomListResult struct {
+	Success     bool                     `json:"success"`
+	Count       int                      `json:"count"`
+	Items       []map[string]interface{} `json:"items"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type BoardroomDetailResult struct {
+	Success         bool   `json:"success"`
+	RoomID          string `json:"room_id"`
+	Name            string `json:"name"`
+	Status          string `json:"status"`
+	PeopleNum       int    `json:"people_num"`
+	CanReserveFlag  string `json:"can_reserve_flag"`
+	Address         string `json:"address"`
+	AreaName        string `json:"area_name"`
+	GradingID       string `json:"grading_id"`
+	Error           string `json:"error"`
+	RawResponse     map[string]interface{} `json:"raw_response"`
+}
+
+type BoardroomScheduleResult struct {
+	Success        bool                     `json:"success"`
+	RoomID         string                   `json:"room_id"`
+	Name           string                   `json:"name"`
+	PeopleNum      int                      `json:"people_num"`
+	CanReserveFlag string                   `json:"can_reserve_flag"`
+	Reserves       []map[string]interface{} `json:"reserves"`
+	Deactivations  []map[string]interface{} `json:"deactivations"`
+	Error          string                   `json:"error"`
+	RawResponse    map[string]interface{}   `json:"raw_response"`
+}
+
+type BoardroomReserveDetailResult struct {
+	Success         bool   `json:"success"`
+	ReserveID       string `json:"reserve_id"`
+	BoardroomName   string `json:"boardroom_name"`
+	MeetingName     string `json:"meeting_name"`
+	Status          string `json:"status"`
+	ReserveTimeStart string `json:"reserve_time_start"`
+	ReserveTimeEnd  string `json:"reserve_time_end"`
+	ReserveTime     string `json:"reserve_time"`
+	ReserveUserName string `json:"reserve_user_name"`
+	PeopleNumber    string `json:"people_number"`
+	Error           string `json:"error"`
+	RawResponse     map[string]interface{} `json:"raw_response"`
+}
+
+type BoardroomReserveResult struct {
+	Success         bool   `json:"success"`
+	ReserveID       string `json:"reserve_id"`
+	ReserveCode     string `json:"reserve_code"`
+	BoardroomName   string `json:"boardroom_name"`
+	MeetingName     string `json:"meeting_name"`
+	Status          string `json:"status"`
+	ReserveTimeStart string `json:"reserve_time_start"`
+	ReserveTimeEnd  string `json:"reserve_time_end"`
+	ReserveTime     string `json:"reserve_time"`
+	Error           string `json:"error"`
+	RawResponse     map[string]interface{} `json:"raw_response"`
+}
+
+type BoardroomOpResult struct {
+	Success     bool                   `json:"success"`
+	Done        bool                   `json:"done"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type BoardroomGradingListResult struct {
+	Success     bool                     `json:"success"`
+	Total       int                      `json:"total"`
+	Gradings    []map[string]interface{} `json:"gradings"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type BoardroomAreaListResult struct {
+	Success     bool                     `json:"success"`
+	Total       int                      `json:"total"`
+	Areas       []map[string]interface{} `json:"areas"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}

@@ -49,7 +49,7 @@ func TestGuessMediaTypeFile(t *testing.T) {
 func TestAPIEndpointsStructure(t *testing.T) {
 	categories := []string{"auth", "oauth", "users", "staffs", "org", "departments",
 		"groups", "messages", "bot", "sse", "medias", "chats",
-		"calendars", "todo", "websocket", "notices", "questionnaires"}
+		"calendars", "todo", "websocket", "notices", "questionnaires", "boardrooms"}
 	for _, cat := range categories {
 		if APIEndpoints[cat] == nil {
 			t.Errorf("expected APIEndpoints category '%s' to exist", cat)

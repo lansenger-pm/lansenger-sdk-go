@@ -40,6 +40,21 @@ const (
 	QuestionnaireScopePublic          = 2
 	QuestionnaireAnswerLimitOnce      = 1
 	QuestionnaireAnswerLimitUnlimited = -1
+
+	BoardroomStatusApproving    = 0
+	BoardroomStatusPendingSign  = 1
+	BoardroomStatusSignTimeout  = 2
+	BoardroomStatusRejected     = 3
+	BoardroomStatusCanceled     = 4
+	BoardroomStatusReserved     = 5
+	BoardroomStatusFinished     = 6
+	BoardroomReserveTypeSingle  = "0"
+	BoardroomReserveTypeRepeat  = "1"
+	BoardroomEditTypeCurrent    = "1"
+	BoardroomEditTypeCurrentAndAfter = "2"
+	BoardroomCancelTypeCurrent  = "1"
+	BoardroomCancelTypeCurrentAndAfter = "2"
+	BoardroomCancelTypeAllUnfinished = "3"
 )
 
 var ValidIdentityTypes = []string{"personal-bot", "org-app", "org-bot"}
@@ -217,6 +232,19 @@ var APIEndpoints = map[string]map[string]string{
 		"answer_data":         "/xtra/questionnaire/server/openapi/v1/answerData",
 		"last_answer_record":  "/xtra/questionnaire/server/openapi/v1/lastAnswerRecord",
 		"upload_url":          "/xtra/questionnaire/server/openapi/v1/upload",
+	},
+	"boardrooms": {
+		"room_list":        "/xtra/boardroom/server/openapi/v2/roomList",
+		"room_detail":      "/xtra/boardroom/server/openapi/v2/roomDetail",
+		"room_schedule":    "/xtra/boardroom/server/openapi/v2/roomSchedule",
+		"reserve_detail":   "/xtra/boardroom/server/openapi/v2/reserveDetail",
+		"reserve_room":     "/xtra/boardroom/server/openapi/v2/reserveRoom",
+		"edit_reserve":     "/xtra/boardroom/server/openapi/v2/editReserve",
+		"reserve_cancel":   "/xtra/boardroom/server/openapi/v2/reserveCancel",
+		"confirm_sign":     "/xtra/boardroom/server/openapi/v2/confirmSign",
+		"my_reserve_list":  "/xtra/boardroom/server/openapi/v2/myReserveList",
+		"grading_list":     "/xtra/boardroom/server/openapi/v2/gradingList",
+		"area_office_list": "/xtra/boardroom/server/openapi/v2/areaOfficeList",
 	},
 	"websocket": {
 		"endpoint": "/v1/ws/endpoint/create",
