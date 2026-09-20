@@ -173,7 +173,9 @@ var boardroomGradingsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchBoardroomGradings(context.Background(), "", "", brUserToken)
+		result, err := client.FetchBoardroomGradings(
+			context.Background(), brGradingsUserID, brGradingsOrgID, brUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"total", "gradings"})
 	},
@@ -194,6 +196,7 @@ var boardroomAreaOfficesCmd = &cobra.Command{
 var (
 	brGradingID, brAreaOfficeID, brFloorIDs, brEquipment                  string
 	brTimeStart, brTimeEnd, brQueryDate, brUserToken                      string
+	brGradingsUserID, brGradingsOrgID                                     string
 	brPage, brLimit                                                       int
 	brScheduleGradingID                                                   string
 	brReserveDetailGradingID                                              string
@@ -277,6 +280,8 @@ func init() {
 	boardroomMyReservesCmd.Flags().StringVar(&brUserToken, "user-token", "", "User token")
 
 	boardroomGradingsCmd.Flags().StringVar(&brUserToken, "user-token", "", "User token")
+	boardroomGradingsCmd.Flags().StringVar(&brGradingsUserID, "user-id", "", "User ID (omit when --as/--user-token is set)")
+	boardroomGradingsCmd.Flags().StringVar(&brGradingsOrgID, "org-id", "", "Organization ID (omit when --as/--user-token is set)")
 	boardroomAreaOfficesCmd.Flags().StringVar(&brUserToken, "user-token", "", "User token")
 
 	boardroomCmd.AddCommand(boardroomRoomsCmd)
