@@ -8,9 +8,13 @@ import (
 )
 
 func personalTodoStringHandler(value string) http.HandlerFunc {
+	return personalTodoStringHandlerWithCode(0, value)
+}
+
+func personalTodoStringHandlerWithCode(code int, value string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{"errCode": 0, "errMsg": "ok", "data": value})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"errCode": code, "errMsg": "ok", "data": value})
 	}
 }
 
@@ -42,6 +46,27 @@ func TestSavePersonalTodoValidation(t *testing.T) {
 	}
 	if result.Success || result.Error != "subject is required" {
 		t.Fatalf("unexpected validation result: %+v", result)
+	}
+}
+
+func TestSavePersonalTodoAcceptsLegacySuccessCode(t *testing.T) {
+	b := newMuxBuilder().handleToken("tok1")
+	b.mux.HandleFunc(
+		"/xtra/tdtask/server/openapi/v3/taskopt/savePersonalTask",
+		personalTodoStringHandlerWithCode(200, "TASK200"),
+	)
+	server := b.build()
+	defer server.Close()
+
+	result, err := newTestClient(server).SavePersonalTodo(context.Background(), &PersonalTodoSaveParams{
+		Subject: "兼容旧环境", StartTime: 100, DueTime: 200, Priority: PersonalTodoPriorityNormal,
+		CreateUserID: "u1", OrgID: "org1", AppID: "app1",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success || result.TodoCode != "TASK200" {
+		t.Fatalf("expected errCode=200 to be treated as success, got %+v", result)
 	}
 }
 

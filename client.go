@@ -149,7 +149,7 @@ func (c *LansengerClient) doGet(ctx context.Context, url string) (map[string]int
 	}
 
 	errCode, _ := result["errCode"].(float64)
-	if errCode != 0 && errCode != 200 {
+	if errCode != 0 {
 		errMsg, _ := result["errMsg"].(string)
 		return nil, NewAPIError(errMsg, int(errCode))
 	}
@@ -219,7 +219,7 @@ func (c *LansengerClient) doPost(ctx context.Context, url string, body interface
 	}
 
 	errCode, _ := result["errCode"].(float64)
-	if errCode != 0 {
+	if errCode != 0 && errCode != 200 {
 		errMsg, _ := result["errMsg"].(string)
 		if DebugLogger != nil {
 			DebugLogger("POST %s error: errCode=%d errMsg=%s", url, int(errCode), errMsg)
