@@ -56,6 +56,50 @@ type NoticeSendParams struct {
 // The notice module has no revoke/delete interface. Paths carry a /server
 // segment (production stage; dev/test environments omit it).
 func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (*NoticeSendResult, error) {
+	if p == nil {
+		return &NoticeSendResult{Success: false, Error: "params is required"}, nil
+	}
+	if p.Title == "" {
+		return &NoticeSendResult{Success: false, Error: "title is required"}, nil
+	}
+	if p.ContentType != 1 && p.ContentType != 2 {
+		return &NoticeSendResult{Success: false, Error: "content_type must be 1 (text) or 2 (link)"}, nil
+	}
+	if p.ContentType == 1 && p.Content == "" {
+		return &NoticeSendResult{Success: false, Error: "content is required when content_type is 1"}, nil
+	}
+	if p.ContentType == 2 && p.NoticeLink == "" {
+		return &NoticeSendResult{Success: false, Error: "notice_link is required when content_type is 2"}, nil
+	}
+	if p.AccountCode == "" {
+		return &NoticeSendResult{Success: false, Error: "account_code is required"}, nil
+	}
+	if p.UserType != 1 && p.UserType != 2 {
+		return &NoticeSendResult{Success: false, Error: "user_type must be 1 (phone) or 2 (openid)"}, nil
+	}
+	if p.UserType == 1 {
+		if len(p.ReleasePhones) == 0 {
+			return &NoticeSendResult{Success: false, Error: "release_phones is required when user_type is 1"}, nil
+		}
+		if len(p.ReleasePhones) > 10 || len(p.CCPhones) > 10 {
+			return &NoticeSendResult{Success: false, Error: "release_phones and cc_phones allow at most 10 numbers"}, nil
+		}
+		if p.CreateMobile == "" && p.UserToken == "" {
+			return &NoticeSendResult{Success: false, Error: "create_mobile is required when user_token is not provided"}, nil
+		}
+	}
+	if p.UserType == 2 {
+		if len(p.ReleaseRange) == 0 {
+			return &NoticeSendResult{Success: false, Error: "release_range is required when user_type is 2"}, nil
+		}
+		if len(p.ReleaseRange) > 200 || len(p.CCStaffIDs) > 200 {
+			return &NoticeSendResult{Success: false, Error: "release_range and cc_staff_ids allow at most 200 entries"}, nil
+		}
+		if p.CreateUserID == "" && p.UserToken == "" {
+			return &NoticeSendResult{Success: false, Error: "create_user_id is required when user_token is not provided"}, nil
+		}
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err

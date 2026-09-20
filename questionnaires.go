@@ -2,6 +2,7 @@ package lansenger
 
 import (
 	"context"
+	"fmt"
 )
 
 // QuestionnaireSaveParams carries the fields for SaveQuestionnaire (问卷系统 /v1/saveQuestionnaire).
@@ -23,21 +24,31 @@ type QuestionnaireSaveParams struct {
 // QuestionnairePublishParams carries the fields for PublishQuestionnaire (问卷系统 /v1/publish).
 type QuestionnairePublishParams struct {
 	QuestionnaireCode string
-	ScopeType         int    // 1=internal, 2=public
+	ScopeType         int // 1=internal, 2=public
 	StaffIDs          []string
 	Phones            []string
-	AnswerLimit       int    // 1=once, -1=unlimited
-	MessageFlag       int    // 1=on, 0=off (server default 0)
-	PageFlag          int    // server default 0
-	ShareFlag         int    // server default 0
-	ViewStatsFlag     int    // server default 1
-	AnonymFlag        int    // server default 0
+	AnswerLimit       int // 1=once, -1=unlimited
+	MessageFlag       int // 1=on, 0=off (server default 0)
+	PageFlag          int // server default 0
+	ShareFlag         int // server default 0
+	ViewStatsFlag     int // server default 1
+	AnonymFlag        int // server default 0
 	PublishUserID     string
 	UserToken         string
 }
 
 // SaveQuestionnaire creates a questionnaire, or overwrites an existing one when Code is set.
 func (c *LansengerClient) SaveQuestionnaire(ctx context.Context, p *QuestionnaireSaveParams) (*QuestionnaireSaveResult, error) {
+	if p == nil {
+		return &QuestionnaireSaveResult{Success: false, Error: "params is required"}, nil
+	}
+	if p.Title == "" {
+		return &QuestionnaireSaveResult{Success: false, Error: "title is required"}, nil
+	}
+	if p.AccountCode == "" {
+		return &QuestionnaireSaveResult{Success: false, Error: "account_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -86,6 +97,13 @@ func (c *LansengerClient) SaveQuestionnaire(ctx context.Context, p *Questionnair
 // SaveQuestionnaireQuestions batch-saves questions of a questionnaire (16 types).
 // questionList items are passed through as camelCase dicts.
 func (c *LansengerClient) SaveQuestionnaireQuestions(ctx context.Context, questionnaireCode string, questionList []map[string]interface{}, createUserID, userToken string) (*QuestionnaireQuestionSaveResult, error) {
+	if questionnaireCode == "" {
+		return &QuestionnaireQuestionSaveResult{Success: false, Error: "questionnaire_code is required"}, nil
+	}
+	if len(questionList) == 0 {
+		return &QuestionnaireQuestionSaveResult{Success: false, Error: "question_list is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -109,6 +127,10 @@ func (c *LansengerClient) SaveQuestionnaireQuestions(ctx context.Context, questi
 
 // DeleteQuestionnaireQuestion deletes a question by code.
 func (c *LansengerClient) DeleteQuestionnaireQuestion(ctx context.Context, questionCode, createUserID, userToken string) (*QuestionnaireQuestionDeleteResult, error) {
+	if questionCode == "" {
+		return &QuestionnaireQuestionDeleteResult{Success: false, Error: "question_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -132,6 +154,19 @@ func (c *LansengerClient) DeleteQuestionnaireQuestion(ctx context.Context, quest
 
 // PublishQuestionnaire publishes a questionnaire.
 func (c *LansengerClient) PublishQuestionnaire(ctx context.Context, p *QuestionnairePublishParams) (*QuestionnaireOpResult, error) {
+	if p == nil {
+		return &QuestionnaireOpResult{Success: false, Error: "params is required"}, nil
+	}
+	if p.QuestionnaireCode == "" {
+		return &QuestionnaireOpResult{Success: false, Error: "questionnaire_code is required"}, nil
+	}
+	if p.ScopeType != 1 && p.ScopeType != 2 {
+		return &QuestionnaireOpResult{Success: false, Error: "scope_type must be 1 (internal) or 2 (public)"}, nil
+	}
+	if p.AnswerLimit != 1 && p.AnswerLimit != -1 {
+		return &QuestionnaireOpResult{Success: false, Error: "answer_limit must be 1 (once) or -1 (unlimited)"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -169,6 +204,9 @@ func (c *LansengerClient) PublishQuestionnaire(ctx context.Context, p *Questionn
 }
 
 func questionnaireCodeOp(ctx context.Context, c *LansengerClient, category, code, operateUserID, userToken string) (map[string]interface{}, error) {
+	if code == "" {
+		return nil, fmt.Errorf("questionnaire_code is required")
+	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -259,6 +297,10 @@ func (c *LansengerClient) FetchQuestionnaireDetail(ctx context.Context, code, op
 
 // FetchQuestionnaireBrief fetches detail without admin check (no question list).
 func (c *LansengerClient) FetchQuestionnaireBrief(ctx context.Context, code, userToken string) (*QuestionnaireDetailResult, error) {
+	if code == "" {
+		return &QuestionnaireDetailResult{Success: false, Error: "questionnaire_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -303,6 +345,10 @@ func (c *LansengerClient) CopyQuestionnaire(ctx context.Context, code, operateUs
 
 // FetchQuestionnairesByCodes batch-fetches questionnaire basic info by codes.
 func (c *LansengerClient) FetchQuestionnairesByCodes(ctx context.Context, codeList []string, includeDeleted int, userToken string) (*QuestionnaireQueryListResult, error) {
+	if len(codeList) == 0 {
+		return &QuestionnaireQueryListResult{Success: false, Error: "code_list is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -376,6 +422,10 @@ func fillQuestionnairePage(res *QuestionnairePageResult, result map[string]inter
 
 // FetchCreatedQuestionnaires pages questionnaires created under an office account.
 func (c *LansengerClient) FetchCreatedQuestionnaires(ctx context.Context, accountCode string, pageNo, pageSize int, status *int, userID, userToken string) (*QuestionnairePageResult, error) {
+	if accountCode == "" {
+		return &QuestionnairePageResult{Success: false, Error: "account_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -399,6 +449,10 @@ func (c *LansengerClient) FetchCreatedQuestionnaires(ctx context.Context, accoun
 
 // FetchMyCreatedQuestionnaires pages all questionnaires the user created (personal + official).
 func (c *LansengerClient) FetchMyCreatedQuestionnaires(ctx context.Context, orgID string, pageNo, pageSize int, title string, status *int, userID, userToken string) (*QuestionnairePageResult, error) {
+	if orgID == "" {
+		return &QuestionnairePageResult{Success: false, Error: "org_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -425,6 +479,10 @@ func (c *LansengerClient) FetchMyCreatedQuestionnaires(ctx context.Context, orgI
 
 // FetchParticipatedQuestionnaires pages questionnaires the user answered.
 func (c *LansengerClient) FetchParticipatedQuestionnaires(ctx context.Context, orgID string, pageNo, pageSize int, status *int, userID, userToken string) (*QuestionnairePageResult, error) {
+	if orgID == "" {
+		return &QuestionnairePageResult{Success: false, Error: "org_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -448,6 +506,13 @@ func (c *LansengerClient) FetchParticipatedQuestionnaires(ctx context.Context, o
 
 // FetchAnswerRecords pages answer records of a questionnaire.
 func (c *LansengerClient) FetchAnswerRecords(ctx context.Context, accountCode, questionnaireCode string, pageNo, pageSize int, userID, userToken string) (*QuestionnairePageResult, error) {
+	if accountCode == "" {
+		return &QuestionnairePageResult{Success: false, Error: "account_code is required"}, nil
+	}
+	if questionnaireCode == "" {
+		return &QuestionnairePageResult{Success: false, Error: "questionnaire_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -496,6 +561,13 @@ func fillQuestionnaireAnswerDetail(res *QuestionnaireAnswerDetailResult, data ma
 
 // FetchQuestionnaireAnswerDetail fetches one answer record's full detail.
 func (c *LansengerClient) FetchQuestionnaireAnswerDetail(ctx context.Context, accountCode, answerCode, userID, userToken string) (*QuestionnaireAnswerDetailResult, error) {
+	if accountCode == "" {
+		return &QuestionnaireAnswerDetailResult{Success: false, Error: "account_code is required"}, nil
+	}
+	if answerCode == "" {
+		return &QuestionnaireAnswerDetailResult{Success: false, Error: "answer_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -518,6 +590,10 @@ func (c *LansengerClient) FetchQuestionnaireAnswerDetail(ctx context.Context, ac
 
 // FetchQuestionnaireLastAnswerDetail fetches the user's last answer detail.
 func (c *LansengerClient) FetchQuestionnaireLastAnswerDetail(ctx context.Context, code, answerRecordCode, userID, userToken string) (*QuestionnaireAnswerDetailResult, error) {
+	if code == "" {
+		return &QuestionnaireAnswerDetailResult{Success: false, Error: "questionnaire_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -543,6 +619,13 @@ func (c *LansengerClient) FetchQuestionnaireLastAnswerDetail(ctx context.Context
 
 // FetchAnswerData pages answer data for export (items carry the raw answerMap).
 func (c *LansengerClient) FetchAnswerData(ctx context.Context, accountCode, questionnaireCode string, pageNo, pageSize int, userID, userToken string) (*QuestionnairePageResult, error) {
+	if accountCode == "" {
+		return &QuestionnairePageResult{Success: false, Error: "account_code is required"}, nil
+	}
+	if questionnaireCode == "" {
+		return &QuestionnairePageResult{Success: false, Error: "questionnaire_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -563,6 +646,10 @@ func (c *LansengerClient) FetchAnswerData(ctx context.Context, accountCode, ques
 
 // FetchQuestionnaireLastAnswerRecord fetches the user's last answer record (main table).
 func (c *LansengerClient) FetchQuestionnaireLastAnswerRecord(ctx context.Context, code, answerRecordCode, userID, userToken string) (*QuestionnaireRecordResult, error) {
+	if code == "" {
+		return &QuestionnaireRecordResult{Success: false, Error: "questionnaire_code is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -598,6 +685,16 @@ func (c *LansengerClient) FetchQuestionnaireLastAnswerRecord(ctx context.Context
 // FetchQuestionnaireUploadURL fetches a presigned upload URL;
 // upload via PUT with a Content-MD5 header carrying the file's MD5.
 func (c *LansengerClient) FetchQuestionnaireUploadURL(ctx context.Context, fileName, md5 string, size int64, userToken string) (*QuestionnaireUploadUrlResult, error) {
+	if fileName == "" {
+		return &QuestionnaireUploadUrlResult{Success: false, Error: "file_name is required"}, nil
+	}
+	if md5 == "" {
+		return &QuestionnaireUploadUrlResult{Success: false, Error: "md5 is required"}, nil
+	}
+	if size <= 0 {
+		return &QuestionnaireUploadUrlResult{Success: false, Error: "size is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err

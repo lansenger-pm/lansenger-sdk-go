@@ -6,30 +6,30 @@ import (
 
 // BoardroomReserveParams carries the fields for ReserveBoardroom (会议室预定 V2 /v2/reserveRoom).
 type BoardroomReserveParams struct {
-	BoardRoomID       string
-	Name              string
-	GradingID         string
-	ReserveTimeStart  string // yyyy-MM-dd HH:mm:ss
-	ReserveTimeEnd    string
-	NoticeTime        string
-	ReserveUser       string
-	OrgID             string
-	Toastmaster       string
-	Leader            string
-	LeaderAttend      string // 0出席 1不出席
-	PeopleNumber      string
-	OtherDemand       string
-	IsVideo           string // 0开启 1不开启
-	VideoName         string
-	UserList          []string
+	BoardRoomID        string
+	Name               string
+	GradingID          string
+	ReserveTimeStart   string // yyyy-MM-dd HH:mm:ss
+	ReserveTimeEnd     string
+	NoticeTime         string
+	ReserveUser        string
+	OrgID              string
+	Toastmaster        string
+	Leader             string
+	LeaderAttend       string // 0出席 1不出席
+	PeopleNumber       string
+	OtherDemand        string
+	IsVideo            string // 0开启 1不开启
+	VideoName          string
+	UserList           []string
 	InvitationUserList []string
-	TableCards        string // 0开启 1关闭
-	ReserveType       string // 0单次 1重复
-	RepeatType        string // day/week/month
-	RepeatDays        []int
-	Skip              string // 0跳过 1不跳过
-	RepeatEndDateStr  string
-	UserToken         string
+	TableCards         string // 0开启 1关闭
+	ReserveType        string // 0单次 1重复
+	RepeatType         string // day/week/month
+	RepeatDays         []int
+	Skip               string // 0跳过 1不跳过
+	RepeatEndDateStr   string
+	UserToken          string
 }
 
 // BoardroomEditParams carries the fields for EditBoardroomReserve (会议室预定 V2 /v2/editReserve).
@@ -168,6 +168,10 @@ func (c *LansengerClient) FetchBoardroomList(ctx context.Context, gradingID, are
 
 // FetchBoardroomDetail fetches meeting-room detail.
 func (c *LansengerClient) FetchBoardroomDetail(ctx context.Context, roomID, orgID, userToken string) (*BoardroomDetailResult, error) {
+	if roomID == "" {
+		return &BoardroomDetailResult{Success: false, Error: "room_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -190,6 +194,16 @@ func (c *LansengerClient) FetchBoardroomDetail(ctx context.Context, roomID, orgI
 
 // FetchBoardroomSchedule fetches a room's bookings + deactivations for a date.
 func (c *LansengerClient) FetchBoardroomSchedule(ctx context.Context, roomID, queryDate, gradingID, reserveUserID, orgID, userToken string) (*BoardroomScheduleResult, error) {
+	if roomID == "" {
+		return &BoardroomScheduleResult{Success: false, Error: "room_id is required"}, nil
+	}
+	if queryDate == "" {
+		return &BoardroomScheduleResult{Success: false, Error: "query_date is required"}, nil
+	}
+	if gradingID == "" {
+		return &BoardroomScheduleResult{Success: false, Error: "grading_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -215,6 +229,10 @@ func (c *LansengerClient) FetchBoardroomSchedule(ctx context.Context, roomID, qu
 
 // FetchBoardroomReserveDetail fetches reservation detail (attendees, approval flow).
 func (c *LansengerClient) FetchBoardroomReserveDetail(ctx context.Context, reserveRoomID, gradingID, orgID, userToken string) (*BoardroomReserveDetailResult, error) {
+	if reserveRoomID == "" {
+		return &BoardroomReserveDetailResult{Success: false, Error: "reserve_room_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -240,6 +258,28 @@ func (c *LansengerClient) FetchBoardroomReserveDetail(ctx context.Context, reser
 
 // ReserveBoardroom reserves a meeting room (single or repeating).
 func (c *LansengerClient) ReserveBoardroom(ctx context.Context, p *BoardroomReserveParams) (*BoardroomReserveResult, error) {
+	if p == nil {
+		return &BoardroomReserveResult{Success: false, Error: "params is required"}, nil
+	}
+	if p.BoardRoomID == "" {
+		return &BoardroomReserveResult{Success: false, Error: "boardroom_id is required"}, nil
+	}
+	if p.Name == "" {
+		return &BoardroomReserveResult{Success: false, Error: "name is required"}, nil
+	}
+	if p.GradingID == "" {
+		return &BoardroomReserveResult{Success: false, Error: "grading_id is required"}, nil
+	}
+	if p.ReserveTimeStart == "" {
+		return &BoardroomReserveResult{Success: false, Error: "reserve_time_start is required"}, nil
+	}
+	if p.ReserveTimeEnd == "" {
+		return &BoardroomReserveResult{Success: false, Error: "reserve_time_end is required"}, nil
+	}
+	if p.NoticeTime == "" {
+		return &BoardroomReserveResult{Success: false, Error: "notice_time is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -318,6 +358,31 @@ func (c *LansengerClient) ReserveBoardroom(ctx context.Context, p *BoardroomRese
 
 // EditBoardroomReserve edits a reservation (only non-approval-flow bookings).
 func (c *LansengerClient) EditBoardroomReserve(ctx context.Context, p *BoardroomEditParams) (*BoardroomReserveResult, error) {
+	if p == nil {
+		return &BoardroomReserveResult{Success: false, Error: "params is required"}, nil
+	}
+	if p.ReserveID == "" {
+		return &BoardroomReserveResult{Success: false, Error: "reserve_id is required"}, nil
+	}
+	if p.BoardRoomID == "" {
+		return &BoardroomReserveResult{Success: false, Error: "boardroom_id is required"}, nil
+	}
+	if p.Name == "" {
+		return &BoardroomReserveResult{Success: false, Error: "name is required"}, nil
+	}
+	if p.GradingID == "" {
+		return &BoardroomReserveResult{Success: false, Error: "grading_id is required"}, nil
+	}
+	if p.ReserveTimeStart == "" {
+		return &BoardroomReserveResult{Success: false, Error: "reserve_time_start is required"}, nil
+	}
+	if p.ReserveTimeEnd == "" {
+		return &BoardroomReserveResult{Success: false, Error: "reserve_time_end is required"}, nil
+	}
+	if p.NoticeTime == "" {
+		return &BoardroomReserveResult{Success: false, Error: "notice_time is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -358,6 +423,10 @@ func (c *LansengerClient) EditBoardroomReserve(ctx context.Context, p *Boardroom
 
 // CancelBoardroomReserve cancels a reservation (status 0/1/5 only).
 func (c *LansengerClient) CancelBoardroomReserve(ctx context.Context, reserveID, cancelUserID, orgID, cancelReason string, isSend *bool, notifyUserList []string, cancelVideo, cancelType, userToken string) (*BoardroomOpResult, error) {
+	if reserveID == "" {
+		return &BoardroomOpResult{Success: false, Error: "reserve_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -398,6 +467,10 @@ func (c *LansengerClient) CancelBoardroomReserve(ctx context.Context, reserveID,
 
 // ConfirmBoardroomSign confirms a reservation awaiting scan-code (status 1 only).
 func (c *LansengerClient) ConfirmBoardroomSign(ctx context.Context, reserveID, orgID, userToken string) (*BoardroomOpResult, error) {
+	if reserveID == "" {
+		return &BoardroomOpResult{Success: false, Error: "reserve_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -420,6 +493,10 @@ func (c *LansengerClient) ConfirmBoardroomSign(ctx context.Context, reserveID, o
 
 // FetchMyBoardroomReserves pages the user's reservations with filters.
 func (c *LansengerClient) FetchMyBoardroomReserves(ctx context.Context, gradingID, keys, startTime, endTime, boardRoomID string, floorIDs []string, page, limit int, lxUserID, orgID, userToken string) (*BoardroomListResult, error) {
+	if gradingID == "" {
+		return &BoardroomListResult{Success: false, Error: "grading_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -489,6 +566,10 @@ func (c *LansengerClient) FetchBoardroomGradings(ctx context.Context, lxUserID, 
 
 // FetchBoardroomAreaOffices fetches office areas under a grading.
 func (c *LansengerClient) FetchBoardroomAreaOffices(ctx context.Context, gradingID, userToken string) (*BoardroomAreaListResult, error) {
+	if gradingID == "" {
+		return &BoardroomAreaListResult{Success: false, Error: "grading_id is required"}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
