@@ -414,6 +414,79 @@ func TestUserTokenBackwardCompatLegacyFlat(t *testing.T) {
 	}
 }
 
+func TestCredentialStoreAcceptsFloatingPointExpiries(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test_state.json")
+	raw := `{
+		"active_profile": "default",
+		"profiles": {
+			"default": {
+				"app_id": "app1",
+				"app_secret": "secret1",
+				"app_token": "app-token",
+				"app_token_expiry": 4102444800.80789,
+				"user_token": "flat-token",
+				"refresh_token": "flat-refresh",
+				"staff_id": "flat-staff",
+				"user_token_expiry": 4102444801.80789,
+				"refresh_token_expiry": 4102444802.80789,
+				"user_tokens": {
+					"nested-staff": {
+						"user_token": "nested-token",
+						"refresh_token": "nested-refresh",
+						"user_token_expiry": 4102444803.80789,
+						"refresh_token_expiry": 4102444804.80789
+					}
+				}
+			}
+		}
+	}`
+	if err := os.WriteFile(path, []byte(raw), 0600); err != nil {
+		t.Fatalf("write state: %v", err)
+	}
+
+	store, err := NewCredentialStore(path, "default")
+	if err != nil {
+		t.Fatalf("create store: %v", err)
+	}
+
+	appToken, err := store.LoadAppToken()
+	if err != nil {
+		t.Fatalf("load app token: %v", err)
+	}
+	if appToken != "app-token" {
+		t.Fatalf("expected app-token, got %q", appToken)
+	}
+
+	nested, err := store.LoadUserToken("nested-staff")
+	if err != nil {
+		t.Fatalf("load nested user token: %v", err)
+	}
+	if nested["user_token"] != "nested-token" {
+		t.Fatalf("expected nested-token, got %q", nested["user_token"])
+	}
+	if nested["user_token_expiry"] != "4102444803" {
+		t.Fatalf("expected truncated nested user expiry, got %q", nested["user_token_expiry"])
+	}
+	if nested["refresh_token_expiry"] != "4102444804" {
+		t.Fatalf("expected truncated nested refresh expiry, got %q", nested["refresh_token_expiry"])
+	}
+
+	flat, err := store.LoadUserToken("flat-staff")
+	if err != nil {
+		t.Fatalf("load migrated flat user token: %v", err)
+	}
+	if flat["user_token"] != "flat-token" {
+		t.Fatalf("expected flat-token, got %q", flat["user_token"])
+	}
+	if flat["user_token_expiry"] != "4102444801" {
+		t.Fatalf("expected truncated flat user expiry, got %q", flat["user_token_expiry"])
+	}
+	if flat["refresh_token_expiry"] != "4102444802" {
+		t.Fatalf("expected truncated flat refresh expiry, got %q", flat["refresh_token_expiry"])
+	}
+}
+
 func TestUserTokenRawStateStructure(t *testing.T) {
 	tmpDir := t.TempDir()
 	store, _ := NewCredentialStore(filepath.Join(tmpDir, "test_state.json"), "default")
@@ -465,10 +538,10 @@ func TestUserTokenMigrationCleansStaleFlat(t *testing.T) {
 				// Nested (old data from previous migration)
 				"user_tokens": map[string]interface{}{
 					"staff-1": map[string]interface{}{
-						"user_token":             "nested-old",
-						"refresh_token":          "nested-rt",
-						"user_token_expiry":      int(now + 3600),
-						"refresh_token_expiry":   int(now + 86400),
+						"user_token":           "nested-old",
+						"refresh_token":        "nested-rt",
+						"user_token_expiry":    int(now + 3600),
+						"refresh_token_expiry": int(now + 86400),
 					},
 				},
 				// Flat (written by old SDK) — has NEWER token

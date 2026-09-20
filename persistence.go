@@ -40,11 +40,61 @@ type storeData struct {
 	ActiveProfile string                 `json:"active_profile"`
 }
 
+type flexibleInt64 int64
+
+func (v *flexibleInt64) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		*v = 0
+		return nil
+	}
+
+	value := string(data)
+	if len(data) > 1 && data[0] == '"' {
+		var encoded string
+		if err := json.Unmarshal(data, &encoded); err != nil {
+			return err
+		}
+		if encoded == "" {
+			*v = 0
+			return nil
+		}
+		value = encoded
+	}
+
+	parsed, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return fmt.Errorf("invalid integer value %q: %w", value, err)
+	}
+	*v = flexibleInt64(parsed)
+	return nil
+}
+
 type userTokenEntry struct {
 	UserToken             string `json:"user_token"`
 	RefreshToken          string `json:"refresh_token"`
 	UserTokenExpiresAt    int64  `json:"user_token_expiry"`
 	RefreshTokenExpiresAt int64  `json:"refresh_token_expiry"`
+}
+
+func (e *userTokenEntry) UnmarshalJSON(data []byte) error {
+	type rawEntry struct {
+		UserToken             string        `json:"user_token"`
+		RefreshToken          string        `json:"refresh_token"`
+		UserTokenExpiresAt    flexibleInt64 `json:"user_token_expiry"`
+		RefreshTokenExpiresAt flexibleInt64 `json:"refresh_token_expiry"`
+	}
+
+	var raw rawEntry
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	*e = userTokenEntry{
+		UserToken:             raw.UserToken,
+		RefreshToken:          raw.RefreshToken,
+		UserTokenExpiresAt:    int64(raw.UserTokenExpiresAt),
+		RefreshTokenExpiresAt: int64(raw.RefreshTokenExpiresAt),
+	}
+	return nil
 }
 
 type profileData struct {
@@ -76,17 +126,17 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 		EncodingKey           string                    `json:"encoding_key"`
 		CallbackToken         string                    `json:"callback_token"`
 		AppToken              string                    `json:"app_token"`
-		TokenExpiresAt        int64                     `json:"app_token_expiry"`
-		ATokenExpiresAtCompat *int64                    `json:"token_expires_at"`
+		TokenExpiresAt        flexibleInt64             `json:"app_token_expiry"`
+		ATokenExpiresAtCompat *flexibleInt64            `json:"token_expires_at"`
 		UserToken             string                    `json:"user_token"`
 		RefreshToken          string                    `json:"refresh_token"`
 		StaffID               string                    `json:"staff_id"`
 		IdentityType          string                    `json:"identity_type"`
 		UserTokens            map[string]userTokenEntry `json:"user_tokens"`
-		UserTokenExpiry       *int64                    `json:"user_token_expiry"`
-		UserTokenExpiresAt    *int64                    `json:"user_token_expires_at"`
-		RTokenExpiry          *int64                    `json:"refresh_token_expiry"`
-		RTokenExpiresAt       *int64                    `json:"refresh_token_expires_at"`
+		UserTokenExpiry       *flexibleInt64            `json:"user_token_expiry"`
+		UserTokenExpiresAt    *flexibleInt64            `json:"user_token_expires_at"`
+		RTokenExpiry          *flexibleInt64            `json:"refresh_token_expiry"`
+		RTokenExpiresAt       *flexibleInt64            `json:"refresh_token_expires_at"`
 	}
 	var raw rawPD
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -100,9 +150,9 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 	p.EncodingKey = raw.EncodingKey
 	p.CallbackToken = raw.CallbackToken
 	p.AppToken = raw.AppToken
-	p.TokenExpiresAt = raw.TokenExpiresAt
+	p.TokenExpiresAt = int64(raw.TokenExpiresAt)
 	if raw.ATokenExpiresAtCompat != nil && p.TokenExpiresAt == 0 {
-		p.TokenExpiresAt = *raw.ATokenExpiresAtCompat
+		p.TokenExpiresAt = int64(*raw.ATokenExpiresAtCompat)
 	}
 	p.UserToken = raw.UserToken
 	p.RefreshToken = raw.RefreshToken
@@ -113,14 +163,14 @@ func (p *profileData) UnmarshalJSON(data []byte) error {
 	}
 
 	if raw.UserTokenExpiry != nil {
-		p.UserTokenExpiresAt = *raw.UserTokenExpiry
+		p.UserTokenExpiresAt = int64(*raw.UserTokenExpiry)
 	} else if raw.UserTokenExpiresAt != nil {
-		p.UserTokenExpiresAt = *raw.UserTokenExpiresAt
+		p.UserTokenExpiresAt = int64(*raw.UserTokenExpiresAt)
 	}
 	if raw.RTokenExpiry != nil {
-		p.RefreshTokenExpiresAt = *raw.RTokenExpiry
+		p.RefreshTokenExpiresAt = int64(*raw.RTokenExpiry)
 	} else if raw.RTokenExpiresAt != nil {
-		p.RefreshTokenExpiresAt = *raw.RTokenExpiresAt
+		p.RefreshTokenExpiresAt = int64(*raw.RTokenExpiresAt)
 	}
 	return nil
 }
