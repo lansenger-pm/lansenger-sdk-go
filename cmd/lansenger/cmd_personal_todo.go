@@ -59,6 +59,7 @@ var personalTodoSaveCmd = &cobra.Command{
 			AppID:           args[3],
 			StartTime:       pTodoStartTime,
 			DueTime:         pTodoDueTime,
+			FinishTime:      pTodoFinishTime,
 			Priority:        pTodoPriority,
 			Description:     pTodoDescription,
 			ParentCode:      pTodoParentCode,
@@ -175,6 +176,7 @@ func int64PtrOrNil(v int64) *int64 {
 func init() {
 	personalTodoSaveCmd.Flags().Int64Var(&pTodoStartTime, "start-time", -1, "Start time in epoch milliseconds")
 	personalTodoSaveCmd.Flags().Int64Var(&pTodoDueTime, "due-time", -1, "Due time in epoch milliseconds")
+	personalTodoSaveCmd.Flags().Int64Var(&pTodoFinishTime, "finish-time", 0, "Finish time in epoch milliseconds")
 	personalTodoSaveCmd.Flags().IntVar(&pTodoPriority, "priority", 1, "0=low, 1=normal, 2=urgent, 3=very urgent")
 	personalTodoSaveCmd.Flags().StringVar(&pTodoDescription, "description", "", "Description")
 	personalTodoSaveCmd.Flags().StringVar(&pTodoParentCode, "parent-code", "", "Parent todo code")

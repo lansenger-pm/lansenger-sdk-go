@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -24,10 +25,9 @@ func TestSavePersonalTodoSuccess(t *testing.T) {
 	server := b.build()
 	defer server.Close()
 
-	finish := int64(0)
 	result, err := newTestClient(server).SavePersonalTodo(context.Background(), &PersonalTodoSaveParams{
 		Subject: "完成项目方案", StartTime: 100, DueTime: 200, Priority: PersonalTodoPriorityNormal,
-		CreateUserID: "u1", OrgID: "org1", AppID: "app1", FinishTime: &finish,
+		CreateUserID: "u1", OrgID: "org1", AppID: "app1", FinishTime: 0,
 		Executors: []map[string]interface{}{{"staffId": "u1", "opt": 1}},
 	})
 	if err != nil {
@@ -46,6 +46,39 @@ func TestSavePersonalTodoValidation(t *testing.T) {
 	}
 	if result.Success || result.Error != "subject is required" {
 		t.Fatalf("unexpected validation result: %+v", result)
+	}
+}
+
+func TestSavePersonalTodoWorkingRequestShape(t *testing.T) {
+	var body map[string]interface{}
+	var rawURL string
+	b := newMuxBuilder().handleToken("tok1")
+	b.mux.HandleFunc("/xtra/tdtask/server/openapi/v3/taskopt/savePersonalTask", func(w http.ResponseWriter, r *http.Request) {
+		rawURL = r.URL.String()
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"errCode": 0, "errMsg": "ok", "data": "TASK001"})
+	})
+	server := b.build()
+	defer server.Close()
+
+	result, err := newTestClient(server).SavePersonalTodo(context.Background(), &PersonalTodoSaveParams{
+		Subject: "测试待办", StartTime: 1789725600000, DueTime: 1789812000000,
+		FinishTime: 0, Priority: 1,
+		CreateUserID: "user-001", OrgID: "org-001", AppID: "app-001",
+		Executors: []map[string]interface{}{{"staffId": "user-001", "opt": 1}},
+		UserToken: "ut1",
+	})
+	if err != nil || !result.Success {
+		t.Fatalf("unexpected result: %+v err=%v", result, err)
+	}
+	if body["finishTime"] != float64(0) || body["type"] != float64(1) {
+		t.Fatalf("unexpected body: %+v", body)
+	}
+	if _, ok := body["finishTime"]; !ok {
+		t.Fatalf("finishTime must be present: %+v", body)
+	}
+	if !strings.Contains(rawURL, "app_token=tok1") || !strings.Contains(rawURL, "user_token=ut1") {
+		t.Fatalf("unexpected query: %s", rawURL)
 	}
 }
 

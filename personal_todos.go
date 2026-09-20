@@ -15,7 +15,7 @@ type PersonalTodoSaveParams struct {
 	ParentCode        string
 	GroupID           string
 	GroupCategoryCode string
-	FinishTime        *int64
+	FinishTime        int64
 	StatusTagNo       string
 	StatusTagYes      string
 	AppInfoID         *int64
