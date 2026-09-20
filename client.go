@@ -149,7 +149,7 @@ func (c *LansengerClient) doGet(ctx context.Context, url string) (map[string]int
 	}
 
 	errCode, _ := result["errCode"].(float64)
-	if errCode != 0 {
+	if errCode != 0 && errCode != 200 {
 		errMsg, _ := result["errMsg"].(string)
 		return nil, NewAPIError(errMsg, int(errCode))
 	}

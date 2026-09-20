@@ -5,7 +5,7 @@
 SDK Go pour la plateforme Lansenger (蓝信) — prend en charge les applications Lansenger, les robots d'organisation et les robots personnels.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.9.23](https://img.shields.io/badge/Version-0.9.23-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Version: 0.16.0](https://img.shields.io/badge/Version-0.16.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-blue)](https://go.dev/)
 [![Tests: 148](https://img.shields.io/badge/Tests-148-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
@@ -39,6 +39,7 @@ Les trois types de robots utilisent le même mécanisme d'authentification : `ap
 - **Notices (通知系统)** — envoyer des notifications via un compte officiel (texte/lien, ciblage téléphone/staff, confirmation/rappels, pièces jointes), lister les comptes officiels
 - **Questionnaires (问卷系统)** — créer/mettre à jour/publier/retirer/terminer/supprimer des questionnaires, gestion groupée des questions, listes paginées, enregistrements et export des réponses, URL de téléversement pré-signée
 - **Boardroom (会议室预定 V2)** — recherche de salles, détails et planning journalier, réservation/modification, annulation, confirmation par scan, mes réservations, listes de gradings et zones
+- **Todos personnels (个人待办)** — créer/modifier/lister les todos personnels et gérer les pièces jointes
 - **Commandes de bot** — créer/gérer les entrées de commande de bot
 - **Applications personnelles** — gérer les bots personnels
 - **Événements de callback** — 24 types d'événements, analyse de données structurées, vérification de signature
@@ -599,6 +600,7 @@ lansenger-sdk-go/
 ├── notices.go             # Notifications (通知系统)
 ├── questionnaires.go      # Questionnaires (问卷系统)
 ├── boardrooms.go          # Boardroom (会议室预定 V2)
+├── personal_todos.go      # Personal Todo (个人待办)
 ├── calendars.go         # Calendrier & planification (4.23) — 10 endpoints
 ├── callbacks.go         # Analyse d'événements de callback + déchiffrement AES-256-CBC + vérification de signature SHA1
 ├── persistence.go       # CredentialStore — persistance dans fichier JSON

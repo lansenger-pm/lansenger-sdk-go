@@ -5,7 +5,7 @@
 Go SDK for the Lansenger (蓝信) platform — supports Lansenger apps, organization bots, and personal bots.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.9.26](https://img.shields.io/badge/Version-0.9.26-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Version: 0.16.0](https://img.shields.io/badge/Version-0.16.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-blue)](https://go.dev/)
 [![Tests: 148](https://img.shields.io/badge/Tests-148-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
@@ -39,6 +39,7 @@ All three bot types use the same auth mechanism: `appToken` is required for ever
 - **Notices (通知系统)** — send official-account notices (text/link content, phone/staff targeting, confirm/forward/reply flags, reminder policies, attachments), query org official accounts
 - **Questionnaires (问卷系统)** — create/update/publish/withdraw/finish/delete questionnaires, batch question management, office-account & created/participated lists (paged), answer records and export, presigned upload URL
 - **Boardroom (会议室预定 V2)** — room lookup with area/floor/equipment/time filters, room detail & daily schedule, reserve/edit (single & repeating), cancel, scan-code confirmation, my reservations (paged), grading & office-area lists
+- **Personal todos (个人待办)** — create/edit/list user-owned personal todos and manage attachments; separate from application todos
 - **Bot slash commands** (4.37) — create/query/delete Command entries for bot interaction menus
 - **Personal apps** (4.38) — create/update/query/delete/list personal bots with user token
 - **Callback events** — 24 event types, structured data parsing, signature verification
@@ -599,6 +600,7 @@ lansenger-sdk-go/
 ├── notices.go             # Notice (通知系统)
 ├── questionnaires.go      # Questionnaire (问卷系统)
 ├── boardrooms.go          # Boardroom (会议室预定 V2)
+├── personal_todos.go      # Personal Todo (个人待办)
 ├── calendars.go         # Calendar & schedule (4.23) — 10 endpoints
 ├── callbacks.go         # Callback event parsing + AES-256-CBC decryption + SHA1 signature verification
 ├── persistence.go       # CredentialStore — JSON file persistence

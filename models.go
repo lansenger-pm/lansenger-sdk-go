@@ -12,18 +12,18 @@ type SendMessageResult struct {
 }
 
 type StaffBasicInfoResult struct {
-	Success     bool                   `json:"success"`
-	OrgID       string                 `json:"org_id"`
-	OrgName     string                 `json:"org_name"`
-	Name        string                 `json:"name"`
-	Gender      string                 `json:"gender"`
-	Signature   string                 `json:"signature"`
-	AvatarURL   string                 `json:"avatar_url"`
-	AvatarID    string                 `json:"avatar_id"`
-	Status      string                 `json:"status"`
+	Success     bool                     `json:"success"`
+	OrgID       string                   `json:"org_id"`
+	OrgName     string                   `json:"org_name"`
+	Name        string                   `json:"name"`
+	Gender      string                   `json:"gender"`
+	Signature   string                   `json:"signature"`
+	AvatarURL   string                   `json:"avatar_url"`
+	AvatarID    string                   `json:"avatar_id"`
+	Status      string                   `json:"status"`
 	Departments []map[string]interface{} `json:"departments"`
-	Error       string                 `json:"error"`
-	RawResponse map[string]interface{} `json:"raw_response"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
 type ScheduleAttendeesUpdateResult struct {
@@ -81,40 +81,40 @@ type PersonalAppListResult struct {
 }
 
 type StaffDetailResult struct {
-	Success                bool                   `json:"success"`
-	Name                   string                 `json:"name"`
-	Signature              string                 `json:"signature"`
-	AvatarID               string                 `json:"avatar_id"`
-	AvatarURL              string                 `json:"avatar_url"`
-	Status                 string                 `json:"status"`
+	Success                bool                     `json:"success"`
+	Name                   string                   `json:"name"`
+	Signature              string                   `json:"signature"`
+	AvatarID               string                   `json:"avatar_id"`
+	AvatarURL              string                   `json:"avatar_url"`
+	Status                 string                   `json:"status"`
 	Departments            []map[string]interface{} `json:"departments"`
-	Gender                 string                 `json:"gender"`
-	OrgID                  string                 `json:"org_id"`
-	OrgName                string                 `json:"org_name"`
-	LoginName              string                 `json:"login_name"`
-	EmployeeNumber         string                 `json:"employee_number"`
-	Email                  string                 `json:"email"`
-	ExternalID             string                 `json:"external_id"`
-	Nationality            string                 `json:"nationality"`
-	Birthdate              string                 `json:"birthdate"`
-	IDNumber               string                 `json:"id_number"`
-	NativePlace            string                 `json:"native_place"`
+	Gender                 string                   `json:"gender"`
+	OrgID                  string                   `json:"org_id"`
+	OrgName                string                   `json:"org_name"`
+	LoginName              string                   `json:"login_name"`
+	EmployeeNumber         string                   `json:"employee_number"`
+	Email                  string                   `json:"email"`
+	ExternalID             string                   `json:"external_id"`
+	Nationality            string                   `json:"nationality"`
+	Birthdate              string                   `json:"birthdate"`
+	IDNumber               string                   `json:"id_number"`
+	NativePlace            string                   `json:"native_place"`
 	Duties                 []map[string]interface{} `json:"duties"`
 	Parties                []map[string]interface{} `json:"parties"`
-	Address                string                 `json:"address"`
-	MobilePhone            string                 `json:"mobile_phone"`
-	MobilePhoneCountryCode string                 `json:"mobile_phone_country_code"`
-	ExtraPhones            []string               `json:"extra_phones"`
-	Introduction           string                 `json:"introduction"`
+	Address                string                   `json:"address"`
+	MobilePhone            string                   `json:"mobile_phone"`
+	MobilePhoneCountryCode string                   `json:"mobile_phone_country_code"`
+	ExtraPhones            []string                 `json:"extra_phones"`
+	Introduction           string                   `json:"introduction"`
 	Education              []map[string]interface{} `json:"education"`
 	Career                 []map[string]interface{} `json:"career"`
 	LoginWays              []map[string]interface{} `json:"login_ways"`
 	Tags                   []map[string]interface{} `json:"tags"`
 	ExtraFieldSet          []map[string]interface{} `json:"extra_field_set"`
 	Leaders                []map[string]interface{} `json:"leaders"`
-	JoinDate               string                 `json:"join_date"`
-	Error                  string                 `json:"error"`
-	RawResponse            map[string]interface{} `json:"raw_response"`
+	JoinDate               string                   `json:"join_date"`
+	Error                  string                   `json:"error"`
+	RawResponse            map[string]interface{}   `json:"raw_response"`
 }
 
 type DepartmentAncestorsResult struct {
@@ -154,12 +154,12 @@ type ExtraFieldIdsResult struct {
 }
 
 type StaffSearchResult struct {
-	Success     bool                   `json:"success"`
-	HasMore     bool                   `json:"has_more"`
-	Total       int                    `json:"total"`
+	Success     bool                     `json:"success"`
+	HasMore     bool                     `json:"has_more"`
+	Total       int                      `json:"total"`
 	StaffInfo   []map[string]interface{} `json:"staff_info"`
-	Error       string                 `json:"error"`
-	RawResponse map[string]interface{} `json:"raw_response"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
 type QueryGroupsResult struct {
@@ -202,24 +202,24 @@ type MediaPathResult struct {
 }
 
 type AppCardParams struct {
-	BodyTitle      string                 `json:"body_title"`
-	ChatID         string                 `json:"chat_id"`
-	HeadTitle      string                 `json:"head_title"`
-	BodySubTitle   string                 `json:"body_sub_title"`
-	BodyContent    string                 `json:"body_content"`
-	Signature      string                 `json:"signature"`
+	BodyTitle      string                   `json:"body_title"`
+	ChatID         string                   `json:"chat_id"`
+	HeadTitle      string                   `json:"head_title"`
+	BodySubTitle   string                   `json:"body_sub_title"`
+	BodyContent    string                   `json:"body_content"`
+	Signature      string                   `json:"signature"`
 	Fields         []map[string]interface{} `json:"fields"`
 	Links          []map[string]interface{} `json:"links"`
-	CardLink       string                 `json:"card_link"`
-	PcCardLink     string                 `json:"pc_card_link"`
-	PadCardLink    string                 `json:"pad_card_link"`
-	IsDynamic      bool                   `json:"is_dynamic"`
-	HeadStatusInfo map[string]interface{} `json:"head_status_info"`
-	StaffID        string                 `json:"staff_id"`
-	HeadIconURL    string                 `json:"head_icon_url"`
-	IsGroup        bool                   `json:"is_group"`
-	UserToken      string                 `json:"user_token"`
-	SenderID       string                 `json:"sender_id"`
+	CardLink       string                   `json:"card_link"`
+	PcCardLink     string                   `json:"pc_card_link"`
+	PadCardLink    string                   `json:"pad_card_link"`
+	IsDynamic      bool                     `json:"is_dynamic"`
+	HeadStatusInfo map[string]interface{}   `json:"head_status_info"`
+	StaffID        string                   `json:"staff_id"`
+	HeadIconURL    string                   `json:"head_icon_url"`
+	IsGroup        bool                     `json:"is_group"`
+	UserToken      string                   `json:"user_token"`
+	SenderID       string                   `json:"sender_id"`
 }
 
 type LinkCardParams struct {
@@ -238,27 +238,27 @@ type LinkCardParams struct {
 }
 
 type OaCardParams struct {
-	ChatID     string                 `json:"chat_id"`
-	Head       string                 `json:"head"`
-	Title      string                 `json:"title"`
-	SubTitle   string                 `json:"sub_title"`
-	StaffID    string                 `json:"staff_id"`
+	ChatID     string                   `json:"chat_id"`
+	Head       string                   `json:"head"`
+	Title      string                   `json:"title"`
+	SubTitle   string                   `json:"sub_title"`
+	StaffID    string                   `json:"staff_id"`
 	Fields     []map[string]interface{} `json:"fields"`
-	Link       string                 `json:"link"`
-	PcLink     string                 `json:"pc_link"`
-	PadLink    string                 `json:"pad_link"`
-	CardAction map[string]interface{} `json:"card_action"`
-	IsGroup    bool                   `json:"is_group"`
-	UserToken  string                 `json:"user_token"`
-	SenderID   string                 `json:"sender_id"`
+	Link       string                   `json:"link"`
+	PcLink     string                   `json:"pc_link"`
+	PadLink    string                   `json:"pad_link"`
+	CardAction map[string]interface{}   `json:"card_action"`
+	IsGroup    bool                     `json:"is_group"`
+	UserToken  string                   `json:"user_token"`
+	SenderID   string                   `json:"sender_id"`
 }
 
 type DynamicCardUpdateParams struct {
-	MsgID          string                 `json:"msg_id"`
-	UserId         string                 `json:"user_id"`
-	HeadStatusInfo map[string]interface{} `json:"head_status_info"`
+	MsgID          string                   `json:"msg_id"`
+	UserId         string                   `json:"user_id"`
+	HeadStatusInfo map[string]interface{}   `json:"head_status_info"`
 	Links          []map[string]interface{} `json:"links"`
-	IsLastUpdate   bool                   `json:"is_last_update"`
+	IsLastUpdate   bool                     `json:"is_last_update"`
 }
 
 type ApproveCardParams struct {
@@ -266,16 +266,16 @@ type ApproveCardParams struct {
 	BodyTitle   string `json:"body_title"`
 	BodyContent string `json:"body_content"`
 
-	HeadTitle         string `json:"head_title"`
-	HeadIconLink      string `json:"head_icon_link"`
-	HeadIconID        string `json:"head_icon_id"`
+	HeadTitle          string `json:"head_title"`
+	HeadIconLink       string `json:"head_icon_link"`
+	HeadIconID         string `json:"head_icon_id"`
 	HeadStatusDescribe string `json:"head_status_describe"`
 	HeadStatusIcon     int    `json:"head_status_icon"`
 	HeadStatusIconLink string `json:"head_status_icon_link"`
 	HeadStatusColour   string `json:"head_status_colour"`
 
-	BodyFormatType int                   `json:"body_format_type"`
-	Fields          []map[string]string  `json:"fields"`
+	BodyFormatType int                 `json:"body_format_type"`
+	Fields         []map[string]string `json:"fields"`
 
 	ReminderAll     bool     `json:"reminder_all"`
 	ReminderUserIDs []string `json:"reminder_user_ids"`
@@ -298,9 +298,9 @@ type ApproveCardUpdateParams struct {
 	MsgID string `json:"msg_id"`
 
 	HeadStatusDescribe string `json:"head_status_describe"`
-	HeadStatusIcon      int    `json:"head_status_icon"`
-	HeadStatusIconLink  string `json:"head_status_icon_link"`
-	HeadStatusColour    string `json:"head_status_colour"`
+	HeadStatusIcon     int    `json:"head_status_icon"`
+	HeadStatusIconLink string `json:"head_status_icon_link"`
+	HeadStatusColour   string `json:"head_status_colour"`
 
 	Buttons []map[string]interface{} `json:"buttons"`
 }
@@ -324,20 +324,20 @@ type UserTokenResult struct {
 }
 
 type UserInfoResult struct {
-	Success        bool                   `json:"success"`
-	StaffID        string                 `json:"staff_id"`
-	Name           string                 `json:"name"`
-	OrgID          string                 `json:"org_id"`
-	OrgName        string                 `json:"org_name"`
-	AvatarID       string                 `json:"avatar_id"`
-	AvatarURL      string                 `json:"avatar_url"`
-	Email          string                 `json:"email"`
-	EmployeeNumber string                 `json:"employee_number"`
-	LoginName      string                 `json:"login_name"`
-	ExternalID     string                 `json:"external_id"`
+	Success        bool                     `json:"success"`
+	StaffID        string                   `json:"staff_id"`
+	Name           string                   `json:"name"`
+	OrgID          string                   `json:"org_id"`
+	OrgName        string                   `json:"org_name"`
+	AvatarID       string                   `json:"avatar_id"`
+	AvatarURL      string                   `json:"avatar_url"`
+	Email          string                   `json:"email"`
+	EmployeeNumber string                   `json:"employee_number"`
+	LoginName      string                   `json:"login_name"`
+	ExternalID     string                   `json:"external_id"`
 	Departments    []map[string]interface{} `json:"department"`
-	Error          string                 `json:"error"`
-	RawResponse    map[string]interface{} `json:"raw_response"`
+	Error          string                   `json:"error"`
+	RawResponse    map[string]interface{}   `json:"raw_response"`
 }
 
 type AccountMessageResult struct {
@@ -422,11 +422,11 @@ type GroupInfoResult struct {
 }
 
 type GroupMemberResult struct {
-	Success      bool                   `json:"success"`
-	TotalMembers int                    `json:"total_members"`
+	Success      bool                     `json:"success"`
+	TotalMembers int                      `json:"total_members"`
 	Members      []map[string]interface{} `json:"members"`
-	Error        string                 `json:"error"`
-	RawResponse  map[string]interface{} `json:"raw_response"`
+	Error        string                   `json:"error"`
+	RawResponse  map[string]interface{}   `json:"raw_response"`
 }
 
 type UpdateGroupResult struct {
@@ -462,47 +462,47 @@ type IsInGroupResult struct {
 }
 
 type DepartmentDetailResult struct {
-	Success               bool                   `json:"success"`
-	ID                    string                 `json:"id"`
-	Name                  string                 `json:"name"`
-	ExternalID            string                 `json:"external_id"`
-	ParentID              string                 `json:"parent_id"`
-	Order                 float64                `json:"order"`
-	HasChildren           bool                   `json:"has_children"`
-	NormalMembers         int                    `json:"normal_members"`
-	InactiveMembers       int                    `json:"inactive_members"`
-	FrozenMembers         int                    `json:"frozen_members"`
-	DeletedMembers        int                    `json:"deleted_members"`
-	NormalMembersUnique   int                    `json:"normal_members_unique"`
-	InactiveMembersUnique int                    `json:"inactive_members_unique"`
-	FrozenMembersUnique   int                    `json:"frozen_members_unique"`
-	DeletedMembersUnique  int                    `json:"deleted_members_unique"`
+	Success               bool                     `json:"success"`
+	ID                    string                   `json:"id"`
+	Name                  string                   `json:"name"`
+	ExternalID            string                   `json:"external_id"`
+	ParentID              string                   `json:"parent_id"`
+	Order                 float64                  `json:"order"`
+	HasChildren           bool                     `json:"has_children"`
+	NormalMembers         int                      `json:"normal_members"`
+	InactiveMembers       int                      `json:"inactive_members"`
+	FrozenMembers         int                      `json:"frozen_members"`
+	DeletedMembers        int                      `json:"deleted_members"`
+	NormalMembersUnique   int                      `json:"normal_members_unique"`
+	InactiveMembersUnique int                      `json:"inactive_members_unique"`
+	FrozenMembersUnique   int                      `json:"frozen_members_unique"`
+	DeletedMembersUnique  int                      `json:"deleted_members_unique"`
 	Tags                  []map[string]interface{} `json:"tags"`
 	AncestorDepartments   []map[string]interface{} `json:"ancestor_departments"`
 	Leaders               []map[string]interface{} `json:"leaders"`
-	Emails                []string               `json:"emails"`
-	Phones                []string               `json:"phones"`
-	Addresses             []string               `json:"addresses"`
-	Introductions        []string               `json:"introductions"`
-	DeptType              int                    `json:"dept_type"`
-	Error                 string                 `json:"error"`
-	RawResponse           map[string]interface{} `json:"raw_response"`
+	Emails                []string                 `json:"emails"`
+	Phones                []string                 `json:"phones"`
+	Addresses             []string                 `json:"addresses"`
+	Introductions         []string                 `json:"introductions"`
+	DeptType              int                      `json:"dept_type"`
+	Error                 string                   `json:"error"`
+	RawResponse           map[string]interface{}   `json:"raw_response"`
 }
 
 type DepartmentChildrenResult struct {
-	Success     bool                   `json:"success"`
+	Success     bool                     `json:"success"`
 	Departments []map[string]interface{} `json:"departments"`
-	Error       string                 `json:"error"`
-	RawResponse map[string]interface{} `json:"raw_response"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
 type DepartmentStaffsResult struct {
-	Success     bool                   `json:"success"`
-	HasMore     bool                   `json:"has_more"`
-	Total       int                    `json:"total"`
+	Success     bool                     `json:"success"`
+	HasMore     bool                     `json:"has_more"`
+	Total       int                      `json:"total"`
 	Staffs      []map[string]interface{} `json:"staffs"`
-	Error       string                 `json:"error"`
-	RawResponse map[string]interface{} `json:"raw_response"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
 type TodoTaskCreateResult struct {
@@ -531,26 +531,26 @@ type TodoTaskInfoResult struct {
 }
 
 type TodoTaskListResult struct {
-	Success      bool                   `json:"success"`
-	Total        int                    `json:"total"`
+	Success      bool                     `json:"success"`
+	Total        int                      `json:"total"`
 	TodotaskList []map[string]interface{} `json:"todotask_list"`
-	Error        string                 `json:"error"`
-	RawResponse  map[string]interface{} `json:"raw_response"`
+	Error        string                   `json:"error"`
+	RawResponse  map[string]interface{}   `json:"raw_response"`
 }
 
 type TodoTaskStatusCountResult struct {
-	Success      bool                   `json:"success"`
+	Success      bool                     `json:"success"`
 	StatusCounts []map[string]interface{} `json:"status_counts"`
-	Error        string                 `json:"error"`
-	RawResponse  map[string]interface{} `json:"raw_response"`
+	Error        string                   `json:"error"`
+	RawResponse  map[string]interface{}   `json:"raw_response"`
 }
 
 type TodoTaskExecutorListResult struct {
-	Success      bool                   `json:"success"`
-	Total        int                    `json:"total"`
+	Success      bool                     `json:"success"`
+	Total        int                      `json:"total"`
 	ExecutorList []map[string]interface{} `json:"executor_list"`
-	Error        string                 `json:"error"`
-	RawResponse  map[string]interface{} `json:"raw_response"`
+	Error        string                   `json:"error"`
+	RawResponse  map[string]interface{}   `json:"raw_response"`
 }
 
 type CalendarPrimaryResult struct {
@@ -574,17 +574,17 @@ type ScheduleCreateResult struct {
 }
 
 type ScheduleDeleteResult struct {
-	Success      bool                   `json:"success"`
-	ScheduleIDs  []string               `json:"schedule_ids"`
-	Error        string                 `json:"error"`
-	RawResponse  map[string]interface{} `json:"raw_response"`
+	Success     bool                   `json:"success"`
+	ScheduleIDs []string               `json:"schedule_ids"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
 type ScheduleAttendeesDeleteResult struct {
-	Success      bool                   `json:"success"`
-	ScheduleIDs  []string               `json:"schedule_ids"`
-	Error        string                 `json:"error"`
-	RawResponse  map[string]interface{} `json:"raw_response"`
+	Success     bool                   `json:"success"`
+	ScheduleIDs []string               `json:"schedule_ids"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
 type ScheduleInfoResult struct {
@@ -607,18 +607,18 @@ type ScheduleInfoResult struct {
 }
 
 type ScheduleListResult struct {
-	Success      bool                   `json:"success"`
+	Success      bool                     `json:"success"`
 	ScheduleList []map[string]interface{} `json:"schedule_list"`
-	Error        string                 `json:"error"`
-	RawResponse  map[string]interface{} `json:"raw_response"`
+	Error        string                   `json:"error"`
+	RawResponse  map[string]interface{}   `json:"raw_response"`
 }
 
 type ScheduleAttendeesResult struct {
-	Success     bool                   `json:"success"`
-	Total       int                    `json:"total"`
+	Success     bool                     `json:"success"`
+	Total       int                      `json:"total"`
 	Attendees   []map[string]interface{} `json:"attendees"`
-	Error       string                 `json:"error"`
-	RawResponse map[string]interface{} `json:"raw_response"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
 type ChatStaffInfo struct {
@@ -839,17 +839,17 @@ type BoardroomListResult struct {
 }
 
 type BoardroomDetailResult struct {
-	Success         bool   `json:"success"`
-	RoomID          string `json:"room_id"`
-	Name            string `json:"name"`
-	Status          string `json:"status"`
-	PeopleNum       int    `json:"people_num"`
-	CanReserveFlag  string `json:"can_reserve_flag"`
-	Address         string `json:"address"`
-	AreaName        string `json:"area_name"`
-	GradingID       string `json:"grading_id"`
-	Error           string `json:"error"`
-	RawResponse     map[string]interface{} `json:"raw_response"`
+	Success        bool                   `json:"success"`
+	RoomID         string                 `json:"room_id"`
+	Name           string                 `json:"name"`
+	Status         string                 `json:"status"`
+	PeopleNum      int                    `json:"people_num"`
+	CanReserveFlag string                 `json:"can_reserve_flag"`
+	Address        string                 `json:"address"`
+	AreaName       string                 `json:"area_name"`
+	GradingID      string                 `json:"grading_id"`
+	Error          string                 `json:"error"`
+	RawResponse    map[string]interface{} `json:"raw_response"`
 }
 
 type BoardroomScheduleResult struct {
@@ -865,32 +865,32 @@ type BoardroomScheduleResult struct {
 }
 
 type BoardroomReserveDetailResult struct {
-	Success         bool   `json:"success"`
-	ReserveID       string `json:"reserve_id"`
-	BoardroomName   string `json:"boardroom_name"`
-	MeetingName     string `json:"meeting_name"`
-	Status          string `json:"status"`
-	ReserveTimeStart string `json:"reserve_time_start"`
-	ReserveTimeEnd  string `json:"reserve_time_end"`
-	ReserveTime     string `json:"reserve_time"`
-	ReserveUserName string `json:"reserve_user_name"`
-	PeopleNumber    string `json:"people_number"`
-	Error           string `json:"error"`
-	RawResponse     map[string]interface{} `json:"raw_response"`
+	Success          bool                   `json:"success"`
+	ReserveID        string                 `json:"reserve_id"`
+	BoardroomName    string                 `json:"boardroom_name"`
+	MeetingName      string                 `json:"meeting_name"`
+	Status           string                 `json:"status"`
+	ReserveTimeStart string                 `json:"reserve_time_start"`
+	ReserveTimeEnd   string                 `json:"reserve_time_end"`
+	ReserveTime      string                 `json:"reserve_time"`
+	ReserveUserName  string                 `json:"reserve_user_name"`
+	PeopleNumber     string                 `json:"people_number"`
+	Error            string                 `json:"error"`
+	RawResponse      map[string]interface{} `json:"raw_response"`
 }
 
 type BoardroomReserveResult struct {
-	Success         bool   `json:"success"`
-	ReserveID       string `json:"reserve_id"`
-	ReserveCode     string `json:"reserve_code"`
-	BoardroomName   string `json:"boardroom_name"`
-	MeetingName     string `json:"meeting_name"`
-	Status          string `json:"status"`
-	ReserveTimeStart string `json:"reserve_time_start"`
-	ReserveTimeEnd  string `json:"reserve_time_end"`
-	ReserveTime     string `json:"reserve_time"`
-	Error           string `json:"error"`
-	RawResponse     map[string]interface{} `json:"raw_response"`
+	Success          bool                   `json:"success"`
+	ReserveID        string                 `json:"reserve_id"`
+	ReserveCode      string                 `json:"reserve_code"`
+	BoardroomName    string                 `json:"boardroom_name"`
+	MeetingName      string                 `json:"meeting_name"`
+	Status           string                 `json:"status"`
+	ReserveTimeStart string                 `json:"reserve_time_start"`
+	ReserveTimeEnd   string                 `json:"reserve_time_end"`
+	ReserveTime      string                 `json:"reserve_time"`
+	Error            string                 `json:"error"`
+	RawResponse      map[string]interface{} `json:"raw_response"`
 }
 
 type BoardroomOpResult struct {
@@ -914,4 +914,45 @@ type BoardroomAreaListResult struct {
 	Areas       []map[string]interface{} `json:"areas"`
 	Error       string                   `json:"error"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type PersonalTodoSaveResult struct {
+	Success     bool                   `json:"success"`
+	TodoCode    string                 `json:"todo_code"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type PersonalTodoListResult struct {
+	Success     bool                     `json:"success"`
+	PageNo      int                      `json:"page_no"`
+	PageSize    int                      `json:"page_size"`
+	Pages       int                      `json:"pages"`
+	Total       int                      `json:"total"`
+	HasMore     bool                     `json:"has_more"`
+	Items       []map[string]interface{} `json:"items"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type PersonalTodoResourceResult struct {
+	Success            bool                   `json:"success"`
+	FileName           string                 `json:"file_name"`
+	MimeType           string                 `json:"mime_type"`
+	Suffix             string                 `json:"suffix"`
+	Size               int64                  `json:"size"`
+	MD5                string                 `json:"md5"`
+	ExtensionInfo      string                 `json:"extension_info"`
+	ResourceID         string                 `json:"resource_id"`
+	DownloadURL        string                 `json:"download_url"`
+	ImageThumbnailList map[string]interface{} `json:"image_thumbnail_list"`
+	Error              string                 `json:"error"`
+	RawResponse        map[string]interface{} `json:"raw_response"`
+}
+
+type PersonalTodoURLResult struct {
+	Success     bool                   `json:"success"`
+	URL         string                 `json:"url"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
 }

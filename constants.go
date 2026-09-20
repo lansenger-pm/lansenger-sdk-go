@@ -41,20 +41,31 @@ const (
 	QuestionnaireAnswerLimitOnce      = 1
 	QuestionnaireAnswerLimitUnlimited = -1
 
-	BoardroomStatusApproving    = 0
-	BoardroomStatusPendingSign  = 1
-	BoardroomStatusSignTimeout  = 2
-	BoardroomStatusRejected     = 3
-	BoardroomStatusCanceled     = 4
-	BoardroomStatusReserved     = 5
-	BoardroomStatusFinished     = 6
-	BoardroomReserveTypeSingle  = "0"
-	BoardroomReserveTypeRepeat  = "1"
-	BoardroomEditTypeCurrent    = "1"
-	BoardroomEditTypeCurrentAndAfter = "2"
-	BoardroomCancelTypeCurrent  = "1"
-	BoardroomCancelTypeCurrentAndAfter = "2"
-	BoardroomCancelTypeAllUnfinished = "3"
+	BoardroomStatusApproving                 = 0
+	BoardroomStatusPendingSign               = 1
+	BoardroomStatusSignTimeout               = 2
+	BoardroomStatusRejected                  = 3
+	BoardroomStatusCanceled                  = 4
+	BoardroomStatusReserved                  = 5
+	BoardroomStatusFinished                  = 6
+	BoardroomReserveTypeSingle               = "0"
+	BoardroomReserveTypeRepeat               = "1"
+	BoardroomEditTypeCurrent                 = "1"
+	BoardroomEditTypeCurrentAndAfter         = "2"
+	BoardroomCancelTypeCurrent               = "1"
+	BoardroomCancelTypeCurrentAndAfter       = "2"
+	BoardroomCancelTypeAllUnfinished         = "3"
+	PersonalTodoTypePersonal                 = 1
+	PersonalTodoStatusUnfinished             = 0
+	PersonalTodoStatusFinished               = 1
+	PersonalTodoPriorityLow                  = 0
+	PersonalTodoPriorityNormal               = 1
+	PersonalTodoPriorityUrgent               = 2
+	PersonalTodoPriorityVeryUrgent           = 3
+	PersonalTodoPlatformApp                  = 1
+	PersonalTodoPlatformWeb                  = 2
+	PersonalTodoPlatformAPI                  = 3
+	PersonalTodoResourceMaxSize        int64 = 9 * 1024 * 1024
 )
 
 var ValidIdentityTypes = []string{"personal-bot", "org-app", "org-bot"}
@@ -210,28 +221,28 @@ var APIEndpoints = map[string]map[string]string{
 		"accounts_fetch": "/xtra/notice/server/openapi/v1/notice/account",
 	},
 	"questionnaires": {
-		"save":                "/xtra/questionnaire/server/openapi/v1/saveQuestionnaire",
-		"questions_save":      "/xtra/questionnaire/server/openapi/v1/saveQuestionList",
-		"question_delete":     "/xtra/questionnaire/server/openapi/v1/deleteQuestion",
-		"publish":             "/xtra/questionnaire/server/openapi/v1/publish",
-		"withdraw":            "/xtra/questionnaire/server/openapi/v1/withdraw",
-		"finish":              "/xtra/questionnaire/server/openapi/v1/finish",
-		"delete":              "/xtra/questionnaire/server/openapi/v1/delete",
-		"detail":              "/xtra/questionnaire/server/openapi/v1/detail",
-		"answer_url":          "/xtra/questionnaire/server/openapi/v1/getAnswerUrl",
-		"copy":                "/xtra/questionnaire/server/openapi/v1/copy",
-		"detail_no_auth":      "/xtra/questionnaire/server/openapi/v1/detailWithoutAuth",
-		"query_list":          "/xtra/questionnaire/server/openapi/v1/queryList",
-		"user_accounts":       "/xtra/questionnaire/server/openapi/v1/userOfficeAccountList",
-		"create_list":         "/xtra/questionnaire/server/openapi/v1/createList",
-		"my_create_list":      "/xtra/questionnaire/server/openapi/v1/myCreateList",
-		"participation_list":  "/xtra/questionnaire/server/openapi/v1/participationList",
-		"answer_list":         "/xtra/questionnaire/server/openapi/v1/answerList",
-		"answer_detail":       "/xtra/questionnaire/server/openapi/v1/answerDetail",
-		"last_answer_detail":  "/xtra/questionnaire/server/openapi/v1/lastAnswerDetail",
-		"answer_data":         "/xtra/questionnaire/server/openapi/v1/answerData",
-		"last_answer_record":  "/xtra/questionnaire/server/openapi/v1/lastAnswerRecord",
-		"upload_url":          "/xtra/questionnaire/server/openapi/v1/upload",
+		"save":               "/xtra/questionnaire/server/openapi/v1/saveQuestionnaire",
+		"questions_save":     "/xtra/questionnaire/server/openapi/v1/saveQuestionList",
+		"question_delete":    "/xtra/questionnaire/server/openapi/v1/deleteQuestion",
+		"publish":            "/xtra/questionnaire/server/openapi/v1/publish",
+		"withdraw":           "/xtra/questionnaire/server/openapi/v1/withdraw",
+		"finish":             "/xtra/questionnaire/server/openapi/v1/finish",
+		"delete":             "/xtra/questionnaire/server/openapi/v1/delete",
+		"detail":             "/xtra/questionnaire/server/openapi/v1/detail",
+		"answer_url":         "/xtra/questionnaire/server/openapi/v1/getAnswerUrl",
+		"copy":               "/xtra/questionnaire/server/openapi/v1/copy",
+		"detail_no_auth":     "/xtra/questionnaire/server/openapi/v1/detailWithoutAuth",
+		"query_list":         "/xtra/questionnaire/server/openapi/v1/queryList",
+		"user_accounts":      "/xtra/questionnaire/server/openapi/v1/userOfficeAccountList",
+		"create_list":        "/xtra/questionnaire/server/openapi/v1/createList",
+		"my_create_list":     "/xtra/questionnaire/server/openapi/v1/myCreateList",
+		"participation_list": "/xtra/questionnaire/server/openapi/v1/participationList",
+		"answer_list":        "/xtra/questionnaire/server/openapi/v1/answerList",
+		"answer_detail":      "/xtra/questionnaire/server/openapi/v1/answerDetail",
+		"last_answer_detail": "/xtra/questionnaire/server/openapi/v1/lastAnswerDetail",
+		"answer_data":        "/xtra/questionnaire/server/openapi/v1/answerData",
+		"last_answer_record": "/xtra/questionnaire/server/openapi/v1/lastAnswerRecord",
+		"upload_url":         "/xtra/questionnaire/server/openapi/v1/upload",
 	},
 	"boardrooms": {
 		"room_list":        "/xtra/boardroom/server/openapi/v2/roomList",
@@ -245,6 +256,14 @@ var APIEndpoints = map[string]map[string]string{
 		"my_reserve_list":  "/xtra/boardroom/server/openapi/v2/myReserveList",
 		"grading_list":     "/xtra/boardroom/server/openapi/v2/gradingList",
 		"area_office_list": "/xtra/boardroom/server/openapi/v2/areaOfficeList",
+	},
+	"personal_todos": {
+		"save":                "/xtra/tdtask/server/openapi/v3/taskopt/savePersonalTask",
+		"update":              "/xtra/tdtask/server/openapi/v3/taskopt/updatePersonalTask",
+		"user_list":           "/xtra/tdtask/server/openapi/v3/user/list",
+		"resource_update":     "/xtra/tdtask/server/openapi/resource/update",
+		"resource_download":   "/xtra/tdtask/server/openapi/resource/getResourceDownload",
+		"resource_upload_url": "/xtra/tdtask/server/openapi/resource/getUploadUrl",
 	},
 	"websocket": {
 		"endpoint": "/v1/ws/endpoint/create",

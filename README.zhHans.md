@@ -5,7 +5,7 @@
 Lansenger（蓝信）平台的 Go SDK — 支持蓝信应用、组织机器人和个人机器人。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version: 0.9.23](https://img.shields.io/badge/Version-0.9.23-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
+[![Version: 0.16.0](https://img.shields.io/badge/Version-0.16.0-blue)](https://github.com/lansenger-pm/lansenger-sdk-go)
 [![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-blue)](https://go.dev/)
 [![Tests: 148](https://img.shields.io/badge/Tests-148-green)](https://github.com/lansenger-pm/lansenger-sdk-go)
 
@@ -39,6 +39,7 @@ Lansenger（蓝信）平台的 Go SDK — 支持蓝信应用、组织机器人�
 - **通知系统** — 通过官方账号发送通知（文本/链接、手机号/staffId 两种投放、确认/提醒策略、附件），查询组织官方账号
 - **问卷系统** — 创建/更新/发布/撤回/结束/删除问卷，批量管理题目，官方账号与我创建/我参与的列表（分页），答卷记录与导出，预签名上传地址
 - **会议室预定 V2** — 会议室检索（办公区/楼层/设备/时段筛选），详情与当日预订情况，预订与修改（单次/重复），取消与扫码确认，我的预订（分页），分级与办公区列表
+- **个人待办** — 创建、编辑、查询用户个人待办及资源附件；与应用待办完全分离
 - **机器人命令** — 创建/查询/删除机器人快捷命令
 - **个人应用** — 创建/修改/查询/删除/列表个人机器人应用
 - **回调事件** — 24 种事件类型、结构化数据解析、签名验证
@@ -599,6 +600,7 @@ lansenger-sdk-go/
 ├── notices.go             # 通知系统
 ├── questionnaires.go      # 问卷系统
 ├── boardrooms.go          # 会议室预定 V2
+├── personal_todos.go      # 个人待办
 ├── calendars.go         # 日历与日程（4.23）— 10 个端点
 ├── callbacks.go         # 回调事件解析 + AES-256-CBC 解密 + SHA1 签名验证
 ├── persistence.go       # CredentialStore — JSON 文件持久化
