@@ -830,6 +830,77 @@ type QuestionnaireUploadUrlResult struct {
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
+type VideoconferenceDetailResult struct {
+	Success       bool                   `json:"success"`
+	Mid           string                 `json:"mid"`
+	Subject       string                 `json:"subject"`
+	MeetingNumber string                 `json:"meeting_number"`
+	StartTime     int64                  `json:"start_time"`
+	StopTime      int64                  `json:"stop_time"`
+	Type          int                    `json:"type"`
+	Status        int                    `json:"status"`
+	Admin         string                 `json:"admin"`
+	Error         string                 `json:"error"`
+	RawResponse   map[string]interface{} `json:"raw_response"`
+}
+
+type VideoconferenceOpResult struct {
+	Success     bool                   `json:"success"`
+	Done        bool                   `json:"done"`
+	Message     string                 `json:"message"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type VideoconferenceListResult struct {
+	Success     bool                     `json:"success"`
+	Offset      int                      `json:"offset"`
+	Total       int                      `json:"total"`
+	Items       []map[string]interface{} `json:"items"`
+	Scalars     []interface{}            `json:"scalars"`
+	Error       string                   `json:"error"`
+	RawResponse map[string]interface{}   `json:"raw_response"`
+}
+
+type VideoconferenceStatusListResult struct {
+	Success     bool                   `json:"success"`
+	Statuses    []interface{}          `json:"statuses"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type VideoconferenceParamResult struct {
+	Success     bool                   `json:"success"`
+	MeetingInfo map[string]interface{} `json:"meeting_info"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type VideoconferenceVodListResult struct {
+	Success     bool                   `json:"success"`
+	Items       []interface{}          `json:"items"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type VideoconferenceVodUrlResult struct {
+	Success     bool                   `json:"success"`
+	Data        map[string]interface{} `json:"data"`
+	Error       string                 `json:"error"`
+	RawResponse map[string]interface{} `json:"raw_response"`
+}
+
+type VideoconferenceConfResult struct {
+	Success           bool                   `json:"success"`
+	MaxPerson         int                    `json:"max_person"`
+	DefaultMaxPerson  int                    `json:"default_max_person"`
+	AllowedRecordFlag int                    `json:"allowed_record_flag"`
+	ForcePasswdFlag   int                    `json:"force_passwd_flag"`
+	SpaceSize         int64                  `json:"space_size"`
+	Error             string                 `json:"error"`
+	RawResponse       map[string]interface{} `json:"raw_response"`
+}
+
 type BoardroomListResult struct {
 	Success     bool                     `json:"success"`
 	Count       int                      `json:"count"`

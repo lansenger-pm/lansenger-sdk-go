@@ -548,6 +548,113 @@ func domainContractCases() []domainContractCase {
 				return r.Success, r.Error, nil
 			},
 		},
+		{
+			name: "videoconference/create",
+			path: "/xtra/videoconference/openapi/v1/meeting/create",
+			success: mapSuccess(map[string]interface{}{
+				"id": "3173", "subject": "周会", "meetingNumber": "MN001",
+			}),
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.CreateMeeting(context.Background(), &VideoconferenceCreateParams{
+					Subject: "周会", StartTime: 1735660800000,
+					Members: []VideoconferenceMember{
+						{StaffID: "1001", Role: VCMemberRoleHost},
+						{StaffID: "1002", Role: VCMemberRoleParticipant},
+					},
+					OrgID: "2285568",
+				})
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/detail",
+			path: "/xtra/videoconference/openapi/v1/meeting/detail",
+			success: mapSuccess(map[string]interface{}{
+				"id": "3173", "subject": "周会", "status": float64(4),
+			}),
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchMeetingDetail(context.Background(), "3173", "2285568", "1001", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/list",
+			path: "/xtra/videoconference/openapi/v1/meeting/list",
+			success: mapSuccess(map[string]interface{}{
+				"offset": 0, "total": 1,
+				"items": []interface{}{map[string]interface{}{"id": "3173"}},
+			}),
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchMeetingList(context.Background(), "2285568", 1000, 2000, VCFetchRangeAll, "", 10, 0, "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/status",
+			path: "/xtra/videoconference/openapi/v1/meeting/status/fetchmore",
+			success: mapSuccess(map[string]interface{}{
+				"mids": []interface{}{map[string]interface{}{"mid": "3173", "status": float64(1)}},
+			}),
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchMeetingStatus(context.Background(), []string{"3173"}, "2285568", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/member-control",
+			path: "/xtra/videoconference/openapi/v1/meeting/member/control",
+			success: mapSuccess(map[string]interface{}{
+				"data": map[string]interface{}{"code": float64(0), "message": "ok"},
+			}),
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.ControlMember(context.Background(), "3173", "1002", "muteall", "1001", "2285568", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/vod-download",
+			path: "/xtra/videoconference/openapi/v1/vod/url/download/fetch",
+			success: mapSuccess(map[string]interface{}{
+				"v1": "https://download.example/v1.mp4",
+			}),
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchVodDownloadURLs(context.Background(),
+					[]VideoconferenceVod{{VodID: "v1"}}, "2285568", "1001", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/conf",
+			path: "/xtra/videoconference/openapi/v1/conf/fetch",
+			success: mapSuccess(map[string]interface{}{
+				"maxPerson": float64(300), "defaultMaxPerson": float64(100),
+			}),
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchOrgConf(context.Background(), "2285568", "", "", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
 	}
 }
 
@@ -905,6 +1012,75 @@ func TestDomainInputGuards(t *testing.T) {
 			want: "grading_id is required",
 			call: func(c *LansengerClient) (bool, string, error) {
 				r, err := c.FetchBoardroomAreaOffices(context.Background(), "", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/create/admin-count",
+			want: "exactly one member must have role='admin'",
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.CreateMeeting(context.Background(), &VideoconferenceCreateParams{
+					Subject: "s", StartTime: 1,
+					Members: []VideoconferenceMember{{StaffID: "a", Role: VCMemberRoleParticipant}},
+				})
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/list/person-range",
+			want: "staff_id is required when fetch_range='person'",
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchMeetingList(context.Background(), "1", 0, 0, VCFetchRangePerson, "", 10, 0, "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/status/mids",
+			want: "mids is required",
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchMeetingStatus(context.Background(), nil, "1", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/member-control/opcode",
+			want: "op_code must be one of ",
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.ControlMember(context.Background(), "1", "2", "notAnOp", "op", "1", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/vod-download/count",
+			want: "vods must contain 1..3 entries",
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchVodDownloadURLs(context.Background(), nil, "1", "op", "")
+				if err != nil {
+					return false, "", err
+				}
+				return r.Success, r.Error, nil
+			},
+		},
+		{
+			name: "videoconference/params/number",
+			want: "meeting_number is required",
+			call: func(c *LansengerClient) (bool, string, error) {
+				r, err := c.FetchMeetingParams(context.Background(), "", "1", "op", "")
 				if err != nil {
 					return false, "", err
 				}

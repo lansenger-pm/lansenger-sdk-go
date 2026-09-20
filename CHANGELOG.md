@@ -33,6 +33,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.13.0] - 2026-09-21
+
+### Added
+
+- **videoconferences**: New videoconference domain (视频会议开放能力) — 20 endpoints on `/xtra/videoconference/openapi/v1`: create/modify/cancel/stop meeting, detail, meeting list, record list, member simplerecord, fixroom list, batch status, events subscribe, meeting params, history/active fetch, member control/invite/member list, vod list, vod download URLs, org conf fetch.
+- **videoconferences**: Client-side validation — exactly one `role='admin'` member on create/modify, opCode whitelist for member control, 1..3 vods per download call, `fetchRange='person'` requires staffId, mids non-empty.
+- **videoconferences**: Typed `VideoconferenceMember`/`VideoconferenceVod` structs, role/fetchRange/createSource/opCode constants, unit tests + domain contract cases and input guards.
+- **cli**: `videoconference` command group covering all 20 endpoints — create/modify/cancel/stop/detail/list/record-list/simplerecord/fixroom-list/status/subscribe/params/history/active/member-control/invite/member-list/vod-list/vod-download/conf — with `--member`/`--vods` JSON flags, the high-risk gate (`--yes`/`--dry-run`) on cancel and stop, and local guards for admin count, opCode whitelist and vod count.
+
+---
+
 ## [0.12.0] - 2026-08-28
 
 ### Added

@@ -601,6 +601,7 @@ lansenger-sdk-go/
 ├── questionnaires.go      # Questionnaires (问卷系统)
 ├── boardrooms.go          # Boardroom (会议室预定 V2)
 ├── personal_todos.go      # Personal Todo (个人待办)
+├── videoconferences.go    # Videoconference (视频会议开放能力)
 ├── calendars.go         # Calendrier & planification (4.23) — 10 endpoints
 ├── callbacks.go         # Analyse d'événements de callback + déchiffrement AES-256-CBC + vérification de signature SHA1
 ├── persistence.go       # CredentialStore — persistance dans fichier JSON

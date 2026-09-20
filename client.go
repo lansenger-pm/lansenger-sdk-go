@@ -270,6 +270,11 @@ func intFromMap(m map[string]interface{}, key string) int {
 	return int(v)
 }
 
+func int64FromMap(m map[string]interface{}, key string) int64 {
+	v, _ := m[key].(float64)
+	return int64(v)
+}
+
 func floatFromMap(m map[string]interface{}, key string) float64 {
 	v, _ := m[key].(float64)
 	return v
