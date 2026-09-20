@@ -459,9 +459,7 @@ func (c *LansengerClient) CancelBoardroomReserve(ctx context.Context, reserveID,
 		return &BoardroomOpResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &BoardroomOpResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.Done = boolFromMap(data, "data")
-	}
+	res.Done = boolDataValue(result)
 	return res, nil
 }
 
@@ -485,9 +483,7 @@ func (c *LansengerClient) ConfirmBoardroomSign(ctx context.Context, reserveID, o
 		return &BoardroomOpResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &BoardroomOpResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.Done = boolFromMap(data, "data")
-	}
+	res.Done = boolDataValue(result)
 	return res, nil
 }
 

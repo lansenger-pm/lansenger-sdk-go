@@ -122,6 +122,44 @@ func TestSendNoticeDefaultRemindStatus(t *testing.T) {
 	}
 }
 
+func TestSendNoticeIncludesZeroCoordinatesWhenExplicit(t *testing.T) {
+	var gotBody map[string]interface{}
+	b := newMuxBuilder().handleToken("tok1")
+	b.mux.HandleFunc("/xtra/notice/server/openapi/v1/send", func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		json.Unmarshal(raw, &gotBody)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"errCode": 0, "errMsg": "ok",
+			"data": map[string]interface{}{"code": "NTC_COORD"},
+		})
+	})
+	server := b.build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.SendNotice(context.Background(), &NoticeSendParams{
+		Title:         "t",
+		ContentType:   1,
+		AccountCode:   "ACC001",
+		UserType:      1,
+		Content:       "c",
+		ReleasePhones: []string{"13800138000"},
+		CreateMobile:  "13800138000",
+		LatitudeSet:   true,
+		LongitudeSet:  true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success {
+		t.Fatalf("expected success, got %s", result.Error)
+	}
+	if gotBody["latitude"] != float64(0) || gotBody["longitude"] != float64(0) {
+		t.Fatalf("expected explicit zero coordinates, got %v/%v", gotBody["latitude"], gotBody["longitude"])
+	}
+}
+
 func TestSendNoticeUsesDefaultIdentity(t *testing.T) {
 	previousToken := getDefaultUserToken()
 	previousID := getDefaultUserID()
@@ -170,6 +208,41 @@ func TestSendNoticeUsesDefaultIdentity(t *testing.T) {
 	}
 	if gotBody["createUserId"] != "default-staff" {
 		t.Fatalf("expected default createUserId, got %v", gotBody["createUserId"])
+	}
+}
+
+func TestSendNoticeRequiresCreatorIdentityWithoutDefault(t *testing.T) {
+	previousToken := getDefaultUserToken()
+	previousID := getDefaultUserID()
+	defer func() {
+		SetDefaultUserToken(previousToken)
+		SetDefaultUserID(previousID)
+	}()
+	SetDefaultUserToken("explicit-user-token")
+	SetDefaultUserID("")
+
+	server := newMuxBuilder().handleToken("tok1").build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.SendNotice(context.Background(), &NoticeSendParams{
+		Title:       "t",
+		ContentType: 1,
+		AccountCode: "ACC001",
+		UserType:    2,
+		Content:     "c",
+		ReleaseRange: []map[string]interface{}{
+			{"objId": "staff-1", "objName": "测试", "objType": 1},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Success {
+		t.Fatal("expected creator identity validation failure")
+	}
+	if result.Error != "create_mobile or create_user_id is required when user_type is 2" {
+		t.Fatalf("unexpected error: %s", result.Error)
 	}
 }
 

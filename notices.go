@@ -7,8 +7,7 @@ import (
 // NoticeSendParams carries the fields for SendNotice (通知系统 /v1/send).
 //
 // Flag-style fields use *int: nil means "omit" (server default applies),
-// 1=yes, 0=no. When UserToken is non-empty, CreateMobile / CreateUserID
-// may be left empty — the server then infers the identity from the token.
+// 1=yes, 0=no. One of CreateMobile / CreateUserID is required.
 type NoticeSendParams struct {
 	Title       string
 	ContentType int    // 1=text (Content required), 2=link (NoticeLink required)
@@ -19,7 +18,9 @@ type NoticeSendParams struct {
 	NoticeLink     string
 	NoticeLocation string
 	Latitude       float64
+	LatitudeSet    bool // include Latitude even when its value is zero
 	Longitude      float64
+	LongitudeSet   bool // include Longitude even when its value is zero
 
 	ReleasePhones []string                 // max 10
 	CCPhones      []string                 // max 10
@@ -94,8 +95,8 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 		if len(p.ReleasePhones) > 10 || len(p.CCPhones) > 10 {
 			return &NoticeSendResult{Success: false, Error: "release_phones and cc_phones allow at most 10 numbers"}, nil
 		}
-		if p.CreateMobile == "" && userToken == "" {
-			return &NoticeSendResult{Success: false, Error: "create_mobile is required when user_token is not provided"}, nil
+		if p.CreateMobile == "" && createUserID == "" {
+			return &NoticeSendResult{Success: false, Error: "create_mobile or create_user_id is required when user_type is 1"}, nil
 		}
 	}
 	if p.UserType == 2 {
@@ -105,8 +106,8 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 		if len(p.ReleaseRange) > 200 || len(p.CCStaffIDs) > 200 {
 			return &NoticeSendResult{Success: false, Error: "release_range and cc_staff_ids allow at most 200 entries"}, nil
 		}
-		if createUserID == "" && userToken == "" {
-			return &NoticeSendResult{Success: false, Error: "create_user_id is required when user_token is not provided"}, nil
+		if createUserID == "" && p.CreateMobile == "" {
+			return &NoticeSendResult{Success: false, Error: "create_mobile or create_user_id is required when user_type is 2"}, nil
 		}
 	}
 
@@ -132,10 +133,10 @@ func (c *LansengerClient) SendNotice(ctx context.Context, p *NoticeSendParams) (
 	if p.NoticeLocation != "" {
 		body["noticeLocation"] = p.NoticeLocation
 	}
-	if p.Latitude != 0 {
+	if p.LatitudeSet || p.Latitude != 0 {
 		body["latitude"] = p.Latitude
 	}
-	if p.Longitude != 0 {
+	if p.LongitudeSet || p.Longitude != 0 {
 		body["longitude"] = p.Longitude
 	}
 	if p.UserType == 1 {

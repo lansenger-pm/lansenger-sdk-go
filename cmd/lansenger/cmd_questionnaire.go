@@ -64,7 +64,7 @@ var questionnaireCmd = &cobra.Command{
 }
 
 var (
-	qSaveCode, qSaveWelcome, qSaveBye                                          string
+	qSaveCode, qSaveWelcome, qSaveBye                                              string
 	qSaveCover, qSaveResourceIDs, qSaveCreateMobile, qSaveCreateUserID, qSaveToken string
 )
 
@@ -77,7 +77,8 @@ var questionnaireSaveCmd = &cobra.Command{
 		result, err := client.SaveQuestionnaire(context.Background(), &lansenger.QuestionnaireSaveParams{
 			Title: args[0], AccountCode: args[1], Code: qSaveCode, WelcomeSpeech: qSaveWelcome,
 			ByeSpeech: qSaveBye, CoverResourceID: qSaveCover, ResourceIDs: qSaveResourceIDs,
-			CreateMobile: qSaveCreateMobile, CreateUserID: qSaveCreateUserID, UserToken: qSaveToken,
+			CreateMobile: qSaveCreateMobile, CreateUserID: questionnaireUserID(qSaveCreateUserID),
+			UserToken: qSaveToken,
 		})
 		checkError(err)
 		outputResultFields(result, []string{"questionnaire_code"})
@@ -91,7 +92,9 @@ var questionnaireSaveQuestionsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
 		questions := parseJSONListFlag(qSaveQuestionsJSON, "--questions")
-		result, err := client.SaveQuestionnaireQuestions(context.Background(), args[0], questions, qSaveQCreateUserID, qSaveQToken)
+		result, err := client.SaveQuestionnaireQuestions(
+			context.Background(), args[0], questions, questionnaireUserID(qSaveQCreateUserID), qSaveQToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"saved_count"})
 	},
@@ -107,7 +110,9 @@ var questionnaireDeleteQuestionCmd = &cobra.Command{
 			return
 		}
 		client := getClient()
-		result, err := client.DeleteQuestionnaireQuestion(context.Background(), args[0], qDelQCreateUserID, qDelQToken)
+		result, err := client.DeleteQuestionnaireQuestion(
+			context.Background(), args[0], questionnaireUserID(qDelQCreateUserID), qDelQToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"deleted"})
 	},
@@ -130,7 +135,7 @@ var questionnairePublishCmd = &cobra.Command{
 			ShareFlag:         qPublishShareFlag,
 			ViewStatsFlag:     qPublishViewStatsFlag,
 			AnonymFlag:        qPublishAnonymFlag,
-			PublishUserID:     qPublishUserID,
+			PublishUserID:     questionnaireUserID(qPublishUserID),
 			UserToken:         qPublishToken,
 		})
 		checkError(err)
@@ -144,11 +149,11 @@ func questionnaireCodeRunner(category string, fields []string) func(cmd *cobra.C
 		ctx := context.Background()
 		switch category {
 		case "withdraw":
-			result, err := client.WithdrawQuestionnaire(ctx, args[0], qOperateUserID, qUserToken)
+			result, err := client.WithdrawQuestionnaire(ctx, args[0], questionnaireUserID(qOperateUserID), qUserToken)
 			checkError(err)
 			outputResultFields(result, fields)
 		case "finish":
-			result, err := client.FinishQuestionnaire(ctx, args[0], qOperateUserID, qUserToken)
+			result, err := client.FinishQuestionnaire(ctx, args[0], questionnaireUserID(qOperateUserID), qUserToken)
 			checkError(err)
 			outputResultFields(result, fields)
 		case "delete":
@@ -156,11 +161,11 @@ func questionnaireCodeRunner(category string, fields []string) func(cmd *cobra.C
 			if qDeleteDryRun {
 				return
 			}
-			result, err := client.DeleteQuestionnaire(ctx, args[0], qOperateUserID, qUserToken)
+			result, err := client.DeleteQuestionnaire(ctx, args[0], questionnaireUserID(qOperateUserID), qUserToken)
 			checkError(err)
 			outputResultFields(result, fields)
 		case "detail":
-			result, err := client.FetchQuestionnaireDetail(ctx, args[0], qOperateUserID, qUserToken)
+			result, err := client.FetchQuestionnaireDetail(ctx, args[0], questionnaireUserID(qOperateUserID), qUserToken)
 			checkError(err)
 			outputResultFields(result, fields)
 		case "brief":
@@ -168,11 +173,11 @@ func questionnaireCodeRunner(category string, fields []string) func(cmd *cobra.C
 			checkError(err)
 			outputResultFields(result, fields)
 		case "answer_url":
-			result, err := client.FetchQuestionnaireAnswerURL(ctx, args[0], qOperateUserID, qUserToken)
+			result, err := client.FetchQuestionnaireAnswerURL(ctx, args[0], questionnaireUserID(qOperateUserID), qUserToken)
 			checkError(err)
 			outputResultFields(result, fields)
 		case "copy":
-			result, err := client.CopyQuestionnaire(ctx, args[0], qOperateUserID, qUserToken)
+			result, err := client.CopyQuestionnaire(ctx, args[0], questionnaireUserID(qOperateUserID), qUserToken)
 			checkError(err)
 			outputResultFields(result, fields)
 		}
@@ -197,7 +202,7 @@ var questionnaireAccountsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchQuestionnaireOfficeAccounts(context.Background(), qAccountsUserID, qUserToken)
+		result, err := client.FetchQuestionnaireOfficeAccounts(context.Background(), questionnaireUserID(qAccountsUserID), qUserToken)
 		checkError(err)
 		outputResultFields(result, []string{"total", "accounts"})
 	},
@@ -209,7 +214,9 @@ var questionnaireCreatedListCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchCreatedQuestionnaires(context.Background(), args[0], qPage, qPageSize, intPtrOrNil(qStatus), "", qUserToken)
+		result, err := client.FetchCreatedQuestionnaires(
+			context.Background(), args[0], qPage, qPageSize, intPtrOrNil(qStatus), questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"total", "page_no", "page_size", "has_more", "items"})
 	},
@@ -221,7 +228,10 @@ var questionnaireMyCreatedCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchMyCreatedQuestionnaires(context.Background(), args[0], qPage, qPageSize, qTitleFilter, intPtrOrNil(qStatus), "", qUserToken)
+		result, err := client.FetchMyCreatedQuestionnaires(
+			context.Background(), args[0], qPage, qPageSize, qTitleFilter, intPtrOrNil(qStatus),
+			questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"total", "page_no", "page_size", "has_more", "items"})
 	},
@@ -233,7 +243,10 @@ var questionnaireParticipatedCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchParticipatedQuestionnaires(context.Background(), args[0], qPage, qPageSize, intPtrOrNil(qStatus), "", qUserToken)
+		result, err := client.FetchParticipatedQuestionnaires(
+			context.Background(), args[0], qPage, qPageSize, intPtrOrNil(qStatus),
+			questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"total", "page_no", "page_size", "has_more", "items"})
 	},
@@ -245,7 +258,9 @@ var questionnaireAnswersCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchAnswerRecords(context.Background(), args[0], args[1], qPage, qPageSize, "", qUserToken)
+		result, err := client.FetchAnswerRecords(
+			context.Background(), args[0], args[1], qPage, qPageSize, questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"total", "page_no", "page_size", "has_more", "items"})
 	},
@@ -257,7 +272,9 @@ var questionnaireAnswerDetailCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchQuestionnaireAnswerDetail(context.Background(), args[0], args[1], "", qUserToken)
+		result, err := client.FetchQuestionnaireAnswerDetail(
+			context.Background(), args[0], args[1], questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"answer_code", "answer_user_name", "answer_status", "answer_commit_time", "questionnaire", "answers"})
 	},
@@ -269,7 +286,9 @@ var questionnaireLastAnswerDetailCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchQuestionnaireLastAnswerDetail(context.Background(), args[0], qAnswerRecordCode, "", qUserToken)
+		result, err := client.FetchQuestionnaireLastAnswerDetail(
+			context.Background(), args[0], qAnswerRecordCode, questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"answer_code", "answer_user_name", "answer_status", "answer_commit_time", "answers"})
 	},
@@ -281,7 +300,9 @@ var questionnaireAnswerDataCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchAnswerData(context.Background(), args[0], args[1], qPage, qPageSize, "", qUserToken)
+		result, err := client.FetchAnswerData(
+			context.Background(), args[0], args[1], qPage, qPageSize, questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"total", "page_no", "page_size", "has_more", "items"})
 	},
@@ -293,7 +314,9 @@ var questionnaireLastAnswerRecordCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
-		result, err := client.FetchQuestionnaireLastAnswerRecord(context.Background(), args[0], qAnswerRecordCode, "", qUserToken)
+		result, err := client.FetchQuestionnaireLastAnswerRecord(
+			context.Background(), args[0], qAnswerRecordCode, questionnaireUserID(qUserID), qUserToken,
+		)
 		checkError(err)
 		outputResultFields(result, []string{"record_code", "answer_user_name", "answer_status", "answer_commit_time", "stats_status"})
 	},
@@ -314,20 +337,28 @@ var questionnaireUploadURLCmd = &cobra.Command{
 }
 
 var (
-	qSaveQuestionsJSON, qSaveQCreateUserID, qSaveQToken                     string
-	qDelQCreateUserID, qDelQToken                                           string
-	qDelQYes, qDelQDryRun                                                   bool
-	qPublishScope, qPublishAnswerLimit, qPublishMessageFlag                 int
+	qSaveQuestionsJSON, qSaveQCreateUserID, qSaveQToken                            string
+	qDelQCreateUserID, qDelQToken                                                  string
+	qDelQYes, qDelQDryRun                                                          bool
+	qPublishScope, qPublishAnswerLimit, qPublishMessageFlag                        int
 	qPublishPageFlag, qPublishShareFlag, qPublishViewStatsFlag, qPublishAnonymFlag int
-	qPublishStaffIDs, qPublishPhones, qPublishUserID, qPublishToken         string
-	qOperateUserID, qUserToken                                              string
-	qDeleteYes, qDeleteDryRun                                               bool
-	qQueryCodes                                                             string
-	qQueryIncludeDeleted                                                    int
-	qAccountsUserID                                                         string
-	qPage, qPageSize, qStatus                                               int
-	qTitleFilter, qAnswerRecordCode                                         string
+	qPublishStaffIDs, qPublishPhones, qPublishUserID, qPublishToken                string
+	qOperateUserID, qUserToken                                                     string
+	qDeleteYes, qDeleteDryRun                                                      bool
+	qQueryCodes                                                                    string
+	qQueryIncludeDeleted                                                           int
+	qAccountsUserID                                                                string
+	qUserID                                                                        string
+	qPage, qPageSize, qStatus                                                      int
+	qTitleFilter, qAnswerRecordCode                                                string
 )
+
+func questionnaireUserID(value string) string {
+	if value != "" {
+		return value
+	}
+	return globalAsStaffID
+}
 
 func intPtrOrNil(v int) *int {
 	if v < 0 {
@@ -405,6 +436,7 @@ func init() {
 	for _, c := range []*cobra.Command{questionnaireCreatedListCmd, questionnaireMyCreatedCmd, questionnaireParticipatedCmd, questionnaireAnswersCmd, questionnaireAnswerDataCmd} {
 		c.Flags().IntVar(&qPage, "page", 1, "Page number")
 		c.Flags().IntVar(&qPageSize, "size", 10, "Page size")
+		c.Flags().StringVar(&qUserID, "user-id", "", "User ID (omit when --as/--user-token is set)")
 		c.Flags().StringVar(&qUserToken, "user-token", "", "User token")
 	}
 	questionnaireCreatedListCmd.Flags().IntVar(&qStatus, "status", -1, "1=draft, 2=ongoing, 3=withdrawn, 4=finished (-1=omit)")
@@ -413,9 +445,12 @@ func init() {
 	questionnaireParticipatedCmd.Flags().IntVar(&qStatus, "status", -1, "2=ongoing, 4=finished (-1=omit)")
 
 	questionnaireLastAnswerDetailCmd.Flags().StringVar(&qAnswerRecordCode, "answer-record-code", "", "Specific answer record code")
+	questionnaireLastAnswerDetailCmd.Flags().StringVar(&qUserID, "user-id", "", "User ID (omit when --as/--user-token is set)")
 	questionnaireLastAnswerDetailCmd.Flags().StringVar(&qUserToken, "user-token", "", "User token")
 	questionnaireLastAnswerRecordCmd.Flags().StringVar(&qAnswerRecordCode, "answer-record-code", "", "Specific answer record code")
+	questionnaireLastAnswerRecordCmd.Flags().StringVar(&qUserID, "user-id", "", "User ID (omit when --as/--user-token is set)")
 	questionnaireLastAnswerRecordCmd.Flags().StringVar(&qUserToken, "user-token", "", "User token")
+	questionnaireAnswerDetailCmd.Flags().StringVar(&qUserID, "user-id", "", "User ID (omit when --as/--user-token is set)")
 	questionnaireAnswerDetailCmd.Flags().StringVar(&qUserToken, "user-token", "", "User token")
 
 	questionnaireCmd.AddCommand(questionnaireSaveCmd)

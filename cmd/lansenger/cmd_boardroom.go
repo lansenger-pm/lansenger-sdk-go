@@ -71,17 +71,20 @@ var boardroomReserveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
 		result, err := client.ReserveBoardroom(context.Background(), &lansenger.BoardroomReserveParams{
-			BoardRoomID:      args[0],
-			Name:             args[1],
-			GradingID:        brReserveGradingID,
-			ReserveTimeStart: brReserveStart,
-			ReserveTimeEnd:   brReserveEnd,
-			NoticeTime:       brReserveNoticeTime,
-			PeopleNumber:     brReservePeople,
-			Toastmaster:      brReserveToastmaster,
-			Leader:           brReserveLeader,
-			IsVideo:          brReserveIsVideo,
-			VideoName:        brReserveVideoName,
+			BoardRoomID:        args[0],
+			Name:               args[1],
+			GradingID:          brReserveGradingID,
+			ReserveTimeStart:   brReserveStart,
+			ReserveTimeEnd:     brReserveEnd,
+			NoticeTime:         brReserveNoticeTime,
+			PeopleNumber:       brReservePeople,
+			Toastmaster:        brReserveToastmaster,
+			Leader:             brReserveLeader,
+			LeaderAttend:       brReserveLeaderAttend,
+			IsVideo:            brReserveIsVideo,
+			VideoName:          brReserveVideoName,
+			OtherDemand:        brReserveOtherDemand,
+			TableCards:         brReserveTableCards,
 			InvitationUserList: splitCommaList(brReserveInvite),
 			UserList:           splitCommaList(brReserveApprovers),
 			ReserveType:        brReserveType,
@@ -189,22 +192,23 @@ var boardroomAreaOfficesCmd = &cobra.Command{
 }
 
 var (
-	brGradingID, brAreaOfficeID, brFloorIDs, brEquipment                 string
-	brTimeStart, brTimeEnd, brQueryDate, brUserToken                     string
-	brPage, brLimit                                                      int
-	brScheduleGradingID                                                  string
-	brReserveDetailGradingID                                             string
+	brGradingID, brAreaOfficeID, brFloorIDs, brEquipment                  string
+	brTimeStart, brTimeEnd, brQueryDate, brUserToken                      string
+	brPage, brLimit                                                       int
+	brScheduleGradingID                                                   string
+	brReserveDetailGradingID                                              string
 	brReserveGradingID, brReserveStart, brReserveEnd, brReserveNoticeTime string
-	brReservePeople, brReserveToastmaster, brReserveLeader               string
-	brReserveIsVideo, brReserveVideoName, brReserveInvite                string
-	brReserveApprovers, brReserveType, brReserveRepeatType               string
-	brReserveRepeatDays, brReserveSkip, brReserveRepeatEnd               string
-	brReserveUserToken                                                   string
-	brEditGradingID, brEditStart, brEditEnd, brEditNoticeTime            string
-	brEditType, brEditPeople, brEditUserToken                            string
-	brCancelReason, brCancelType, brCancelUserToken                      string
-	brCancelNotify, brCancelYes, brCancelDryRun                          bool
-	brMyGradingID, brMyKeys, brMyStartTime, brMyEndTime, brMyRoomID      string
+	brReservePeople, brReserveToastmaster, brReserveLeader                string
+	brReserveLeaderAttend, brReserveOtherDemand, brReserveTableCards      string
+	brReserveIsVideo, brReserveVideoName, brReserveInvite                 string
+	brReserveApprovers, brReserveType, brReserveRepeatType                string
+	brReserveRepeatDays, brReserveSkip, brReserveRepeatEnd                string
+	brReserveUserToken                                                    string
+	brEditGradingID, brEditStart, brEditEnd, brEditNoticeTime             string
+	brEditType, brEditPeople, brEditUserToken                             string
+	brCancelReason, brCancelType, brCancelUserToken                       string
+	brCancelNotify, brCancelYes, brCancelDryRun                           bool
+	brMyGradingID, brMyKeys, brMyStartTime, brMyEndTime, brMyRoomID       string
 )
 
 func init() {
@@ -232,8 +236,11 @@ func init() {
 	boardroomReserveCmd.Flags().StringVar(&brReservePeople, "people", "", "Attendee count")
 	boardroomReserveCmd.Flags().StringVar(&brReserveToastmaster, "toastmaster", "", "Host (max 10 chars)")
 	boardroomReserveCmd.Flags().StringVar(&brReserveLeader, "leader", "", "Attending leader (max 200 chars)")
+	boardroomReserveCmd.Flags().StringVar(&brReserveLeaderAttend, "leader-attend", "", "Leader attendance: 0=attend, 1=not attend")
 	boardroomReserveCmd.Flags().StringVar(&brReserveIsVideo, "is-video", "", "Video meeting: 0=on, 1=off")
 	boardroomReserveCmd.Flags().StringVar(&brReserveVideoName, "video-name", "", "Video meeting name")
+	boardroomReserveCmd.Flags().StringVar(&brReserveOtherDemand, "other-demand", "", "Other meeting requirements")
+	boardroomReserveCmd.Flags().StringVar(&brReserveTableCards, "table-cards", "", "Table cards: 0=on, 1=off")
 	boardroomReserveCmd.Flags().StringVar(&brReserveInvite, "invite", "", "Comma-separated attendee staff IDs")
 	boardroomReserveCmd.Flags().StringVar(&brReserveApprovers, "approvers", "", "Comma-separated approver staff IDs")
 	boardroomReserveCmd.Flags().StringVar(&brReserveType, "reserve-type", "0", "0=single, 1=repeat")

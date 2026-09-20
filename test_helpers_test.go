@@ -33,7 +33,7 @@ func mockAppTokenHandler(token string) http.HandlerFunc {
 	}
 }
 
-func mockAPIResponseHandler(errCode int, errMsg string, data map[string]interface{}) http.HandlerFunc {
+func mockAPIResponseHandler(errCode int, errMsg string, data interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -76,7 +76,7 @@ func (b *muxBuilder) handleToken(token string) *muxBuilder {
 	return b
 }
 
-func (b *muxBuilder) handle(path string, errCode int, errMsg string, data map[string]interface{}) *muxBuilder {
+func (b *muxBuilder) handle(path string, errCode int, errMsg string, data interface{}) *muxBuilder {
 	b.mux.HandleFunc(path, mockAPIResponseHandler(errCode, errMsg, data))
 	return b
 }

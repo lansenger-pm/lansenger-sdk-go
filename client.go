@@ -289,6 +289,47 @@ func boolFromMap(m map[string]interface{}, key string) bool {
 	return false
 }
 
+// stringDataValue reads the top-level data field when an endpoint returns a
+// scalar string. The nested map fallback keeps compatibility with older tests
+// and any legacy server wrappers.
+func stringDataValue(result map[string]interface{}) string {
+	if s, ok := result["data"].(string); ok {
+		return s
+	}
+	if data, ok := result["data"].(map[string]interface{}); ok {
+		return strOrNil(data, "data")
+	}
+	return ""
+}
+
+func intDataValue(result map[string]interface{}) int {
+	if n, ok := result["data"].(float64); ok {
+		return int(n)
+	}
+	if data, ok := result["data"].(map[string]interface{}); ok {
+		return intFromMap(data, "data")
+	}
+	return 0
+}
+
+func boolDataValue(result map[string]interface{}) bool {
+	if value, ok := result["data"]; ok {
+		if b, ok := value.(bool); ok {
+			return b
+		}
+		if s, ok := value.(string); ok {
+			return s == "true" || s == "1"
+		}
+		if n, ok := value.(float64); ok {
+			return n != 0
+		}
+		if data, ok := value.(map[string]interface{}); ok {
+			return boolFromMap(data, "data")
+		}
+	}
+	return false
+}
+
 func mapFromMap(m map[string]interface{}, key string) map[string]interface{} {
 	v, _ := m[key].(map[string]interface{})
 	return v

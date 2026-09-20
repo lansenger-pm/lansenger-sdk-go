@@ -72,7 +72,7 @@ func TestCancelAndConfirmSign(t *testing.T) {
 	} {
 		server := newMuxBuilder().
 			handleToken("tok1").
-			handle("/xtra/boardroom/server/openapi/v2/"+ep.path, 0, "ok", map[string]interface{}{"data": true}).
+			handle("/xtra/boardroom/server/openapi/v2/"+ep.path, 0, "ok", true).
 			build()
 		c := newTestClient(server)
 		result, err := ep.run(c)
@@ -115,8 +115,8 @@ func TestFetchBoardroomSchedule(t *testing.T) {
 		handleToken("tok1").
 		handle("/xtra/boardroom/server/openapi/v2/roomSchedule", 0, "ok", map[string]interface{}{
 			"id": "room1", "name": "第一会议室", "canReserveFlag": "1",
-			"reserveDtoList":       []interface{}{map[string]interface{}{"name": "周会"}},
-			"deactivatedInfoList":  []interface{}{},
+			"reserveDtoList":      []interface{}{map[string]interface{}{"name": "周会"}},
+			"deactivatedInfoList": []interface{}{},
 		}).
 		build()
 	defer server.Close()

@@ -88,9 +88,7 @@ func (c *LansengerClient) SaveQuestionnaire(ctx context.Context, p *Questionnair
 		return &QuestionnaireSaveResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireSaveResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.QuestionnaireCode = strOrNil(data, "data")
-	}
+	res.QuestionnaireCode = stringDataValue(result)
 	return res, nil
 }
 
@@ -119,9 +117,7 @@ func (c *LansengerClient) SaveQuestionnaireQuestions(ctx context.Context, questi
 		return &QuestionnaireQuestionSaveResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireQuestionSaveResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.SavedCount = intFromMap(data, "data")
-	}
+	res.SavedCount = intDataValue(result)
 	return res, nil
 }
 
@@ -146,9 +142,7 @@ func (c *LansengerClient) DeleteQuestionnaireQuestion(ctx context.Context, quest
 		return &QuestionnaireQuestionDeleteResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireQuestionDeleteResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.Deleted = boolFromMap(data, "data")
-	}
+	res.Deleted = boolDataValue(result)
 	return res, nil
 }
 
@@ -197,9 +191,7 @@ func (c *LansengerClient) PublishQuestionnaire(ctx context.Context, p *Questionn
 		return &QuestionnaireOpResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireOpResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.Done = boolFromMap(data, "data")
-	}
+	res.Done = boolDataValue(result)
 	return res, nil
 }
 
@@ -226,9 +218,7 @@ func (c *LansengerClient) WithdrawQuestionnaire(ctx context.Context, code, opera
 		return &QuestionnaireOpResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireOpResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.Done = boolFromMap(data, "data")
-	}
+	res.Done = boolDataValue(result)
 	return res, nil
 }
 
@@ -239,9 +229,7 @@ func (c *LansengerClient) FinishQuestionnaire(ctx context.Context, code, operate
 		return &QuestionnaireOpResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireOpResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.Done = boolFromMap(data, "data")
-	}
+	res.Done = boolDataValue(result)
 	return res, nil
 }
 
@@ -252,9 +240,7 @@ func (c *LansengerClient) DeleteQuestionnaire(ctx context.Context, code, operate
 		return &QuestionnaireOpResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireOpResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.Done = boolFromMap(data, "data")
-	}
+	res.Done = boolDataValue(result)
 	return res, nil
 }
 
@@ -324,9 +310,7 @@ func (c *LansengerClient) FetchQuestionnaireAnswerURL(ctx context.Context, code,
 		return &QuestionnaireAnswerUrlResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireAnswerUrlResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.URL = strOrNil(data, "data")
-	}
+	res.URL = stringDataValue(result)
 	return res, nil
 }
 
@@ -337,9 +321,7 @@ func (c *LansengerClient) CopyQuestionnaire(ctx context.Context, code, operateUs
 		return &QuestionnaireCopyResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireCopyResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.NewCode = strOrNil(data, "data")
-	}
+	res.NewCode = stringDataValue(result)
 	return res, nil
 }
 
@@ -705,8 +687,6 @@ func (c *LansengerClient) FetchQuestionnaireUploadURL(ctx context.Context, fileN
 		return &QuestionnaireUploadUrlResult{Success: false, Error: err.Error()}, nil
 	}
 	res := &QuestionnaireUploadUrlResult{Success: true, RawResponse: result}
-	if data := extractData(result); data != nil {
-		res.URL = strOrNil(data, "data")
-	}
+	res.URL = stringDataValue(result)
 	return res, nil
 }

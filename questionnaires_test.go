@@ -8,9 +8,7 @@ import (
 func TestSaveQuestionnaireSuccess(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
-		handle("/xtra/questionnaire/server/openapi/v1/saveQuestionnaire", 0, "ok", map[string]interface{}{
-			"data": "QN001",
-		}).
+		handle("/xtra/questionnaire/server/openapi/v1/saveQuestionnaire", 0, "ok", "QN001").
 		build()
 	defer server.Close()
 
@@ -51,12 +49,82 @@ func TestSaveQuestionnaireAPIError(t *testing.T) {
 	}
 }
 
+func TestSaveQuestionnaireQuestionsScalarResponse(t *testing.T) {
+	server := newMuxBuilder().
+		handleToken("tok1").
+		handle("/xtra/questionnaire/server/openapi/v1/saveQuestionList", 0, "ok", 2).
+		build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.SaveQuestionnaireQuestions(
+		context.Background(),
+		"QN001",
+		[]map[string]interface{}{{"questionName": "Q1", "questionType": "radio"}},
+		"",
+		"",
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success || result.SavedCount != 2 {
+		t.Fatalf("expected Success=true SavedCount=2, got %+v", result)
+	}
+}
+
+func TestDeleteQuestionnaireQuestionScalarResponse(t *testing.T) {
+	server := newMuxBuilder().
+		handleToken("tok1").
+		handle("/xtra/questionnaire/server/openapi/v1/deleteQuestion", 0, "ok", true).
+		build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.DeleteQuestionnaireQuestion(context.Background(), "Q1", "", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success || !result.Deleted {
+		t.Fatalf("expected Success=true Deleted=true, got %+v", result)
+	}
+}
+
+func TestQuestionnaireStringScalarResponses(t *testing.T) {
+	answerServer := newMuxBuilder().
+		handleToken("tok1").
+		handle("/xtra/questionnaire/server/openapi/v1/getAnswerUrl", 0, "ok", "https://qn.example.com/Q1").
+		build()
+	defer answerServer.Close()
+
+	answerClient := newTestClient(answerServer)
+	answerResult, err := answerClient.FetchQuestionnaireAnswerURL(context.Background(), "Q1", "", "")
+	if err != nil {
+		t.Fatalf("answer URL: unexpected error: %v", err)
+	}
+	if !answerResult.Success || answerResult.URL != "https://qn.example.com/Q1" {
+		t.Fatalf("expected answer URL, got %+v", answerResult)
+	}
+
+	copyServer := newMuxBuilder().
+		handleToken("tok1").
+		handle("/xtra/questionnaire/server/openapi/v1/copy", 0, "ok", "QN002").
+		build()
+	defer copyServer.Close()
+
+	copyClient := newTestClient(copyServer)
+	copyResult, err := copyClient.CopyQuestionnaire(context.Background(), "QN001", "", "")
+	if err != nil {
+		t.Fatalf("copy: unexpected error: %v", err)
+	}
+	if !copyResult.Success || copyResult.NewCode != "QN002" {
+		t.Fatalf("expected new code QN002, got %+v", copyResult)
+	}
+}
+
 func TestPublishQuestionnaireDefaults(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
-		handle("/xtra/questionnaire/server/openapi/v1/publish", 0, "ok", map[string]interface{}{
-			"data": true,
-		}).
+		handle("/xtra/questionnaire/server/openapi/v1/publish", 0, "ok", true).
 		build()
 	defer server.Close()
 
@@ -81,7 +149,7 @@ func TestWithdrawFinishDeleteCodeBody(t *testing.T) {
 	} {
 		server := newMuxBuilder().
 			handleToken("tok1").
-			handle("/xtra/questionnaire/server/openapi/v1/"+ep.path, 0, "ok", map[string]interface{}{"data": true}).
+			handle("/xtra/questionnaire/server/openapi/v1/"+ep.path, 0, "ok", true).
 			build()
 		c := newTestClient(server)
 		var result *QuestionnaireOpResult
@@ -205,9 +273,7 @@ func TestFetchQuestionnaireAnswerDetail(t *testing.T) {
 func TestFetchQuestionnaireUploadURL(t *testing.T) {
 	server := newMuxBuilder().
 		handleToken("tok1").
-		handle("/xtra/questionnaire/server/openapi/v1/upload", 0, "ok", map[string]interface{}{
-			"data": "https://oss.example.com/u?sign=x",
-		}).
+		handle("/xtra/questionnaire/server/openapi/v1/upload", 0, "ok", "https://oss.example.com/u?sign=x").
 		build()
 	defer server.Close()
 
