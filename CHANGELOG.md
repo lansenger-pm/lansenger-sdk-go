@@ -7,55 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.16.0] - 2026-09-20
+## [0.12.1] - 2026-09-20
 
 ### Added
 
 - **personal_todos**: 个人待办 `/xtra/tdtask/server/openapi/...` 6 个端点 — 创建、按字段编辑、用户待办分页，以及资源上传、下载 URL、预签名上传 URL。
 - **cli**: `personal-todo` 命令组 6 个子命令。
 - **models**: `PersonalTodoSaveResult` / `PersonalTodoListResult` / `PersonalTodoResourceResult` / `PersonalTodoURLResult`。
+- **notices**: 新增通知发送、官方账号查询及 CLI 命令。
+- **questionnaires**: 新增问卷系统 22 个接口和 CLI 命令组。
+- **boardrooms**: 新增会议室预定 V2 全部 11 个接口和 CLI 命令组。
 
 ### Changed
 
 - **http**: `doPost` 兼容成功码 `0` 和旧环境写接口成功码 `200`。
+- **notices**: 默认使用注入身份，校验创建人字段，并允许显式发送经纬度 `0`。
+- **questionnaires**: 修复字符串、数字、布尔 `data` 响应解析，并注入 CLI 身份字段。
+- **boardrooms**: 修复取消/扫码确认的布尔响应解析，补齐 CLI 身份与可选参数。
 
 ### Notes
 
 - 个人待办与应用身份统一待办完全分离；`orgId` 必须显式传入，编辑接口的 `orgId` 位于请求体顶层。
 - 服务端当前不提供个人待办完成/删除能力。
 - 创建接口 `finishTime` 默认发送 `0`，与 stage 实测可调用请求一致，不使用 `null`。
-
----
-
-## [0.15.0] - 2026-09-18
-
-### Added
-
-- **boardrooms**: 会议室预定 V2 `/xtra/boardroom/server/openapi/v2/` 全部 11 个端点 — `FetchBoardroomList`（办公区/楼层/设备/时段筛选）、`FetchBoardroomDetail`、`FetchBoardroomSchedule`（当日预订+停用）、`FetchBoardroomReserveDetail`、`ReserveBoardroom` / `EditBoardroomReserve`（单次/重复）、`CancelBoardroomReserve` / `ConfirmBoardroomSign`、`FetchMyBoardroomReserves`、`FetchBoardroomGradings` / `FetchBoardroomAreaOffices`。
-- **cli**: `boardroom` 命令组 11 个子命令；`cancel` 接入 `confirmHighRisk`。
-- **test**: `boardrooms_test.go` mock 用例。
-
----
-
-## [0.14.0] - 2026-09-18
-
-### Added
-
-- **questionnaires**: 问卷系统 `/xtra/questionnaire/server/openapi/v1/` 全部 22 个端点 — `SaveQuestionnaire(ctx, *QuestionnaireSaveParams)`、`SaveQuestionnaireQuestions`（16 题型 dict 透传）、`PublishQuestionnaire(ctx, *QuestionnairePublishParams)`、生命周期（withdraw/finish/delete）、详情与批量查询、官方账号与三个分页列表、答卷分析五件套、预签名上传地址（PUT + Content-MD5）。
-- **cli**: `questionnaire` 命令组 22 个子命令（`cmd_questionnaire.go`）；删除类接入 `confirmHighRisk`。
-- **test**: `questionnaires_test.go`（管理/分页/账号/上传 mock 用例）。
-
----
-
-## [0.13.0] - 2026-09-17
-
-### Added
-
-- **notices**: `SendNotice(ctx, *NoticeSendParams)` — 通知系统 `/xtra/notice/server/openapi/v1/send`，通过官方账号发送通知。`NoticeSendParams` 覆盖文本/链接内容、手机号（≤10）/staffId+部门（≤200）投放、三态标志（`*int`：nil=省略，服务端默认生效）与提醒策略。
-- **notices**: `FetchNoticeAccounts(ctx, orgID, userToken)` — 查询组织官方账号列表（`code` 字段即发送所需的 accountCode）。
-- **cli**: `notice send` / `notice accounts` 子命令（`cmd_notice.go`）；JSON 参数走 `parseJSONRaw`，三态 flag 以 `-1` 为省略哨兵。
-- **notices**: 实测（stage 2026-09-17）服务端对缺失 `remindStatus`、以及 range 对象内缺失/为 null 的 `ccRangeList` 均无空值保护（报 `errCode=-1 unknown exception`），SDK 自动兜底：`remindStatus=0`、`ccRangeList=[]` 强制下发（nil 切片归一为空数组）。
-- **test**: `notices_test.go` 4 个用例（手机号/OPENID 成功、API 错误、账号列表）+ `mockJSONArrayHandler` 测试助手。
 
 ---
 
