@@ -1055,17 +1055,6 @@ func TestDomainInputGuards(t *testing.T) {
 			},
 		},
 		{
-			name: "videoconference/member-control/opcode",
-			want: "op_code must be one of ",
-			call: func(c *LansengerClient) (bool, string, error) {
-				r, err := c.ControlMember(context.Background(), "1", "2", "notAnOp", "op", "1", "")
-				if err != nil {
-					return false, "", err
-				}
-				return r.Success, r.Error, nil
-			},
-		},
-		{
 			name: "videoconference/vod-download/count",
 			want: "vods must contain 1..3 entries",
 			call: func(c *LansengerClient) (bool, string, error) {

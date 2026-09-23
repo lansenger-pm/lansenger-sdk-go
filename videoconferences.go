@@ -3,7 +3,6 @@ package lansenger
 import (
 	"context"
 	"strconv"
-	"strings"
 )
 
 const (
@@ -19,22 +18,18 @@ const (
 	VCCreateSourceThirdParty = 1
 )
 
-// VCOpCodes lists the valid opCode values for ControlMember (member/control).
+// VCOpCodes lists known opCode values for ControlMember (member/control). Reference
+// only — ControlMember forwards the caller's opCode verbatim, because the server is the
+// authority: a client-side check both rejected values the server accepts and accepted
+// values it does not recognise. The list may be incomplete.
+// Live-verified 2026-09-23: the server accepts "mute" (per-member mute, errCode 0) and
+// rejects "applyAudio" (errCode 105601, opCode does not exist) — hence the swap.
 var VCOpCodes = []string{
 	"kick", "quit", "join", "handup", "openScreenShare", "closeScreenShare",
-	"openVideo", "closeVideo", "applyAudio", "applyVideo", "shareVideo",
+	"openVideo", "closeVideo", "mute", "applyVideo", "shareVideo",
 	"cancelShareVideo", "muteall", "unmuteall", "remove", "call",
 	"enforceOpenVideo", "setJoinHost", "cancelJoinHost", "inviteOpenAudio",
 	"setHost", "grabHost",
-}
-
-func isValidVCOpCode(opCode string) bool {
-	for _, op := range VCOpCodes {
-		if op == opCode {
-			return true
-		}
-	}
-	return false
 }
 
 // VideoconferenceMember is one attendee entry ({staffId, employeeName, role}
@@ -93,6 +88,7 @@ type VideoconferenceModifyParams struct {
 	GroupNew        int
 	ConfPassword    string
 	ControlPassword string
+	UserStopTime    *int64
 	UserToken       string
 }
 
@@ -137,18 +133,31 @@ func vcHostErr(members []VideoconferenceMember) error {
 	return nil
 }
 
+// fillVCOp fills an op result. The outer errCode has already been validated by the
+// response layer, so Done means "the request completed":
+//   - endpoints returning an inner {code, message} (cancel / stop / member control)
+//     are judged by code == 0;
+//   - endpoints returning a business object (modify returns the meeting object, which
+//     carries no inner code) count as completed. Judging those by the inner code made
+//     Done permanently false for ModifyMeeting, unlike CreateMeeting (detail result).
+//   - a success response with no payload at all also counts as completed, so that all
+//     three SDKs answer identically (the Python/TypeScript _op do the same).
 func fillVCOp(res *VideoconferenceOpResult, result map[string]interface{}) {
 	data := extractData(result)
 	if data == nil {
+		res.Done = true
 		return
 	}
-	if inner, ok := data["data"].(map[string]interface{}); ok {
-		res.Done = vcCodeZero(inner["code"])
-		res.Message = strFromMap(inner, "message")
-	} else {
-		res.Done = vcCodeZero(data["code"])
-		res.Message = strFromMap(data, "message")
+	inner, ok := data["data"].(map[string]interface{})
+	if !ok {
+		inner = data
 	}
+	if code, hasCode := inner["code"]; hasCode {
+		res.Done = vcCodeZero(code)
+	} else {
+		res.Done = true
+	}
+	res.Message = strFromMap(inner, "message")
 }
 
 func vcCodeZero(v interface{}) bool {
@@ -293,6 +302,11 @@ func (c *LansengerClient) ModifyMeeting(ctx context.Context, p *VideoconferenceM
 		"confPassword":    p.ConfPassword,
 		"controlPassword": p.ControlPassword,
 		"member":          p.Members,
+	}
+	// Same contract as CreateMeeting: when the field is omitted the server resets the
+	// meeting to startTime + 24h, so only send it when the caller gave a value.
+	if p.UserStopTime != nil {
+		body["userStopTime"] = *p.UserStopTime
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
@@ -628,11 +642,9 @@ func (c *LansengerClient) FetchActiveMeetings(ctx context.Context, orgID, operat
 }
 
 // ControlMember performs a host control operation on a member
-// (/meeting/member/control). opCode must be one of VCOpCodes.
+// (/meeting/member/control). opCode is forwarded verbatim — the server is the
+// authority on accepted values; VCOpCodes is a reference list, not a validator.
 func (c *LansengerClient) ControlMember(ctx context.Context, mid, staffID, opCode, operator, orgID, userToken string) (*VideoconferenceOpResult, error) {
-	if !isValidVCOpCode(opCode) {
-		return &VideoconferenceOpResult{Success: false, Error: "op_code must be one of " + strings.Join(VCOpCodes, ", ")}, nil
-	}
 	midVal, err := vcMidValue(mid)
 	if err != nil {
 		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil

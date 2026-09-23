@@ -47,14 +47,34 @@ func TestParseVCVods(t *testing.T) {
 	}
 }
 
-func TestVCOpCodeValid(t *testing.T) {
-	if !vcOpCodeValid("muteall") || !vcOpCodeValid("setHost") {
-		t.Fatal("expected whitelisted opCodes to be valid")
+// VCOpCodes 只是「已知值」参考表：客户端不再校验 OP_CODE，服务端才是权威。
+func TestVCOpCodesIsReferenceOnly(t *testing.T) {
+	if vcMemberControlCmd.PreRunE != nil {
+		t.Fatal("member-control must not validate OP_CODE on the client")
 	}
-	if vcOpCodeValid("notAnOp") {
-		t.Fatal("expected unknown opCode to be rejected")
+
+	known := make(map[string]bool, len(lansenger.VCOpCodes))
+	for _, op := range lansenger.VCOpCodes {
+		known[op] = true
 	}
-	if len(lansenger.VCOpCodes) != 22 {
-		t.Fatalf("expected 22 opCodes, got %d", len(lansenger.VCOpCodes))
+	// 实测修正 (2026-09-23)：服务端认 "mute"，不认 "applyAudio"
+	if !known["mute"] {
+		t.Fatal(`expected "mute" to be listed as a known opCode`)
+	}
+	if known["applyAudio"] {
+		t.Fatal(`"applyAudio" is rejected by the server (errCode 105601) and must not be listed`)
+	}
+}
+
+// modify 与 create 同契约：都必须能传自动结束时间。
+func TestVCModifyAcceptsUserStopTime(t *testing.T) {
+	if vcModifyCmd.Flags().Lookup("user-stop-time") == nil {
+		t.Fatal("modify must accept --user-stop-time")
+	}
+	if int64PtrOrNil(-1) != nil {
+		t.Fatal("-1 must mean omit")
+	}
+	if v := int64PtrOrNil(1700003600000); v == nil || *v != 1700003600000 {
+		t.Fatal("expected the value to be forwarded")
 	}
 }

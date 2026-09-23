@@ -101,15 +101,6 @@ func parseVCVods(raw string) ([]lansenger.VideoconferenceVod, error) {
 	return vods, nil
 }
 
-func vcOpCodeValid(opCode string) bool {
-	for _, op := range lansenger.VCOpCodes {
-		if op == opCode {
-			return true
-		}
-	}
-	return false
-}
-
 var vcCreateCmd = &cobra.Command{
 	Use:   "create SUBJECT",
 	Short: "Create a meeting (instant or reserved)",
@@ -177,6 +168,7 @@ var vcModifyCmd = &cobra.Command{
 			GroupNew:        vcGroupNew,
 			ConfPassword:    vcConfPassword,
 			ControlPassword: vcControlPassword,
+			UserStopTime:    int64PtrOrNil(vcUserStopTime),
 			UserToken:       vcUserToken,
 		})
 		checkError(err)
@@ -353,12 +345,6 @@ var vcMemberControlCmd = &cobra.Command{
 	Use:   "member-control MID STAFF_ID OP_CODE",
 	Short: "Host control on a member (kick/muteall/setHost/...)",
 	Args:  cobra.ExactArgs(3),
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if !vcOpCodeValid(args[2]) {
-			return fmt.Errorf("OP_CODE must be one of %v", lansenger.VCOpCodes)
-		}
-		return nil
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		result, err := getClient().ControlMember(context.Background(), args[0], args[1], args[2], vcOperator, vcOrgID, vcUserToken)
 		checkError(err)
@@ -466,6 +452,7 @@ func init() {
 	vcModifyCmd.Flags().IntVar(&vcGroupNew, "group-new", 0, "Create group chat: 0=no, 1=yes")
 	vcModifyCmd.Flags().StringVar(&vcConfPassword, "conf-password", "", "Meeting password")
 	vcModifyCmd.Flags().StringVar(&vcControlPassword, "control-password", "", "Host control password")
+	vcModifyCmd.Flags().Int64Var(&vcUserStopTime, "user-stop-time", -1, "Auto-stop time in epoch milliseconds (-1=omit)")
 	vcModifyCmd.Flags().StringVar(&vcUserToken, "user-token", "", "User token")
 
 	for _, c := range []*cobra.Command{vcCancelCmd, vcStopCmd} {

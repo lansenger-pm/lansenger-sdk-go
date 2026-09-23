@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **videoconferences**: `ModifyMeeting` 补齐 `UserStopTime`（自动结束时间）透传，与 `CreateMeeting` 对齐。此前该参数只在创建时可传——修改时不生效，且会把会议结束时间重置为开始时间 +24 小时。
+- **videoconferences**: `ControlMember` 移除 `opCode` 客户端校验，改为原样透传（服务端才是权威），`VCOpCodes` 保留为已知值参考表。客户端硬校验既拦掉了服务端实际接受的取值（如 `mute`），又放行了服务端不认的值（如 `applyAudio`）。
+- **cli**: `videoconference modify` 新增 `--user-stop-time`；`member-control` 移除 `OP_CODE` 白名单校验。
+
+## [0.13.0] - 2026-09-20
+
+### Added
+
+- **videoconferences**: 视频会议开放能力域（`/xtra/videoconference/openapi/v1/*`，20 端点）——会议创建/修改/取消/结束、详情/列表/操作记录/进出记录、固定会议室、批量状态、事件订阅、会议参数、历史与进行中会议、主持人会控、成员邀请与列表、录像列表与下载链接、组织配置。前提：组织安装视频会议应用并在开发者中心开通开放能力。
+- **cli**: `videoconference` 命令组，覆盖上述 20 个端点；`--member`/`--vods` 以 JSON 入参，`cancel`/`stop` 接入高风险门禁（`--yes`/`--dry-run`）。
+
+### Notes
+
+- 创建/修改要求成员列表恰好一名 `role="admin"` 主持人；录像下载链接每次最多 3 个；`fetchRange='person'` 必须传 `staffId`；`mids` 不得为空。
+
 ## [0.12.1] - 2026-09-20
 
 ### Added
@@ -49,7 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **persistence**: CredentialStore 支持 `identity_type` 身份类型持久化（`ValidIdentityTypes` / `LoadIdentityType` / `SaveIdentityType`）；CLI `config set identity_type` 命令，`config show` / `config list-profiles` 显示身份类型——用于区分个人机器人与组织应用凭证。
-
 
 ## [0.10.0] - 2026-07-29
 
