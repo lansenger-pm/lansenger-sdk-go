@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **personal_todos**: 挂附件条目构造助手。上传接口返回 `mimeType`/`size`，而挂附件写体的条目必须叫 `fileType`/`fileSize`，直接把上传响应塞进 `resources` 会被后端以 errCode 500 打回——两个入口统一做这层映射（与 Python/TS SDK 同名助手等价）：
+  - `BuildPersonalTodoResourceEntry(resourceID, fileName, fileType, fileSize, opt)`：显式构造（条目结构的唯一定义处）；
+  - `PersonalTodoResourceEntryFromUpload(upload, opt)`：从上传结果构造，`upload` 接受 `*PersonalTodoResourceResult` **或原始响应 map**（含内层 `data`）两种形态；无法解析时返回 error，不会静默产出缺 `resourceId` 的条目。
+
 ### Fixed
 
 - **videoconferences**: `ModifyMeeting` 补齐 `UserStopTime`（自动结束时间）透传，与 `CreateMeeting` 对齐。此前该参数只在创建时可传——修改时不生效，且会把会议结束时间重置为开始时间 +24 小时。
@@ -68,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **persistence**: CredentialStore 支持 `identity_type` 身份类型持久化（`ValidIdentityTypes` / `LoadIdentityType` / `SaveIdentityType`）；CLI `config set identity_type` 命令，`config show` / `config list-profiles` 显示身份类型——用于区分个人机器人与组织应用凭证。
+
 
 ## [0.10.0] - 2026-07-29
 

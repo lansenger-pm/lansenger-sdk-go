@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -236,4 +237,70 @@ func TestPersonalTodoResourceGuards(t *testing.T) {
 	if result.Success || result.Error == "" {
 		t.Fatalf("expected size guard, got %+v", result)
 	}
+}
+
+func TestPersonalTodoResourceEntryFromUpload(t *testing.T) {
+	// 上传响应用 mimeType/size，挂附件必须叫 fileType/fileSize
+	want := map[string]interface{}{
+		"fileName":   "a.pdf",
+		"resourceId": "res1",
+		"fileType":   "application/pdf",
+		"fileSize":   int64(10),
+		"opt":        1,
+	}
+	raw := map[string]interface{}{
+		"errCode": 0,
+		"data": map[string]interface{}{
+			"fileName": "a.pdf", "mimeType": "application/pdf",
+			"size": float64(10), "resourceId": "res1",
+		},
+	}
+
+	t.Run("accepts the upload result object", func(t *testing.T) {
+		res := &PersonalTodoResourceResult{
+			Success: true, FileName: "a.pdf", MimeType: "application/pdf",
+			Size: 10, ResourceID: "res1",
+		}
+		got, err := PersonalTodoResourceEntryFromUpload(res, 1)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("accepts the raw response and its inner data", func(t *testing.T) {
+		for _, in := range []interface{}{raw, raw["data"]} {
+			got, err := PersonalTodoResourceEntryFromUpload(in, 1)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("got %+v, want %+v", got, want)
+			}
+		}
+	})
+
+	t.Run("agrees with the explicit constructor", func(t *testing.T) {
+		want0 := BuildPersonalTodoResourceEntry("res1", "a.pdf", "application/pdf", 10, 0)
+		got, err := PersonalTodoResourceEntryFromUpload(&PersonalTodoResourceResult{
+			Success: true, FileName: "a.pdf", MimeType: "application/pdf",
+			Size: 10, ResourceID: "res1",
+		}, 0)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(got, want0) || got["opt"] != 0 {
+			t.Fatalf("got %+v, want %+v", got, want0)
+		}
+	})
+
+	t.Run("rejects input with no usable payload", func(t *testing.T) {
+		for _, in := range []interface{}{nil, 42, "res1", (*PersonalTodoResourceResult)(nil)} {
+			if _, err := PersonalTodoResourceEntryFromUpload(in, 1); err == nil {
+				t.Fatalf("expected error for %T, got nil", in)
+			}
+		}
+	})
 }

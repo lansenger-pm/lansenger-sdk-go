@@ -1,6 +1,81 @@
 package lansenger
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
+
+// BuildPersonalTodoResourceEntry 拼装「挂到待办」用的 resources 条目。
+//
+// 陷阱：上传接口（/resource/update）返回的是 mimeType/size，而挂附件写体的条目
+// 必须叫 fileType/fileSize，直接把上传响应塞进 resources 会被后端 errCode 500 打回。
+// opt: 1=添加，0=移除。
+//
+// 这是条目结构的唯一定义处，`PersonalTodoResourceEntryFromUpload` 经由它产出，
+// 与 Python/TS SDK 的 build_personal_todo_resource_entry / buildPersonalTodoResourceEntry 同义。
+func BuildPersonalTodoResourceEntry(resourceID, fileName, fileType string, fileSize int64, opt int) map[string]interface{} {
+	return map[string]interface{}{
+		"fileName":   fileName,
+		"resourceId": resourceID,
+		"fileType":   fileType,
+		"fileSize":   fileSize,
+		"opt":        opt,
+	}
+}
+
+// PersonalTodoResourceEntryFromUpload 从上传结果构造 resources 条目，省掉手工做
+// mimeType→fileType / size→fileSize 的映射。
+//
+// upload 两种形态都收（与 Python/TS SDK 的同名助手等价）：
+//   - *PersonalTodoResourceResult：UploadPersonalTodoResource 的返回，字段已解析；
+//   - map[string]interface{}：/resource/update 的原始响应，或其内层 data。
+//
+// 其他类型返回 error，不会静默退化成空条目——缺 resourceId 的条目会被后端打回，
+// 静默比报错难查得多。
+func PersonalTodoResourceEntryFromUpload(upload interface{}, opt int) (map[string]interface{}, error) {
+	switch v := upload.(type) {
+	case *PersonalTodoResourceResult:
+		if v == nil {
+			return nil, fmt.Errorf("upload result is nil")
+		}
+		return BuildPersonalTodoResourceEntry(v.ResourceID, v.FileName, v.MimeType, v.Size, opt), nil
+	case PersonalTodoResourceResult:
+		return BuildPersonalTodoResourceEntry(v.ResourceID, v.FileName, v.MimeType, v.Size, opt), nil
+	case map[string]interface{}:
+		inner := v
+		if data, ok := v["data"].(map[string]interface{}); ok {
+			inner = data
+		}
+		return BuildPersonalTodoResourceEntry(
+			firstNonEmptyStr(strFromMap(inner, "resourceId"), strFromMap(v, "resourceId")),
+			firstNonEmptyStr(strFromMap(inner, "fileName"), strFromMap(v, "fileName")),
+			firstNonEmptyStr(strFromMap(inner, "mimeType"), strFromMap(v, "mimeType")),
+			firstNonZeroInt64(int64FromMap(inner, "size"), int64FromMap(v, "size")),
+			opt,
+		), nil
+	default:
+		return nil, fmt.Errorf(
+			"unsupported upload type %T: expected *PersonalTodoResourceResult or a response map", upload)
+	}
+}
+
+func firstNonEmptyStr(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func firstNonZeroInt64(values ...int64) int64 {
+	for _, v := range values {
+		if v != 0 {
+			return v
+		}
+	}
+	return 0
+}
 
 // PersonalTodoSaveParams carries fields for SavePersonalTodo (个人待办 /v3/taskopt/savePersonalTask).
 type PersonalTodoSaveParams struct {
@@ -25,9 +100,12 @@ type PersonalTodoSaveParams struct {
 	UserCode          string
 	Executors         []map[string]interface{}
 	Copys             []map[string]interface{}
-	Resources         []map[string]interface{}
-	Reminds           []map[string]interface{}
-	UserToken         string
+	// Resources 挂附件条目。注意：上传接口返回的是 mimeType/size，挂附件必须映射成
+	// fileType/fileSize（每条必填 fileName/resourceId/fileType/fileSize），直接把上传响应塞进来
+	// 会被后端 errCode 500 打回；列表侧 resourceList 是只读字段，不能当写字段。
+	Resources []map[string]interface{}
+	Reminds   []map[string]interface{}
+	UserToken string
 }
 
 // PersonalTodoUpdateParams carries fields for UpdatePersonalTodo (个人待办 /v3/taskopt/updatePersonalTask).
@@ -50,9 +128,12 @@ type PersonalTodoUpdateParams struct {
 	AppID             string
 	Executors         []map[string]interface{}
 	Copys             []map[string]interface{}
-	Resources         []map[string]interface{}
-	Reminds           []map[string]interface{}
-	UserToken         string
+	// Resources 挂附件条目。注意：上传接口返回的是 mimeType/size，挂附件必须映射成
+	// fileType/fileSize（每条必填 fileName/resourceId/fileType/fileSize），直接把上传响应塞进来
+	// 会被后端 errCode 500 打回；列表侧 resourceList 是只读字段，不能当写字段。
+	Resources []map[string]interface{}
+	Reminds   []map[string]interface{}
+	UserToken string
 }
 
 // PersonalTodoResourceUploadParams carries fields for UploadPersonalTodoResource.
