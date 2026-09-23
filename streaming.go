@@ -23,14 +23,25 @@ func (c *LansengerClient) CreateStreamMessage(ctx context.Context, receiverID, r
 
 	data := extractData(result)
 
-	res := &StreamMessageResult{
-		Success:     true,
-		RawResponse: result,
-	}
+	var msgID string
 	if data != nil {
-		res.MessageID = strFromMap(data, "msgId")
+		msgID = strFromMap(data, "msgId")
 	}
-	return res, nil
+	// Server has been observed returning success with an empty payload
+	// (LXBUGS-128497); without a msgId the fetch step is unusable, so treat
+	// it as a failure instead of reporting success.
+	if msgID == "" {
+		return &StreamMessageResult{
+			Success:     false,
+			Error:       "server returned success but no msgId; stream message is unusable",
+			RawResponse: result,
+		}, nil
+	}
+	return &StreamMessageResult{
+		Success:     true,
+		MessageID:   msgID,
+		RawResponse: result,
+	}, nil
 }
 
 func (c *LansengerClient) FetchStreamMessage(ctx context.Context, msgID string) (*StreamMessageResult, error) {

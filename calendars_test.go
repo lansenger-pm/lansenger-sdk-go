@@ -74,7 +74,7 @@ func TestCreateScheduleAutoFillAttendees(t *testing.T) {
 
 	c := newTestClient(server)
 	// Pass nil attendees but provide a userID – the SDK should auto-fill
-	// attendees with [{staffId: userID, attendeeFlag: "required"}]
+	// attendees with [{staffId: userID, attendeeFlag: "yes"}]
 	result, err := c.CreateSchedule(context.Background(), "cal001",
 		"Team Meeting", map[string]interface{}{"time": 1000}, map[string]interface{}{"time": 2000},
 		nil, "", "no", "", nil, "", "no", "", "utok1", "uid1")

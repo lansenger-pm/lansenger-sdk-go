@@ -2,7 +2,53 @@ package lansenger
 
 import (
 	"context"
+	"fmt"
 )
+
+// Server-accepted attendeeFlag values (OpenAPI 4.23.10). Values like
+// "required"/"optional"/"attendee"/"host" are NOT accepted — the server
+// rejects the whole request with errCode=40060.
+const (
+	AttendeeFlagYes    = "yes"    // must attend
+	AttendeeFlagOption = "option" // optional attendance
+	AttendeeFlagNo     = "no"     // does not attend
+)
+
+// AttendeeFlags lists the attendeeFlag values the server accepts.
+var AttendeeFlags = []string{AttendeeFlagYes, AttendeeFlagOption, AttendeeFlagNo}
+
+// Time field structure (OpenAPI 4.23.10):
+//
+//	{"time": 1656468000, "timeZone": "Asia/Shanghai"}  — time is Unix SECONDS
+//	allDay="yes": {"date": "2006-01-02", "timeZone": "UTC"} — date replaces time
+
+func isAttendeeFlagValid(flag string) bool {
+	for _, f := range AttendeeFlags {
+		if f == flag {
+			return true
+		}
+	}
+	return false
+}
+
+// validateAttendees returns an error message for invalid attendee maps, or "".
+func validateAttendees(attendees []map[string]interface{}) string {
+	for i, a := range attendees {
+		if a == nil {
+			return fmt.Sprintf("attendees[%d] must be a map with a 'staffId' key", i)
+		}
+		if _, ok := a["staffId"]; !ok {
+			return fmt.Sprintf("attendees[%d] must be a map with a 'staffId' key", i)
+		}
+		if flag, ok := a["attendeeFlag"]; ok && flag != nil {
+			s, isStr := flag.(string)
+			if !isStr || !isAttendeeFlagValid(s) {
+				return fmt.Sprintf("attendees[%d].attendeeFlag=%v is not accepted by the server; valid values: %v", i, flag, AttendeeFlags)
+			}
+		}
+	}
+	return ""
+}
 
 func (c *LansengerClient) FetchPrimaryCalendar(ctx context.Context, userToken, userID string) (*CalendarPrimaryResult, error) {
 	token, err := c.GetToken(ctx)
@@ -38,6 +84,14 @@ func (c *LansengerClient) FetchPrimaryCalendar(ctx context.Context, userToken, u
 	}, nil
 }
 
+// CreateSchedule creates a schedule (POST /v1/calendars/{calendar_id}/schedules/create).
+//
+// startTime/endTime structure (OpenAPI 4.23.10):
+//	{"time": <unix SECONDS>, "timeZone": "IANA name"}; for allDay="yes"
+//	use {"date": "YYYY-MM-DD", "timeZone": "UTC"} — date replaces time.
+// attendees entries: {"staffId": ..., "attendeeFlag": one of AttendeeFlags
+// ("yes"/"option"/"no", default "yes")}; invalid flags are rejected locally
+// before any HTTP call.
 func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summary string, startTime, endTime map[string]interface{}, attendees []map[string]interface{}, description string, allDay string, repeatType string, rule map[string]interface{}, expireDateType, reminderType, attendeePermissions string, userToken, userID string) (*ScheduleCreateResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -63,7 +117,10 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 		if userID == "" {
 			return &ScheduleCreateResult{Success: false, Error: "attendees is required (or provide user_id to auto-fill creator)"}, nil
 		}
-		attendees = []map[string]interface{}{{"staffId": userID, "attendeeFlag": "required"}}
+		attendees = []map[string]interface{}{{"staffId": userID, "attendeeFlag": AttendeeFlagYes}}
+	}
+	if errMsg := validateAttendees(attendees); errMsg != "" {
+		return &ScheduleCreateResult{Success: false, Error: errMsg}, nil
 	}
 	body["attendees"] = attendees
 	if description != "" {
@@ -348,6 +405,9 @@ func (c *LansengerClient) DeleteScheduleAttendees(ctx context.Context, calendarI
 	return res, nil
 }
 
+// UpdateSchedule updates a schedule by raw params map. startTime/endTime
+// entries follow {"time": <unix SECONDS>, "timeZone": "IANA name"}; for
+// allDay="yes" use {"date": "YYYY-MM-DD", "timeZone": "UTC"}.
 func (c *LansengerClient) UpdateSchedule(ctx context.Context, calendarID, scheduleID string, params map[string]interface{}, userToken, userID string) (*ScheduleDeleteResult, error) {
 	token, err := c.GetToken(ctx)
 	if err != nil {

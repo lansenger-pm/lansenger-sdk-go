@@ -351,7 +351,7 @@ var vcActiveCmd = &cobra.Command{
 
 var vcMemberControlCmd = &cobra.Command{
 	Use:   "member-control MID STAFF_ID OP_CODE",
-	Short: "Host control on a member (kick/muteall/setHost/...)",
+	Short: "Host control on a member (kick/setHost/...; muteall may be unsupported)",
 	Args:  cobra.ExactArgs(3),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if !vcOpCodeValid(args[2]) {

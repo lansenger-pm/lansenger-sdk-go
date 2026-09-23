@@ -249,12 +249,24 @@ func (c *LansengerClient) SearchStaff(ctx context.Context, keyword, userToken, u
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "staffs", "search", token,
-		WithUserToken(userToken),
-		WithUserID(userID),
-		WithPage(page),
-		WithPageSize(pageSize),
-	)
+	opts := []URLOption{WithUserToken(userToken), WithUserID(userID)}
+	// Server requires page and page_size together (doc 4.1.16 v2); sending only
+	// one is silently ignored, so default page=1/page_size=20 when either is
+	// given (page/pageSize == 0 means "not given").
+	// NOTE: HasMore may be unreliable (observed always true, LXBUGS-128510);
+	// prefer comparing len(result.StaffInfos) against result.Total for
+	// pagination termination.
+	if page > 0 || pageSize > 0 {
+		if page <= 0 {
+			page = 1
+		}
+		if pageSize <= 0 {
+			pageSize = 20
+		}
+		opts = append(opts, WithPage(page), WithPageSize(pageSize))
+	}
+
+	url := BuildAPIURL(c.config, "staffs", "search", token, opts...)
 
 	searchScope := map[string]interface{}{}
 	if len(sectorIDs) > 0 {

@@ -20,6 +20,10 @@ const (
 )
 
 // VCOpCodes lists the valid opCode values for ControlMember (member/control).
+// Verified live (LXBUGS-128490): "kick" works; "muteall"/"unmuteall" are
+// rejected by the meeting server (errCode=105601 opCode不存在) in the tested
+// environment. They are kept here pending server-side confirmation — treat
+// 105601 as "value unsupported in this environment".
 var VCOpCodes = []string{
 	"kick", "quit", "join", "handup", "openScreenShare", "closeScreenShare",
 	"openVideo", "closeVideo", "applyAudio", "applyVideo", "shareVideo",
@@ -628,7 +632,9 @@ func (c *LansengerClient) FetchActiveMeetings(ctx context.Context, orgID, operat
 }
 
 // ControlMember performs a host control operation on a member
-// (/meeting/member/control). opCode must be one of VCOpCodes.
+// (/meeting/member/control). opCode must be one of VCOpCodes. Some values
+// (e.g. muteall/unmuteall) may be rejected with errCode=105601 depending on
+// the meeting server build.
 func (c *LansengerClient) ControlMember(ctx context.Context, mid, staffID, opCode, operator, orgID, userToken string) (*VideoconferenceOpResult, error) {
 	if !isValidVCOpCode(opCode) {
 		return &VideoconferenceOpResult{Success: false, Error: "op_code must be one of " + strings.Join(VCOpCodes, ", ")}, nil
