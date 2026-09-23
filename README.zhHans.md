@@ -302,11 +302,12 @@ result, err := client.DissolveGroup(ctx, "groupId", "ut")
 // 获取主日历（需要 userToken 或 userID）
 cal, err := client.FetchPrimaryCalendar(ctx, "ut", "uid1")
 
-// 创建日程（startTime/endTime 为 map 对象，allDay 为 "yes"/"no")
+// 创建日程 — startTime/endTime 为 {"time": <unix 秒>, "timeZone": "IANA 时区名"}；"date" 仅用于 allDay="yes" 且时区为 UTC 时
 schedule, err := client.CreateSchedule(ctx, cal.CalendarID, "团队会议",
-    map[string]interface{}{"time": "2024-01-15T09:00"},
-    map[string]interface{}{"time": "2024-01-15T10:00"},
-    nil, "", "no", "", nil, "", "", "", "ut", "")
+    map[string]interface{}{"time": 1736893200, "timeZone": "Asia/Shanghai"},
+    map[string]interface{}{"time": 1736896800, "timeZone": "Asia/Shanghai"},
+    []map[string]interface{}{{"staffId": "staff1", "attendeeFlag": "yes"}}, // attendeeFlag 合法值：yes/option/no（"required" 会被服务端拒绝）
+    "", "no", "", nil, "", "", "", "ut", "")
 
 // 获取/删除日程
 info, err := client.FetchSchedule(ctx, "cal1", "sch1", "ut", "")

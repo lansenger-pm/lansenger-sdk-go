@@ -302,11 +302,12 @@ result, err := client.DissolveGroup(ctx, "groupId", "ut")
 // Get primary calendar (requires userToken or userID)
 cal, err := client.FetchPrimaryCalendar(ctx, "ut", "uid1")
 
-// Create schedule (startTime/endTime are map objects, allDay is "yes"/"no")
+// Create schedule — startTime/endTime: {"time": <unix SECONDS>, "timeZone": "IANA name"}; "date" only for allDay="yes" with UTC timezone
 schedule, err := client.CreateSchedule(ctx, cal.CalendarID, "Team Meeting",
-    map[string]interface{}{"time": "2024-01-15T09:00"},
-    map[string]interface{}{"time": "2024-01-15T10:00"},
-    nil, "", "no", "", nil, "", "", "", "ut", "")
+    map[string]interface{}{"time": 1736893200, "timeZone": "Asia/Shanghai"},
+    map[string]interface{}{"time": 1736896800, "timeZone": "Asia/Shanghai"},
+    []map[string]interface{}{{"staffId": "staff1", "attendeeFlag": "yes"}}, // valid flags: yes/option/no — "required" is rejected by the server
+    "", "no", "", nil, "", "", "", "ut", "")
 
 // Fetch/delete schedule
 info, err := client.FetchSchedule(ctx, "cal1", "sch1", "ut", "")

@@ -183,6 +183,10 @@ func (c *LansengerClient) DownloadMediaByShareID(ctx context.Context, shareID st
 	}, nil
 }
 
+// DownloadMediaToFile downloads a media file and writes it to targetPath
+// (defaulting to the mediaID when empty). Unlike most SDK methods (which
+// return a *Result struct with a Success field), this returns the saved file
+// path on success and a plain error on failure.
 func (c *LansengerClient) DownloadMediaToFile(ctx context.Context, mediaID string, targetPath string) (string, error) {
 	result, err := c.DownloadMedia(ctx, mediaID)
 	if err != nil {

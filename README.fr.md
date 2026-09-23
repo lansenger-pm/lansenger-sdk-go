@@ -302,11 +302,12 @@ result, err := client.DissolveGroup(ctx, "groupId", "ut")
 // Obtenir le calendrier principal (requiert userToken ou userID)
 cal, err := client.FetchPrimaryCalendar(ctx, "ut", "uid1")
 
-// Créer une planification (startTime/endTime sont des objets map, allDay est "yes"/"no")
+// Créer une planification — startTime/endTime : {"time": <secondes unix>, "timeZone": "nom IANA"} ; "date" uniquement pour allDay="yes" avec le fuseau UTC
 schedule, err := client.CreateSchedule(ctx, cal.CalendarID, "Réunion d'équipe",
-    map[string]interface{}{"time": "2024-01-15T09:00"},
-    map[string]interface{}{"time": "2024-01-15T10:00"},
-    nil, "", "no", "", nil, "", "", "", "ut", "")
+    map[string]interface{}{"time": 1736893200, "timeZone": "Asia/Shanghai"},
+    map[string]interface{}{"time": 1736896800, "timeZone": "Asia/Shanghai"},
+    []map[string]interface{}{{"staffId": "staff1", "attendeeFlag": "yes"}}, // valeurs valides : yes/option/no — « required » est rejeté par le serveur
+    "", "no", "", nil, "", "", "", "ut", "")
 
 // Obtenir/supprimer une planification
 info, err := client.FetchSchedule(ctx, "cal1", "sch1", "ut", "")

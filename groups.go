@@ -2,6 +2,8 @@ package lansenger
 
 import (
 	"context"
+	"errors"
+	"fmt"
 )
 
 func (c *LansengerClient) CreateGroup(ctx context.Context, info *GroupCreateInfo, userToken string) (*CreateGroupResult, error) {
@@ -201,6 +203,14 @@ func (c *LansengerClient) CheckIsInGroup(ctx context.Context, groupID, userToken
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
+		// Server returns errCode=10000 "API服务 不可得" for a staff member who
+		// is not in the group (LXBUGS-128498) instead of isInGroup=false. Do
+		// NOT map it to IsInGroup=false: the same code may also mean a real
+		// query failure — surface the ambiguity instead.
+		var apiErr *APIError
+		if errors.As(err, &apiErr) && apiErr.ErrCode == 10000 {
+			err = fmt.Errorf("%w (the server returns this code both for query failures and for non-members; membership could not be determined)", err)
+		}
 		return &IsInGroupResult{Success: false, Error: err.Error()}, nil
 	}
 

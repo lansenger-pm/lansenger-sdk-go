@@ -1,5 +1,9 @@
 package lansenger
 
+import (
+	"strings"
+)
+
 type SendMessageResult struct {
 	Success     bool                   `json:"success"`
 	MessageID   string                 `json:"message_id"`
@@ -647,19 +651,121 @@ type ChatMessageInfo struct {
 	Content     map[string]interface{} `json:"content"`
 }
 
-func (m *ChatMessageInfo) PlainText() string {
-	if m.Content == nil {
+// textScanKeys are keys whose string values are human-readable message text;
+// used by PlainText as a fallback for card payloads not covered by the
+// explicit branches.
+var textScanKeys = map[string]bool{
+	"text": true, "content": true, "title": true, "summary": true,
+	"description": true, "headTitle": true, "bodyTitle": true, "bodyContent": true,
+}
+
+const textScanMaxDepth = 4
+
+// scanMessageText performs a depth-limited scan for known text keys inside a
+// message payload. Mirrors models.py _scan_message_text.
+func scanMessageText(obj interface{}, depth int) string {
+	if depth > textScanMaxDepth {
 		return ""
 	}
-	if text, ok := m.Content["text"].(string); ok && text != "" {
-		return text
-	}
-	if ft, ok := m.Content["formatText"].(map[string]interface{}); ok {
-		if content, ok := ft["content"].(string); ok {
-			return content
+	switch v := obj.(type) {
+	case map[string]interface{}:
+		parts := make([]string, 0, len(v))
+		for k, val := range v {
+			if textScanKeys[k] {
+				if s, ok := val.(string); ok && strings.TrimSpace(s) != "" {
+					parts = append(parts, strings.TrimSpace(s))
+					continue
+				}
+			}
+			switch val.(type) {
+			case map[string]interface{}, []interface{}:
+				if nested := scanMessageText(val, depth+1); nested != "" {
+					parts = append(parts, nested)
+				}
+			}
 		}
+		return strings.Join(parts, " | ")
+	case []interface{}:
+		parts := make([]string, 0, len(v))
+		for _, item := range v {
+			if nested := scanMessageText(item, depth+1); nested != "" {
+				parts = append(parts, nested)
+			}
+		}
+		return strings.Join(parts, " | ")
 	}
 	return ""
+}
+
+// joinedCardParts collects non-empty string values for the given keys in order.
+func joinedCardParts(m map[string]interface{}, keys ...string) []string {
+	parts := make([]string, 0, len(keys))
+	for _, k := range keys {
+		if s, ok := m[k].(string); ok && s != "" {
+			parts = append(parts, s)
+		}
+	}
+	return parts
+}
+
+// PlainText extracts a human-readable single-line text from the message
+// content payload (mirrors models.py ChatMessageInfo.plain_text).
+func (m *ChatMessageInfo) PlainText() string {
+	c := m.Content
+	if c == nil {
+		return ""
+	}
+	if ft, ok := c["formatText"].(map[string]interface{}); ok {
+		// OpenAPI 4.6.4 documents the body key as "text"; some writer paths
+		// use "content" — accept both.
+		if s, ok := ft["text"].(string); ok && s != "" {
+			return s
+		}
+		if s, ok := ft["content"].(string); ok {
+			return s
+		}
+		return ""
+	}
+	if text, ok := c["text"].(string); ok {
+		return text
+	}
+	if text, ok := c["text"].(map[string]interface{}); ok {
+		if inner, ok := text["content"].(string); ok {
+			return inner
+		}
+	}
+	card, ok := c["appCard"].(map[string]interface{})
+	if !ok || card == nil {
+		card, _ = c["i18nAppCard"].(map[string]interface{})
+	}
+	if card != nil {
+		parts := joinedCardParts(card, "headTitle", "bodyTitle", "bodyContent")
+		if len(parts) > 0 {
+			return strings.Join(parts, " | ")
+		}
+	}
+	if link, ok := c["linkCard"].(map[string]interface{}); ok {
+		parts := joinedCardParts(link, "title", "description")
+		if len(parts) > 0 {
+			return strings.Join(parts, " | ")
+		}
+	}
+	if articles, ok := c["appArticles"].(map[string]interface{}); ok {
+		if list, ok := articles["articles"].([]interface{}); ok {
+			var titles []string
+			for _, item := range list {
+				if a, ok := item.(map[string]interface{}); ok {
+					if t, ok := a["title"].(string); ok {
+						titles = append(titles, t)
+					}
+				}
+			}
+			if len(titles) > 0 {
+				return strings.Join(titles, " | ")
+			}
+		}
+	}
+	return scanMessageText(c, 0)
 }
 
 type ChatMessagesResult struct {

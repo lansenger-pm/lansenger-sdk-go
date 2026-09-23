@@ -21,6 +21,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **videoconferences**: `ControlMember` 移除 `opCode` 客户端校验，改为原样透传（服务端才是权威），`VCOpCodes` 保留为已知值参考表。客户端硬校验既拦掉了服务端实际接受的取值（如 `mute`），又放行了服务端不认的值（如 `applyAudio`）。
 - **cli**: `videoconference modify` 新增 `--user-stop-time`；`member-control` 移除 `OP_CODE` 白名单校验。
 
+---
+
+## [0.14.0] - 2026-09-23
+
+### Fixed
+
+- **calendars**: default `attendeeFlag` changed from `"required"` to `"yes"` — not in the server enum (`yes`/`option`/`no`), made the auto-fill path fail with 40060 (LXBUGS-128487). Added `ATTENDEE_FLAGS` local validation before any HTTP call; docstrings corrected to the unix-seconds time structure.
+- **contacts**: staff search applies `page_size` alone by defaulting `page=1` (LXBUGS-128510); documented unreliable `hasMore`.
+- **models**: chat message plain-text extraction now parses appCard/i18nAppCard, linkCard, appArticles, formatText (`text` + legacy `content` keys) and object text shapes, with a depth-limited fallback scan (LXBUGS-128493).
+- **streaming**: stream message creation downgrades success-with-empty-msgId to a failure (LXBUGS-128497).
+- **groups**: is-in-group error explains the errCode=10000 ambiguity (LXBUGS-128498).
+- **videoconferences**: VC ops annotated — `muteall`/`unmuteall` rejected live with 105601 (LXBUGS-128490).
+- **media/client**: documented download/health-check return shapes (LXBUGS-128494).
+- READMEs: attendee example fixed.
+
+---
+
 ## [0.13.0] - 2026-09-20
 
 ### Added
@@ -31,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 
 - 创建/修改要求成员列表恰好一名 `role="admin"` 主持人；录像下载链接每次最多 3 个；`fetchRange='person'` 必须传 `staffId`；`mids` 不得为空。
+
+---
 
 ## [0.12.1] - 2026-09-20
 

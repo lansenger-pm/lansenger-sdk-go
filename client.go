@@ -114,6 +114,9 @@ func (c *LansengerClient) InvalidateToken() {
 	c.tokenMgr.Invalidate()
 }
 
+// HealthCheck verifies the client can obtain a valid app token. Unlike most
+// SDK methods (which return a *Result struct with a Success field), this
+// returns a plain bool (false on failure).
 func (c *LansengerClient) HealthCheck(ctx context.Context) bool {
 	token, err := c.GetToken(ctx)
 	if err != nil {
