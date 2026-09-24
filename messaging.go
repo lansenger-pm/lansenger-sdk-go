@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -529,7 +530,14 @@ func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *Dynamic
 		return nil, err
 	}
 
-	url := BuildAPIURL(c.config, "messages", "dynamic_update", token)
+	apiURL := BuildAPIURL(c.config, "messages", "dynamic_update", token)
+	if params.UserToken != "" {
+		// The update must carry the identity that SENT the card (OpenAPI
+		// 4.6.5/4.6.13): bot-sent cards update with the app identity alone;
+		// human-sent cards (e.g. group messages) need user_token (query) or
+		// user_id (body userId) — mismatch fails with 10005 (LXBUGS-128492).
+		apiURL += "&user_token=" + url.QueryEscape(params.UserToken)
+	}
 
 	msgData := map[string]interface{}{
 		"isLastUpdate": params.IsLastUpdate,
@@ -550,7 +558,7 @@ func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *Dynamic
 		body["userId"] = params.UserId
 	}
 
-	result, err := c.doPost(ctx, url, body)
+	result, err := c.doPost(ctx, apiURL, body)
 	if err != nil {
 		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
 	}

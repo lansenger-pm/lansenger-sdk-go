@@ -259,6 +259,7 @@ type OaCardParams struct {
 
 type DynamicCardUpdateParams struct {
 	MsgID          string                   `json:"msg_id"`
+	UserToken      string                   `json:"user_token"`
 	UserId         string                   `json:"user_id"`
 	HeadStatusInfo map[string]interface{}   `json:"head_status_info"`
 	Links          []map[string]interface{} `json:"links"`

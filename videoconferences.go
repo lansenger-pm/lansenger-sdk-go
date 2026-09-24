@@ -24,14 +24,13 @@ const (
 // values it does not recognise. The list may be incomplete.
 // Live-verified 2026-09-23: the server accepts "mute" (per-member mute, errCode 0) and
 // rejects "applyAudio" (errCode 105601, opCode does not exist) — hence the swap.
-// Verified live (LXBUGS-128490): "kick" works; "muteall"/"unmuteall" are rejected by
-// the meeting server (errCode=105601 opCode不存在) in the tested environment. They are
-// kept here pending server-side confirmation — treat 105601 as "value unsupported in
-// this environment".
+// Verified live (LXBUGS-128490) + backend confirmation (邹治会 2026-09-24):
+// /meeting/member/control is PER-MEMBER only — muteall/unmuteall are not
+// supported by the interface and have been removed (backend: 邹治会 2026-09-24).
 var VCOpCodes = []string{
 	"kick", "quit", "join", "handup", "openScreenShare", "closeScreenShare",
 	"openVideo", "closeVideo", "mute", "applyVideo", "shareVideo",
-	"cancelShareVideo", "muteall", "unmuteall", "remove", "call",
+	"cancelShareVideo", "remove", "call",
 	"enforceOpenVideo", "setJoinHost", "cancelJoinHost", "inviteOpenAudio",
 	"setHost", "grabHost",
 }
@@ -648,8 +647,7 @@ func (c *LansengerClient) FetchActiveMeetings(ctx context.Context, orgID, operat
 // ControlMember performs a host control operation on a member
 // (/meeting/member/control). opCode is forwarded verbatim — the server is the
 // authority on accepted values; VCOpCodes is a reference list, not a validator.
-// Some values (e.g. muteall/unmuteall) may be rejected with errCode=105601
-// depending on the meeting server build.
+// op_code is passed through as-is; unsupported values fail with 105601.
 func (c *LansengerClient) ControlMember(ctx context.Context, mid, staffID, opCode, operator, orgID, userToken string) (*VideoconferenceOpResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
