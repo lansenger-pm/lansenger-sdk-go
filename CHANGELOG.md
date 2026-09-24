@@ -60,6 +60,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+---
+
+## [0.16.0] - 2026-09-24
+
+### Fixed (media, mirror of python 1.10.1)
+
+- **media.UploadAppMediaV2**: non-string / out-of-enum `mediaType` is rejected locally with guidance (the numeric 1/2/3 convention belongs to the legacy 4.5.1 endpoint) — prevents errCode 50052 缺少上传media类型.
+- **client.SendFile**: when `userToken` is provided (assistant identity) the upload routes through the v2 app-media channel (4.5.5) — the v1 channel rejected the assistant identity with 10005 invalid appCategory; bot identity keeps the v1 path. (The download-side JSON error check already existed in this SDK.)
+
 ## [0.12.1] - 2026-09-20
 
 ### Added

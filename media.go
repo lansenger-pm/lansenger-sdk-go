@@ -67,6 +67,17 @@ func (c *LansengerClient) UploadAppMedia(ctx context.Context, filePath string, m
 }
 
 func (c *LansengerClient) UploadAppMediaV2(ctx context.Context, filePath string, mediaType string, userToken string, width, height, duration int) (*UploadAppMediaResult, error) {
+	// OpenAPI 4.5.5 用字符串枚举；数字 1/2/3 是旧 4.5.1 端点的约定，传数字
+	// 会 50052「缺少上传media类型」——就地拦截并指路。
+	switch mediaType {
+	case AppMediaTypeFile, AppMediaTypeVideo, AppMediaTypeImage, AppMediaTypeAudio:
+	default:
+		return &UploadAppMediaResult{
+			Success: false,
+			Error: fmt.Sprintf("mediaType must be one of 'file'/'video'/'image'/'audio' (strings per OpenAPI 4.5.5); got %q. The numeric 1/2/3 convention belongs to the legacy 4.5.1 UploadMedia endpoint.", mediaType),
+		}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err

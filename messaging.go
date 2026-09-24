@@ -94,9 +94,18 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 	if mt == "" {
 		mt = GuessAppMediaType(filePath)
 	}
-	uploadResult, err := c.UploadAppMedia(ctx, filePath, mt, 0, 0, 0)
-	if err != nil {
-		return &SendMessageResult{Success: false, Error: "upload failed: " + err.Error(), Platform: "lansenger"}, nil
+	// assistant 身份（带 user_token）走 v1 上传通道会被 10005 invalid
+	// appCategory 拒绝——统一收敛到 v2 通道（4.5.5，user_token 鉴权）；
+	// bot 身份仍走 v1（LXBUGS-128492 测试轮）。
+	var uploadResult *UploadAppMediaResult
+	var upErr error
+	if userToken != "" {
+		uploadResult, upErr = c.UploadAppMediaV2(ctx, filePath, mt, userToken, 0, 0, 0)
+	} else {
+		uploadResult, upErr = c.UploadAppMedia(ctx, filePath, mt, 0, 0, 0)
+	}
+	if upErr != nil {
+		return &SendMessageResult{Success: false, Error: "upload failed: " + upErr.Error(), Platform: "lansenger"}, nil
 	}
 	if !uploadResult.Success {
 		return &SendMessageResult{Success: false, Error: "upload failed: " + uploadResult.Error, Platform: "lansenger"}, nil
@@ -110,9 +119,15 @@ func (c *LansengerClient) SendFile(ctx context.Context, chatID, filePath string,
 		textData["content"] = content
 	}
 	if coverImagePath != "" {
-		coverResult, err := c.UploadAppMedia(ctx, coverImagePath, AppMediaTypeImage, 0, 0, 0)
-		if err != nil {
-			return &SendMessageResult{Success: false, Error: "cover upload failed: " + err.Error(), Platform: "lansenger"}, nil
+		var coverResult *UploadAppMediaResult
+		var coverErr error
+		if userToken != "" {
+			coverResult, coverErr = c.UploadAppMediaV2(ctx, coverImagePath, AppMediaTypeImage, userToken, 0, 0, 0)
+		} else {
+			coverResult, coverErr = c.UploadAppMedia(ctx, coverImagePath, AppMediaTypeImage, 0, 0, 0)
+		}
+		if coverErr != nil {
+			return &SendMessageResult{Success: false, Error: "cover upload failed: " + coverErr.Error(), Platform: "lansenger"}, nil
 		}
 		if !coverResult.Success {
 			return &SendMessageResult{Success: false, Error: "cover upload failed: " + coverResult.Error, Platform: "lansenger"}, nil
