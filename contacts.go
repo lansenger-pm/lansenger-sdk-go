@@ -145,16 +145,39 @@ func (c *LansengerClient) FetchDepartmentAncestors(ctx context.Context, staffID 
 		return &DepartmentAncestorsResult{Success: false, Error: err.Error()}, nil
 	}
 
-	data := extractData(result)
-	if data == nil {
-		return &DepartmentAncestorsResult{Success: false, Error: "no data in response", RawResponse: result}, nil
-	}
-
 	res := &DepartmentAncestorsResult{
 		Success:     true,
 		RawResponse: result,
 	}
 
+	// 真实响应把 data 作为数组返回，每个元素带一个 ancestorDepartments 对象数组：
+	// {"data":[{"ancestorDepartments":[{"departmentId":…,"externalId":…,"name":…}, …]}, …]}
+	// （Python/TypeScript SDK 同样把 data 当列表处理。）
+	if entries, ok := result["data"].([]interface{}); ok {
+		res.AncestorGroups = make([][]map[string]string, 0, len(entries))
+		for _, entry := range entries {
+			ancestors := []map[string]string{}
+			if m, ok := entry.(map[string]interface{}); ok {
+				if arr, ok := m["ancestorDepartments"].([]interface{}); ok {
+					ancestors = make([]map[string]string, 0, len(arr))
+					for _, item := range arr {
+						if dm, ok := item.(map[string]interface{}); ok {
+							ancestors = append(ancestors, ancestorDepartmentEntry(dm))
+						}
+					}
+				}
+			}
+			res.AncestorGroups = append(res.AncestorGroups, ancestors)
+		}
+		return res, nil
+	}
+
+	data := extractData(result)
+	if data == nil {
+		return &DepartmentAncestorsResult{Success: false, Error: "no data in response", RawResponse: result}, nil
+	}
+
+	// 兼容旧形状：data.ancestorDepartments 是数组的数组。
 	if ancestorList, ok := data["ancestorDepartments"].([]interface{}); ok {
 		res.AncestorGroups = make([][]map[string]string, 0, len(ancestorList))
 		for _, group := range ancestorList {
@@ -162,14 +185,7 @@ func (c *LansengerClient) FetchDepartmentAncestors(ctx context.Context, staffID 
 				ancestors := make([]map[string]string, 0, len(arr))
 				for _, item := range arr {
 					if m, ok := item.(map[string]interface{}); ok {
-						entry := map[string]string{
-							"id":   strFromMap(m, "id"),
-							"name": strFromMap(m, "name"),
-						}
-						if extID := strFromMap(m, "externalId"); extID != "" {
-							entry["externalId"] = extID
-						}
-						ancestors = append(ancestors, entry)
+						ancestors = append(ancestors, ancestorDepartmentEntry(m))
 					}
 				}
 				res.AncestorGroups = append(res.AncestorGroups, ancestors)
@@ -178,6 +194,20 @@ func (c *LansengerClient) FetchDepartmentAncestors(ctx context.Context, staffID 
 	}
 
 	return res, nil
+}
+
+// ancestorDepartmentEntry 归一化一个部门条目；服务端实际用 departmentId 作为部门标识。
+func ancestorDepartmentEntry(m map[string]interface{}) map[string]string {
+	id := strFromMapLoose(m, "departmentId", "id")
+	entry := map[string]string{
+		"id":           id,
+		"departmentId": id,
+		"name":         strFromMap(m, "name"),
+	}
+	if extID := strFromMap(m, "externalId"); extID != "" {
+		entry["externalId"] = extID
+	}
+	return entry
 }
 
 func (c *LansengerClient) FetchStaffIdMapping(ctx context.Context, orgID, idType, idValue, userToken string) (*StaffIdMappingResult, error) {

@@ -2,7 +2,7 @@
 
 # Lansenger CLI（Go）
 
-Lansenger 命令行工具 — 在終端直接調用藍信開放平台 API，傳送訊息、管理群組、查詢人員/部門、操作行事曆與待辦等。
+Lansenger 命令行工具 — 在終端直接調用藍信開放平台 API，傳送訊息、管理群組、查詢人員/部門、操作行事曆等。
 
 命令語法與 Python 版、TypeScript 版完全一致，安裝任一版本即可使用。
 
@@ -80,7 +80,6 @@ lansenger message send-text staff001 "Hello from CLI!"
 | `staff` | 查詢人員資訊 | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
 | `department` | 查詢部門資訊 | `detail`, `children`, `staffs` |
 | `calendar` | 行事曆操作 | `primary`, `create-schedule`, `fetch-schedule`, `delete-schedule`, `list-schedules`, `attendees`, `add-attendees`, `delete-attendees`, `update-schedule`, `attendee-meta` |
-| `todo` | 待辦任務管理 | `create`, `update`, `update-status`, `delete`, `list`, `fetch-by-id`, `fetch-by-source`, `status-counts`, `executor-status`, `add-executors`, `delete-executors`, `executor-list` |
 | `oauth` | OAuth2 使用者認證 | `authorize-url`, `exchange-code`, `refresh-token`, `user-info`, `parse-callback`, `validate-state` |
 | `callback` | 回呼事件解析 | `parse-payload`, `decrypt-payload`, `verify-signature`, `event-types` |
 | `media` | 媒體檔案操作 | `upload`, `upload-app`, `download`, `download-to-file`, `path` |
@@ -247,7 +246,6 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 | `staff *` (通訊錄唯讀) | N | **Y** | **Y** | `search` 額外需要 userToken |
 | `department *` | N | **Y** | **Y** | 僅組織級應用 |
 | `calendar *` | N | **Y** | **Y** | 帶 userToken = 使用者身份；不帶 = 機器人身份 |
-| `todo *` | N | **Y** | **Y** | 僅組織級應用 |
 | `chat list/messages` | N | **Y** | **Y** | 僅組織級應用 |
 | `group *` (群組管理 V2) | N | N | **Y** | 需要機器人已在群內 |
 | `media upload` | **Y** | **Y** | **Y** | 通用上傳 |
@@ -260,7 +258,7 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 
 > **個人機器人** 只能收發訊息和上傳/下載檔案，無法存取通訊錄、行事曆或 OAuth2。
 >
-> **組織應用 vs 組織應用 + 機器人**：使用相同的 appID/appSecret。唯一區別在於訊息通道 —— 僅機器人可以傳送機器人私聊訊息和群聊訊息（因為只有機器人能加入群聊）。其他所有 API（通訊錄、行事曆、待辦、聊天記錄、OAuth2、串流訊息）兩者完全一致。目前僅自建應用支援機器人能力。
+> **組織應用 vs 組織應用 + 機器人**：使用相同的 appID/appSecret。唯一區別在於訊息通道 —— 僅機器人可以傳送機器人私聊訊息和群聊訊息（因為只有機器人能加入群聊）。其他所有 API（通訊錄、行事曆、聊天記錄、OAuth2、串流訊息）兩者完全一致。目前僅自建應用支援機器人能力。
 
 ### 開發者中心權限
 

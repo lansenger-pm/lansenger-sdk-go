@@ -2,7 +2,7 @@
 
 # Lansenger CLI（Go）
 
-Lansenger 命令行工具 — 在终端直接调用蓝信开放平台 API，发送消息、管理群组、查询人员/部门、操作日程与待办等。
+Lansenger 命令行工具 — 在终端直接调用蓝信开放平台 API，发送消息、管理群组、查询人员/部门、操作日程等。
 
 命令语法与 Python 版、TypeScript 版完全一致，安装任一版本即可使用。
 
@@ -80,7 +80,6 @@ lansenger message send-text staff001 "Hello from CLI!"
 | `staff` | 查询人员信息 | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
 | `department` | 查询部门信息 | `detail`, `children`, `staffs` |
 | `calendar` | 日程操作 | `primary`, `create-schedule`, `fetch-schedule`, `delete-schedule`, `list-schedules`, `attendees`, `add-attendees`, `delete-attendees`, `update-schedule`, `attendee-meta` |
-| `todo` | 待办任务管理 | `create`, `update`, `update-status`, `delete`, `list`, `fetch-by-id`, `fetch-by-source`, `status-counts`, `executor-status`, `add-executors`, `delete-executors`, `executor-list` |
 | `oauth` | OAuth2 用户认证 | `authorize-url`, `exchange-code`, `refresh-token`, `user-info`, `parse-callback`, `validate-state` |
 | `callback` | 回调事件解析 | `parse-payload`, `decrypt-payload`, `verify-signature`, `event-types` |
 | `media` | 媒体文件操作 | `upload`, `upload-app`, `download`, `download-to-file`, `path` |
@@ -250,7 +249,6 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 | `staff *` (通讯录只读) | N | **Y** | **Y** | `search` 额外需要 userToken |
 | `department *` | N | **Y** | **Y** | 仅组织级应用 |
 | `calendar *` | N | **Y** | **Y** | 带 userToken = 用户身份；不带 = 机器人身份 |
-| `todo *` | N | **Y** | **Y** | 仅组织级应用 |
 | `chat list/messages` | N | **Y** | **Y** | 仅组织级应用 |
 | `group *` (群组管理 V2) | N | N | **Y** | 需要机器人已在群内 |
 | `media upload` | **Y** | **Y** | **Y** | 通用上传 |
@@ -263,7 +261,7 @@ lansenger --profile org-bot staff basic-info STAFF_ID
 
 > **个人机器人** 只能收发消息和上传/下载文件，无法访问通讯录、日程或 OAuth2。
 >
-> **组织应用 vs 组织应用 + 机器人**：使用相同的 appID/appSecret。唯一区别在于消息通道 —— 仅机器人可以发送机器人私聊消息和群聊消息（因为只有机器人能加入群聊）。其他所有 API（通讯录、日程、待办、聊天记录、OAuth2、流式消息）两者完全一致。目前仅自建应用支持机器人能力。
+> **组织应用 vs 组织应用 + 机器人**：使用相同的 appID/appSecret。唯一区别在于消息通道 —— 仅机器人可以发送机器人私聊消息和群聊消息（因为只有机器人能加入群聊）。其他所有 API（通讯录、日程、聊天记录、OAuth2、流式消息）两者完全一致。目前仅自建应用支持机器人能力。
 
 ### 开发者中心权限
 

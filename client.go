@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -247,16 +249,50 @@ func extractData(result map[string]interface{}) map[string]interface{} {
 	return nil
 }
 
-func extractDataArray(result map[string]interface{}) []interface{} {
-	if data, ok := result["data"].([]interface{}); ok {
-		return data
-	}
-	return nil
-}
-
 func strFromMap(m map[string]interface{}, key string) string {
 	v, _ := m[key].(string)
 	return v
+}
+
+// strFromScalar 把 JSON 标量转成字符串。
+// 服务端有一部分 id 字段返回为数字（例如会议的 id=1380079），
+// strFromMap 只接受 string，会把这些字段静默丢成空串。
+func strFromScalar(v interface{}) string {
+	switch t := v.(type) {
+	case nil:
+		return ""
+	case string:
+		return t
+	case float64:
+		if math.IsNaN(t) || math.IsInf(t, 0) {
+			return ""
+		}
+		if t == math.Trunc(t) && math.Abs(t) < 1e15 {
+			return strconv.FormatInt(int64(t), 10)
+		}
+		return strconv.FormatFloat(t, 'f', -1, 64)
+	case json.Number:
+		return t.String()
+	case int:
+		return strconv.Itoa(t)
+	case int64:
+		return strconv.FormatInt(t, 10)
+	case bool:
+		return strconv.FormatBool(t)
+	default:
+		return ""
+	}
+}
+
+// strFromMapLoose 与 strFromMap 相同，但额外接受数字等非字符串标量，
+// 用于那些服务端可能以数字返回的 id 字段。
+func strFromMapLoose(m map[string]interface{}, keys ...string) string {
+	for _, k := range keys {
+		if s := strFromScalar(m[k]); s != "" {
+			return s
+		}
+	}
+	return ""
 }
 
 func strOrNil(m map[string]interface{}, keys ...string) string {
@@ -293,47 +329,6 @@ func boolFromMap(m map[string]interface{}, key string) bool {
 	}
 	if n, ok := v.(float64); ok {
 		return n != 0
-	}
-	return false
-}
-
-// stringDataValue reads the top-level data field when an endpoint returns a
-// scalar string. The nested map fallback keeps compatibility with older tests
-// and any legacy server wrappers.
-func stringDataValue(result map[string]interface{}) string {
-	if s, ok := result["data"].(string); ok {
-		return s
-	}
-	if data, ok := result["data"].(map[string]interface{}); ok {
-		return strOrNil(data, "data")
-	}
-	return ""
-}
-
-func intDataValue(result map[string]interface{}) int {
-	if n, ok := result["data"].(float64); ok {
-		return int(n)
-	}
-	if data, ok := result["data"].(map[string]interface{}); ok {
-		return intFromMap(data, "data")
-	}
-	return 0
-}
-
-func boolDataValue(result map[string]interface{}) bool {
-	if value, ok := result["data"]; ok {
-		if b, ok := value.(bool); ok {
-			return b
-		}
-		if s, ok := value.(string); ok {
-			return s == "true" || s == "1"
-		}
-		if n, ok := value.(float64); ok {
-			return n != 0
-		}
-		if data, ok := value.(map[string]interface{}); ok {
-			return boolFromMap(data, "data")
-		}
 	}
 	return false
 }

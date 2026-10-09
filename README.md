@@ -35,11 +35,6 @@ All three bot types use the same auth mechanism: `appToken` is required for ever
 - **Message management** — revoke, dynamic card update, urgent reminder
 - **Groups V2** — create, info, members, list, membership check, update settings & members, dissolve
 - **Calendar & schedule** — primary calendar, schedule CRUD, attendee management, attendee metadata update, update_schedule_attendees()
-- **Unified todo** — create, update, delete, query, executor management, status counts
-- **Notices (通知系统)** — send official-account notices (text/link content, phone/staff targeting, confirm/forward/reply flags, reminder policies, attachments), query org official accounts
-- **Questionnaires (问卷系统)** — create/update/publish/withdraw/finish/delete questionnaires, batch question management, office-account & created/participated lists (paged), answer records and export, presigned upload URL
-- **Boardroom (会议室预定 V2)** — room lookup with area/floor/equipment/time filters, room detail & daily schedule, reserve/edit (single & repeating), cancel, scan-code confirmation, my reservations (paged), grading & office-area lists
-- **Personal todos (个人待办)** — create/edit/list user-owned personal todos and manage attachments; separate from application todos
 - **Bot slash commands** (4.37) — create/query/delete Command entries for bot interaction menus
 - **Personal apps** (4.38) — create/update/query/delete/list personal bots with user token
 - **Callback events** — 24 event types, structured data parsing, signature verification
@@ -258,6 +253,9 @@ download, err := client.DownloadMedia(ctx, "media123")
 // Download and save to file
 path, err := client.DownloadMediaToFile(ctx, "media123", "/path/to/save.pdf")
 
+// Download and save to file, failure reported in the result (no plain error)
+fileResult, err := client.DownloadMediaToFileResult(ctx, "media123", "/path/to/save.pdf")
+
 // Fetch download path info
 pathInfo, err := client.FetchMediaPath(ctx, "media123", "ut")
 
@@ -334,35 +332,7 @@ result, err := client.UpdateScheduleAttendeeMeta(ctx, "cal1", "sch1",
     map[string]interface{}{"rsvpStatus": "accepted"}, "ut", "")
 ```
 
-## 7. Unified Todo
-
-```go
-// Create todo task
-todo, err := client.CreateTodoTask(ctx, "Approval Request", lansenger.TodoTypeApproval,
-    "https://app.com/a/1", "https://pc.app.com/a/1", []string{"staff1"}, "org1", "", "", "", "")
-
-// Update status (11=pending-read, 12=read, 21=pending-do, 22=done)
-result, err := client.UpdateTodoTaskStatus(ctx, "taskId", lansenger.TodoStatusDone, "org1", "", "")
-
-// Update content
-result, err := client.UpdateTodoTask(ctx, "taskId", "Updated", "l", "p", "org1", "", "")
-
-// Delete (sender only)
-result, err := client.DeleteTodoTask(ctx, "taskId", "org1", "", "")
-
-// Query
-list, err := client.FetchTodoTaskList(ctx, "org1", nil, "", nil, "")
-task, err := client.FetchTodoTaskByID(ctx, "taskId", "org1", "", "")
-task, err := client.FetchTodoTaskBySourceID(ctx, "src1", "org1", "", "")
-counts, err := client.FetchTodoTaskStatusCounts(ctx, "staff1", "org1", "", "", "")
-
-// Executor management
-result, err := client.AddExecutors(ctx, []string{"staff2"}, "org1", "taskId", "")
-result, err := client.DeleteExecutors(ctx, []string{"staff2"}, "org1", "taskId", "")
-executors, err := client.FetchExecutorList(ctx, "taskId", "org1", "", nil, "")
-```
-
-## 8. Callback Events
+## 7. Callback Events
 
 ```go
 // Parse plain (unencrypted) webhook payload — query string or JSON
@@ -382,7 +352,7 @@ valid := lansenger.VerifyCallbackSignature(timestamp, nonce, signature, encoding
 types := lansenger.GetCallbackEventTypes()
 ```
 
-## 9. Chat Reading
+## 8. Chat Reading
 
 ```go
 // Fetch user's chat list (private + group)
@@ -524,7 +494,6 @@ The Lansenger platform has three identity types with different API access:
 | `staff *` (contacts read-only) | N | **Y** | **Y** | `search` additionally requires userToken |
 | `department *` | N | **Y** | **Y** | Org-level apps only |
 | `calendar *` | N | **Y** | **Y** | With userToken = user identity; without = bot identity |
-| `todo *` | N | **Y** | **Y** | Org-level apps only |
 | `chat list/messages` | N | **Y** | **Y** | Org-level apps only |
 | `group *` (group management V2) | N | N | **Y** | Requires bot to be in group |
 | `media upload` | **Y** | **Y** | **Y** | General upload |
@@ -537,7 +506,7 @@ The Lansenger platform has three identity types with different API access:
 
 > **Personal Bot** can only send/receive messages and upload/download files. Cannot access contacts, groups, calendars, or OAuth2.
 >
-> **Org App vs Org App + Bot**: Same appID/appSecret. The only difference is messaging channels — only bots can send bot DMs and group messages (because only bots can join groups). All other APIs (contacts, calendar, todo, chat, OAuth2, streaming) work identically for both. Currently only self-built apps support bot capability.
+> **Org App vs Org App + Bot**: Same appID/appSecret. The only difference is messaging channels — only bots can send bot DMs and group messages (because only bots can join groups). All other APIs (contacts, calendar, chat, OAuth2, streaming) work identically for both. Currently only self-built apps support bot capability.
 
 ### Developer Center Permissions
 
@@ -597,11 +566,6 @@ lansenger-sdk-go/
 ├── messaging.go         # Convenience methods + revoke + dynamic update
 ├── streaming.go         # SSE streaming messages
 ├── media.go             # Upload/download files & images
-├── todos.go             # Unified todo (4.33) — 12 endpoints
-├── notices.go             # Notice (通知系统)
-├── questionnaires.go      # Questionnaire (问卷系统)
-├── boardrooms.go          # Boardroom (会议室预定 V2)
-├── personal_todos.go      # Personal Todo (个人待办)
 ├── videoconferences.go    # Videoconference (视频会议开放能力)
 ├── calendars.go         # Calendar & schedule (4.23) — 10 endpoints
 ├── callbacks.go         # Callback event parsing + AES-256-CBC decryption + SHA1 signature verification

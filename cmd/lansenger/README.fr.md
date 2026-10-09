@@ -80,7 +80,6 @@ lansenger message send-text staff001 "Hello from CLI!"
 | `staff` | Interroger les infos du personnel | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
 | `department` | Interroger les départements | `detail`, `children`, `staffs` |
 | `calendar` | Calendrier et planification | `primary`, `create-schedule`, `fetch-schedule`, `delete-schedule`, `list-schedules`, `attendees`, `add-attendees`, `delete-attendees`, `update-schedule`, `attendee-meta` |
-| `todo` | Gestion des tâches | `create`, `update`, `update-status`, `delete`, `list`, `fetch-by-id`, `fetch-by-source`, `status-counts`, `executor-status`, `add-executors`, `delete-executors`, `executor-list` |
 | `oauth` | Authentification OAuth2 | `authorize-url`, `exchange-code`, `refresh-token`, `user-info`, `parse-callback`, `validate-state` |
 | `callback` | Analyse des événements callback | `parse-payload`, `decrypt-payload`, `verify-signature`, `event-types` |
 | `media` | Opérations sur les fichiers média | `upload`, `upload-app`, `download`, `download-to-file`, `path` |
@@ -250,7 +249,6 @@ La plateforme Lansenger propose trois types d'identité avec différents accès 
 | `staff *` (contacts lecture seule) | N | **Y** | **Y** | `search` nécessite en plus userToken |
 | `department *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
 | `calendar *` | N | **Y** | **Y** | Avec userToken = identité utilisateur ; sans = identité bot |
-| `todo *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
 | `chat list/messages` | N | **Y** | **Y** | Applications niveau organisation uniquement |
 | `group *` (gestion de groupes V2) | N | N | **Y** | Nécessite que le bot soit dans le groupe |
 | `media upload` | **Y** | **Y** | **Y** | Upload général |
@@ -263,7 +261,7 @@ La plateforme Lansenger propose trois types d'identité avec différents accès 
 
 > **Bot personnel** peut uniquement envoyer/recevoir des messages et uploader/télécharger des fichiers. Impossible d'accéder aux contacts, calendriers ou OAuth2.
 >
-> **App d'organisation vs App d'organisation + Bot** : Même appID/appSecret. La seule différence concerne les canaux de messagerie — seuls les bots peuvent envoyer des DM bot et des messages de groupe (car seuls les bots peuvent rejoindre les groupes). Toutes les autres API (contacts, calendrier, todo, chat, OAuth2, streaming) fonctionnent de manière identique pour les deux. Actuellement, seules les apps auto-hébergées supportent la capacité bot.
+> **App d'organisation vs App d'organisation + Bot** : Même appID/appSecret. La seule différence concerne les canaux de messagerie — seuls les bots peuvent envoyer des DM bot et des messages de groupe (car seuls les bots peuvent rejoindre les groupes). Toutes les autres API (contacts, calendrier, chat, OAuth2, streaming) fonctionnent de manière identique pour les deux. Actuellement, seules les apps auto-hébergées supportent la capacité bot.
 
 ### Permissions du Centre développeur
 

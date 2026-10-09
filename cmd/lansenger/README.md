@@ -2,7 +2,7 @@
 
 # Lansenger CLI (Go)
 
-Lansenger command-line tool — interact with Lansenger APIs directly from the terminal: send messages, manage groups, query staff/departments, operate calendars and todos, and more.
+Lansenger command-line tool — interact with Lansenger APIs directly from the terminal: send messages, manage groups, query staff/departments, operate calendars, and more.
 
 Command syntax is consistent with the Python and TypeScript versions. Install any one.
 
@@ -80,7 +80,6 @@ lansenger message send-text staff001 "Hello from CLI!"
 | `staff` | Query staff info | `basic-info`, `detail`, `ancestors`, `id-mapping`, `org-extra-fields`, `search`, `org-info` |
 | `department` | Query department info | `detail`, `children`, `staffs` |
 | `calendar` | Calendar & schedule | `primary`, `create-schedule`, `fetch-schedule`, `delete-schedule`, `list-schedules`, `attendees`, `add-attendees`, `delete-attendees`, `update-attendees`, `update-schedule`, `attendee-meta` |
-| `todo` | Todo task management | `create`, `update`, `update-status`, `delete`, `list`, `fetch-by-id`, `fetch-by-source`, `status-counts`, `executor-status`, `add-executors`, `delete-executors`, `executor-list` |
 | `bot-command` | Bot slash commands | `create`, `query`, `delete` |
 | `personal-app` | Personal apps/bots | `create`, `update`, `info`, `delete`, `list` |
 | `oauth` | OAuth2 user auth | `authorize-url`, `exchange-code`, `refresh-token`, `user-info`, `parse-callback`, `validate-state` |
@@ -252,7 +251,6 @@ The Lansenger platform has three identity types with different API access:
 | `staff *` (contacts read-only) | N | **Y** | **Y** | `search` additionally requires userToken |
 | `department *` | N | **Y** | **Y** | Org-level apps only |
 | `calendar *` | N | **Y** | **Y** | With userToken = user identity; without = bot identity |
-| `todo *` | N | **Y** | **Y** | Org-level apps only |
 | `chat list/messages` | N | **Y** | **Y** | Org-level apps only |
 | `group *` (group management V2) | N | N | **Y** | Requires bot to be in group |
 | `media upload` | **Y** | **Y** | **Y** | General upload |
@@ -265,7 +263,7 @@ The Lansenger platform has three identity types with different API access:
 
 > **Personal Bot** can only send/receive messages and upload/download files. Cannot access contacts, calendars, or OAuth2.
 >
-> **Org App vs Org App + Bot**: Same appID/appSecret. The only difference is messaging channels — only bots can send bot DMs and group messages (because only bots can join groups). All other APIs (contacts, calendar, todo, chat, OAuth2, streaming) work identically for both. Currently only self-built apps support bot capability.
+> **Org App vs Org App + Bot**: Same appID/appSecret. The only difference is messaging channels — only bots can send bot DMs and group messages (because only bots can join groups). All other APIs (contacts, calendar, chat, OAuth2, streaming) work identically for both. Currently only self-built apps support bot capability.
 
 ### Developer Center Permissions
 

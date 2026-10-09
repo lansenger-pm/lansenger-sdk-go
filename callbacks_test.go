@@ -502,9 +502,9 @@ func TestDecryptCallbackPayloadWithKnownAppID(t *testing.T) {
 
 func TestFieldMapParsing(t *testing.T) {
 	rawData := map[string]interface{}{
-		"staffId":  "s001",
-		"mobile":   "13800138000",
-		"state":    "active",
+		"staffId":   "s001",
+		"mobile":    "13800138000",
+		"state":     "active",
 		"timestamp": "1234567890",
 	}
 	parsed := parseEventData("staff_modify", rawData)
@@ -809,11 +809,11 @@ func TestDecryptCallbackPayloadJSONFormatSnakeCase(t *testing.T) {
 	iv := aesKey[:16]
 
 	jsonPayload := map[string]interface{}{
-		"random":  "random16bytes!!!",
-		"org_id":  orgID,
-		"app_id":  appID,
-		"events":  json.RawMessage(eventsJSON),
-		"length":  len(eventsJSON),
+		"random": "random16bytes!!!",
+		"org_id": orgID,
+		"app_id": appID,
+		"events": json.RawMessage(eventsJSON),
+		"length": len(eventsJSON),
 	}
 	payloadBytes, _ := json.Marshal(jsonPayload)
 
@@ -844,3 +844,10 @@ func TestDecryptCallbackPayloadJSONFormatSnakeCase(t *testing.T) {
 
 // Silence the unused import warning for fmt
 var _ = fmt.Sprintf
+
+// 既不是 JSON 也不含 eventType 的输入必须报错，而不是静默返回空列表。
+func TestParseCallbackPayloadMalformedReturnsError(t *testing.T) {
+	if _, err := ParseCallbackPayload("bogus-encrypted"); err == nil {
+		t.Error("expected an error for a payload that is neither JSON nor has eventType")
+	}
+}

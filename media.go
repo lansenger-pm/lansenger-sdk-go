@@ -74,7 +74,7 @@ func (c *LansengerClient) UploadAppMediaV2(ctx context.Context, filePath string,
 	default:
 		return &UploadAppMediaResult{
 			Success: false,
-			Error: fmt.Sprintf("mediaType must be one of 'file'/'video'/'image'/'audio' (strings per OpenAPI 4.5.5); got %q. The numeric 1/2/3 convention belongs to the legacy 4.5.1 UploadMedia endpoint.", mediaType),
+			Error:   fmt.Sprintf("mediaType must be one of 'file'/'video'/'image'/'audio' (strings per OpenAPI 4.5.5); got %q. The numeric 1/2/3 convention belongs to the legacy 4.5.1 UploadMedia endpoint.", mediaType),
 		}, nil
 	}
 
@@ -204,7 +204,7 @@ func (c *LansengerClient) DownloadMediaToFile(ctx context.Context, mediaID strin
 		return "", err
 	}
 	if !result.Success {
-		return "", fmt.Errorf("download failed: %s", result.Error)
+		return "", fmt.Errorf("Download failed: %s", result.Error)
 	}
 
 	if targetPath == "" {
@@ -216,6 +216,31 @@ func (c *LansengerClient) DownloadMediaToFile(ctx context.Context, mediaID strin
 	}
 
 	return targetPath, nil
+}
+
+// DownloadMediaToFileResult downloads a media file and writes it to targetPath
+// (defaulting to the mediaID when empty), reporting failures through the
+// returned *DownloadFileResult instead of a plain error. Transport-level
+// failures (auth, request creation) are still returned as an error, matching
+// the other *Result methods.
+func (c *LansengerClient) DownloadMediaToFileResult(ctx context.Context, mediaID string, targetPath string) (*DownloadFileResult, error) {
+	result, err := c.DownloadMedia(ctx, mediaID)
+	if err != nil {
+		return nil, err
+	}
+	if !result.Success {
+		return &DownloadFileResult{Success: false, Error: fmt.Sprintf("Download failed: %s", result.Error)}, nil
+	}
+
+	if targetPath == "" {
+		targetPath = mediaID
+	}
+
+	if err := os.WriteFile(targetPath, result.Data, 0644); err != nil {
+		return &DownloadFileResult{Success: false, Error: fmt.Sprintf("writing file: %v", err)}, nil
+	}
+
+	return &DownloadFileResult{Success: true, Path: targetPath, Size: len(result.Data)}, nil
 }
 
 func (c *LansengerClient) FetchMediaPath(ctx context.Context, mediaID string, userToken string) (*MediaPathResult, error) {

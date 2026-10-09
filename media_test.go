@@ -159,3 +159,93 @@ func TestDownloadMediaByShareIDUserTokenInURL(t *testing.T) {
 		t.Errorf("expected Success=true, got %v (error: %s)", result.Success, result.Error)
 	}
 }
+
+// newMediaDownloadServer serves the app token plus any /v1/medias/{id}/fetch
+// request with a fixed body/content-type.
+func newMediaDownloadServer(body []byte, contentType string) *httptest.Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/apptoken/create", mockAppTokenHandler("tok1"))
+	mux.HandleFunc("/v1/medias/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
+		w.Write(body)
+	})
+	return httptest.NewServer(mux)
+}
+
+func TestDownloadMediaToFileResultSuccess(t *testing.T) {
+	server := newMediaDownloadServer([]byte("hello-bytes"), "application/octet-stream")
+	defer server.Close()
+
+	target := filepath.Join(t.TempDir(), "out.dat")
+	c := newTestClient(server)
+
+	result, err := c.DownloadMediaToFileResult(context.Background(), "media1", target)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Success {
+		t.Fatalf("expected Success=true, got false (error: %s)", result.Error)
+	}
+	if result.Path != target {
+		t.Errorf("expected Path=%s, got %s", target, result.Path)
+	}
+	if result.Size != len("hello-bytes") {
+		t.Errorf("expected Size=%d, got %d", len("hello-bytes"), result.Size)
+	}
+	written, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatalf("failed to read written file: %v", err)
+	}
+	if string(written) != "hello-bytes" {
+		t.Errorf("expected file content hello-bytes, got %q", string(written))
+	}
+}
+
+func TestDownloadMediaToFileResultAPIErrorIsReported(t *testing.T) {
+	server := newMediaDownloadServer([]byte(`{"errCode":50000,"errMsg":"OPEN ID invalid"}`), "application/json")
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.DownloadMediaToFileResult(context.Background(), "media_bad", filepath.Join(t.TempDir(), "never.dat"))
+	if err != nil {
+		t.Fatalf("expected no transport error, got %v", err)
+	}
+	if result.Success {
+		t.Fatalf("expected Success=false")
+	}
+	if result.Path != "" {
+		t.Errorf("expected empty Path, got %s", result.Path)
+	}
+	if !strings.Contains(result.Error, "50000") {
+		t.Errorf("expected error to mention errCode 50000, got %s", result.Error)
+	}
+}
+
+func TestDownloadMediaToFileResultWriteFailureIsReported(t *testing.T) {
+	server := newMediaDownloadServer([]byte("payload"), "application/octet-stream")
+	defer server.Close()
+
+	c := newTestClient(server)
+	result, err := c.DownloadMediaToFileResult(context.Background(), "media1", "/nonexistent-dir-xyz/out.dat")
+	if err != nil {
+		t.Fatalf("expected no transport error, got %v", err)
+	}
+	if result.Success {
+		t.Fatalf("expected Success=false")
+	}
+	if !strings.Contains(result.Error, "writing file") {
+		t.Errorf("expected write failure message, got %s", result.Error)
+	}
+}
+
+func TestDownloadMediaToFileStillReturnsErrorOnAPIFailure(t *testing.T) {
+	server := newMediaDownloadServer([]byte(`{"errCode":50000,"errMsg":"OPEN ID invalid"}`), "application/json")
+	defer server.Close()
+
+	c := newTestClient(server)
+	if _, err := c.DownloadMediaToFile(context.Background(), "media_bad", filepath.Join(t.TempDir(), "never.dat")); err == nil {
+		t.Fatalf("expected an error from DownloadMediaToFile")
+	} else if !strings.Contains(err.Error(), "Download failed") {
+		t.Errorf("expected Download failed error, got %v", err)
+	}
+}

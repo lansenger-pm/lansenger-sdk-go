@@ -35,11 +35,6 @@ Lansenger（藍信）平台的 Go SDK — 支援藍信應用、組織機器人�
 - **訊息管理** — 撤回、動態卡片更新、加急提醒
 - **群組 V2** — 建立、資訊、成員、列表、成員檢查、更新設定與成員、解散
 - **行事曆與排程** — 主行事曆、排程 CRUD、出席人管理、出席人元資料更新、update_schedule_attendees()
-- **統一待辦** — 建立、更新、刪除、查詢、執行人管理、狀態計數
-- **通知系統** — 透過官方帳號發送通知（文字/連結、手機號/staffId 兩種投放、確認/提醒策略、附件），查詢組織官方帳號
-- **問卷系統** — 建立/更新/發布/撤回/結束/刪除問卷，批次管理題目，官方帳號與我建立/我參與的列表（分頁），答卷記錄與匯出，預簽名上傳地址
-- **會議室預訂 V2** — 會議室檢索（辦公區/樓層/設備/時段篩選），詳情與當日預訂情況，預訂與修改（單次/重複），取消與掃碼確認，我的預訂（分頁），分級與辦公區列表
-- **個人待辦** — 建立、編輯、查詢使用者個人待辦及資源附件；與應用待辦完全分離
 - **機器人命令** — 創建/查詢/刪除機器人快捷命令
 - **個人應用** — 創建/修改/查詢/刪除/列表個人機器人應用
 - **回呼事件** — 24 種事件類型、結構化資料解析、簽章驗證
@@ -258,6 +253,9 @@ download, err := client.DownloadMedia(ctx, "media123")
 // 下載並儲存到檔案
 path, err := client.DownloadMediaToFile(ctx, "media123", "/path/to/save.pdf")
 
+// 下載並儲存到檔案（失敗時於結果中回傳，不拋出錯誤）
+fileResult, err := client.DownloadMediaToFileResult(ctx, "media123", "/path/to/save.pdf")
+
 // 取得下載路徑資訊
 pathInfo, err := client.FetchMediaPath(ctx, "media123", "ut")
 
@@ -334,35 +332,7 @@ result, err := client.UpdateScheduleAttendeeMeta(ctx, "cal1", "sch1",
     map[string]interface{}{"rsvpStatus": "accepted"}, "ut", "")
 ```
 
-## 7. 統一待辦
-
-```go
-// 建立待辦任務
-todo, err := client.CreateTodoTask(ctx, "審批請求", lansenger.TodoTypeApproval,
-    "https://app.com/a/1", "https://pc.app.com/a/1", []string{"staff1"}, "org1", "", "", "", "")
-
-// 更新狀態（11=待讀, 12=已讀, 21=待辦, 22=已完成）
-result, err := client.UpdateTodoTaskStatus(ctx, "taskId", lansenger.TodoStatusDone, "org1", "", "")
-
-// 更新內容
-result, err := client.UpdateTodoTask(ctx, "taskId", "已更新", "l", "p", "org1", "", "")
-
-// 刪除（僅傳送者）
-result, err := client.DeleteTodoTask(ctx, "taskId", "org1", "", "")
-
-// 查詢
-list, err := client.FetchTodoTaskList(ctx, "org1", nil, "", nil, "")
-task, err := client.FetchTodoTaskByID(ctx, "taskId", "org1", "", "")
-task, err := client.FetchTodoTaskBySourceID(ctx, "src1", "org1", "", "")
-counts, err := client.FetchTodoTaskStatusCounts(ctx, "staff1", "org1", "", "", "")
-
-// 執行人管理
-result, err := client.AddExecutors(ctx, []string{"staff2"}, "org1", "taskId", "")
-result, err := client.DeleteExecutors(ctx, []string{"staff2"}, "org1", "taskId", "")
-executors, err := client.FetchExecutorList(ctx, "taskId", "org1", "", nil, "")
-```
-
-## 8. 回呼事件
+## 7. 回呼事件
 
 ```go
 // 解析明文（未加密）webhook 資料 — URL 查詢字串或 JSON
@@ -382,7 +352,7 @@ valid := lansenger.VerifyCallbackSignature(timestamp, nonce, signature, encoding
 types := lansenger.GetCallbackEventTypes()
 ```
 
-## 9. 聊天閱讀
+## 8. 聊天閱讀
 
 ```go
 // 取得使用者聊天列表（私聊 + 群聊）
@@ -524,7 +494,6 @@ token, err := store.LoadAppToken()
 | `staff *` (通訊錄唯讀) | N | **Y** | **Y** | `search` 額外需要 userToken |
 | `department *` | N | **Y** | **Y** | 僅組織級應用 |
 | `calendar *` | N | **Y** | **Y** | 帶 userToken = 使用者身份；不帶 = 機器人身份 |
-| `todo *` | N | **Y** | **Y** | 僅組織級應用 |
 | `chat list/messages` | N | **Y** | **Y** | 僅組織級應用 |
 | `group *` (群組管理 V2) | N | N | **Y** | 需要機器人已在群內 |
 | `media upload` | **Y** | **Y** | **Y** | 通用上傳 |
@@ -537,7 +506,7 @@ token, err := store.LoadAppToken()
 
 > **個人機器人** 只能收發訊息和上傳/下載檔案，無法存取通訊錄、群組、行事曆或 OAuth2。
 >
-> **組織應用 vs 組織應用 + 機器人**：使用相同的 appID/appSecret。唯一區別在於訊息通道 —— 僅機器人可以傳送機器人私聊訊息和群聊訊息（因為只有機器人能加入群聊）。其他所有 API（通訊錄、行事曆、待辦、聊天記錄、OAuth2、串流訊息）兩者完全一致。目前僅自建應用支援機器人能力。
+> **組織應用 vs 組織應用 + 機器人**：使用相同的 appID/appSecret。唯一區別在於訊息通道 —— 僅機器人可以傳送機器人私聊訊息和群聊訊息（因為只有機器人能加入群聊）。其他所有 API（通訊錄、行事曆、聊天記錄、OAuth2、串流訊息）兩者完全一致。目前僅自建應用支援機器人能力。
 
 ### 開發者中心權限
 
@@ -597,11 +566,6 @@ lansenger-sdk-go/
 ├── messaging.go         # 便捷方法 + 撤回 + 動態更新
 ├── streaming.go         # SSE 串流訊息
 ├── media.go             # 上傳/下載檔案與圖片
-├── todos.go             # 結合待辦（4.33）— 12 個端點
-├── notices.go             # 通知系統
-├── questionnaires.go      # 問卷系統
-├── boardrooms.go          # 會議室預訂 V2
-├── personal_todos.go      # 個人待辦
 ├── videoconferences.go    # 視頻會議開放能力
 ├── calendars.go         # 行事曆與排程（4.23）— 10 個端點
 ├── callbacks.go         # 回呼事件解析 + AES-256-CBC 解密 + SHA1 簽章驗證

@@ -1,3 +1,7 @@
+//go:build integration
+
+// 集成测试：需要真实网关与有效凭据，默认不参与 `go test ./...`。
+// 运行方式：go test -tags=integration ./...
 package lansenger
 
 import (

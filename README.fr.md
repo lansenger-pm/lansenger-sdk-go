@@ -35,11 +35,6 @@ Les trois types de robots utilisent le même mécanisme d'authentification : `ap
 - **Gestion des messages** — révoquer, mise à jour dynamique de carte, rappel urgent
 - **Groupes V2** — créer, infos, membres, liste, vérification de membership, mise à jour des paramètres & membres, dissoudre
 - **Calendrier & planification** — calendrier principal, CRUD de planification, gestion des participants, mise à jour des métadonnées des participants, update_schedule_attendees()
-- **Todo unifié** — créer, mettre à jour, supprimer, interroger, gestion des exécutants, comptes de statut
-- **Notices (通知系统)** — envoyer des notifications via un compte officiel (texte/lien, ciblage téléphone/staff, confirmation/rappels, pièces jointes), lister les comptes officiels
-- **Questionnaires (问卷系统)** — créer/mettre à jour/publier/retirer/terminer/supprimer des questionnaires, gestion groupée des questions, listes paginées, enregistrements et export des réponses, URL de téléversement pré-signée
-- **Boardroom (会议室预定 V2)** — recherche de salles, détails et planning journalier, réservation/modification, annulation, confirmation par scan, mes réservations, listes de gradings et zones
-- **Todos personnels (个人待办)** — créer/modifier/lister les todos personnels et gérer les pièces jointes
 - **Commandes de bot** — créer/gérer les entrées de commande de bot
 - **Applications personnelles** — gérer les bots personnels
 - **Événements de callback** — 24 types d'événements, analyse de données structurées, vérification de signature
@@ -258,6 +253,9 @@ download, err := client.DownloadMedia(ctx, "media123")
 // Télécharger et sauvegarder dans un fichier
 path, err := client.DownloadMediaToFile(ctx, "media123", "/path/to/save.pdf")
 
+// Télécharger et sauvegarder dans un fichier, échec renvoyé dans le résultat
+fileResult, err := client.DownloadMediaToFileResult(ctx, "media123", "/path/to/save.pdf")
+
 // Récupérer les infos du chemin de téléchargement
 pathInfo, err := client.FetchMediaPath(ctx, "media123", "ut")
 
@@ -334,35 +332,7 @@ result, err := client.UpdateScheduleAttendeeMeta(ctx, "cal1", "sch1",
     map[string]interface{}{"rsvpStatus": "accepted"}, "ut", "")
 ```
 
-## 7. Todo unifié
-
-```go
-// Créer une tâche todo
-todo, err := client.CreateTodoTask(ctx, "Demande d'approbation", lansenger.TodoTypeApproval,
-    "https://app.com/a/1", "https://pc.app.com/a/1", []string{"staff1"}, "org1", "", "", "", "")
-
-// Mettre à jour le statut (11=en attente de lecture, 12=lu, 21=en attente de faire, 22=terminé)
-result, err := client.UpdateTodoTaskStatus(ctx, "taskId", lansenger.TodoStatusDone, "org1", "", "")
-
-// Mettre à jour le contenu
-result, err := client.UpdateTodoTask(ctx, "taskId", "Mis à jour", "l", "p", "org1", "", "")
-
-// Supprimer (émetteur uniquement)
-result, err := client.DeleteTodoTask(ctx, "taskId", "org1", "", "")
-
-// Interroger
-list, err := client.FetchTodoTaskList(ctx, "org1", nil, "", nil, "")
-task, err := client.FetchTodoTaskByID(ctx, "taskId", "org1", "", "")
-task, err := client.FetchTodoTaskBySourceID(ctx, "src1", "org1", "", "")
-counts, err := client.FetchTodoTaskStatusCounts(ctx, "staff1", "org1", "", "", "")
-
-// Gestion des exécutants
-result, err := client.AddExecutors(ctx, []string{"staff2"}, "org1", "taskId", "")
-result, err := client.DeleteExecutors(ctx, []string{"staff2"}, "org1", "taskId", "")
-executors, err := client.FetchExecutorList(ctx, "taskId", "org1", "", nil, "")
-```
-
-## 8. Événements de callback
+## 7. Événements de callback
 
 ```go
 // Analyser le payload webhook en clair (non chiffré) — chaîne de requête URL ou JSON
@@ -382,7 +352,7 @@ valid := lansenger.VerifyCallbackSignature(timestamp, nonce, signature, encoding
 types := lansenger.GetCallbackEventTypes()
 ```
 
-## 9. Lecture de chats
+## 8. Lecture de chats
 
 ```go
 // Obtenir la liste de chats de l'utilisateur (privé + groupe)
@@ -524,7 +494,6 @@ La plateforme Lansenger propose trois types d'identité avec différents accès 
 | `staff *` (contacts lecture seule) | N | **Y** | **Y** | `search` nécessite en plus userToken |
 | `department *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
 | `calendar *` | N | **Y** | **Y** | Avec userToken = identité utilisateur ; sans = identité bot |
-| `todo *` | N | **Y** | **Y** | Applications niveau organisation uniquement |
 | `chat list/messages` | N | **Y** | **Y** | Applications niveau organisation uniquement |
 | `group *` (gestion de groupes V2) | N | N | **Y** | Nécessite que le bot soit dans le groupe |
 | `media upload` | **Y** | **Y** | **Y** | Upload général |
@@ -537,7 +506,7 @@ La plateforme Lansenger propose trois types d'identité avec différents accès 
 
 > **Bot personnel** peut uniquement envoyer/recevoir des messages et uploader/télécharger des fichiers. Impossible d'accéder aux contacts, groupes, calendriers ou OAuth2.
 >
-> **App d'organisation vs App d'organisation + Bot** : Même appID/appSecret. La seule différence concerne les canaux de messagerie — seuls les bots peuvent envoyer des DM bot et des messages de groupe (car seuls les bots peuvent rejoindre les groupes). Toutes les autres API (contacts, calendrier, todo, chat, OAuth2, streaming) fonctionnent de manière identique pour les deux. Actuellement, seules les apps auto-hébergées supportent la capacité bot.
+> **App d'organisation vs App d'organisation + Bot** : Même appID/appSecret. La seule différence concerne les canaux de messagerie — seuls les bots peuvent envoyer des DM bot et des messages de groupe (car seuls les bots peuvent rejoindre les groupes). Toutes les autres API (contacts, calendrier, chat, OAuth2, streaming) fonctionnent de manière identique pour les deux. Actuellement, seules les apps auto-hébergées supportent la capacité bot.
 
 ### Permissions du Centre développeur
 
@@ -597,17 +566,12 @@ lansenger-sdk-go/
 ├── messaging.go         # Méthodes de convenance + révoquer + mise à jour dynamique
 ├── streaming.go         # Messages en streaming SSE
 ├── media.go             # Upload/download de fichiers & images
-├── todos.go             # Todo unifié (4.33) — 12 endpoints
-├── notices.go             # Notifications (通知系统)
-├── questionnaires.go      # Questionnaires (问卷系统)
-├── boardrooms.go          # Boardroom (会议室预定 V2)
-├── personal_todos.go      # Personal Todo (个人待办)
 ├── videoconferences.go    # Videoconference (视频会议开放能力)
 ├── calendars.go         # Calendrier & planification (4.23) — 10 endpoints
 ├── callbacks.go         # Analyse d'événements de callback + déchiffrement AES-256-CBC + vérification de signature SHA1
 ├── persistence.go       # CredentialStore — persistance dans fichier JSON
 ├── version.go           # Constante de version SDK
-├── *_test.go            # 136 tests unitaires + 10 tests d'intégration
+├── *_test.go            # 300 tests unitaires et d'intégration
 ├── cmd/lansenger/       # Outil CLI (config, oauth, messaging, staff, etc.)
 ├── go.mod
 └── README.md

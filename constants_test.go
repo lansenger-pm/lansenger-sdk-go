@@ -49,7 +49,7 @@ func TestGuessMediaTypeFile(t *testing.T) {
 func TestAPIEndpointsStructure(t *testing.T) {
 	categories := []string{"auth", "oauth", "users", "staffs", "org", "departments",
 		"groups", "messages", "bot", "sse", "medias", "chats",
-		"calendars", "todo", "websocket", "notices", "questionnaires", "boardrooms", "personal_todos"}
+		"calendars", "websocket"}
 	for _, cat := range categories {
 		if APIEndpoints[cat] == nil {
 			t.Errorf("expected APIEndpoints category '%s' to exist", cat)
@@ -88,30 +88,6 @@ func TestGroupsEndpointPaths(t *testing.T) {
 		if actual != expected {
 			t.Errorf("expected groups.%s=%s, got %s", key, expected, actual)
 		}
-	}
-}
-
-func TestTodoStatusConstants(t *testing.T) {
-	if TodoStatusPendingRead != "11" {
-		t.Errorf("expected TodoStatusPendingRead='11', got %s", TodoStatusPendingRead)
-	}
-	if TodoStatusRead != "12" {
-		t.Errorf("expected TodoStatusRead='12', got %s", TodoStatusRead)
-	}
-	if TodoStatusPendingDo != "21" {
-		t.Errorf("expected TodoStatusPendingDo='21', got %s", TodoStatusPendingDo)
-	}
-	if TodoStatusDone != "22" {
-		t.Errorf("expected TodoStatusDone='22', got %s", TodoStatusDone)
-	}
-}
-
-func TestTodoTypeConstants(t *testing.T) {
-	if TodoTypeNotification != 1 {
-		t.Errorf("expected TodoTypeNotification=1, got %d", TodoTypeNotification)
-	}
-	if TodoTypeApproval != 2 {
-		t.Errorf("expected TodoTypeApproval=2, got %d", TodoTypeApproval)
 	}
 }
 

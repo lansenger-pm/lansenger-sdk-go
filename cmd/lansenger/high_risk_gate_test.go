@@ -71,8 +71,6 @@ func TestHighRiskGate_Exit10(t *testing.T) {
 		{args: []string{"group", "update-members", "g1", "--remove", "u1"}, exitCode: 10, stderr: "Confirmation required"},
 		{args: []string{"calendar", "delete-schedule", "cal1", "sch1"}, exitCode: 10, stderr: "Confirmation required"},
 		{args: []string{"calendar", "delete-attendees", "cal1", "sch1", "[\"u1\"]"}, exitCode: 10, stderr: "Confirmation required"},
-		{args: []string{"todo", "delete", "t1", "org1"}, exitCode: 10, stderr: "Confirmation required"},
-		{args: []string{"todo", "delete-executors", "u1", "org1"}, exitCode: 10, stderr: "Confirmation required"},
 	}
 	for _, c := range cases {
 		code, _, se := runGate(t, c.args)
@@ -125,7 +123,6 @@ func TestHighRiskGate_DryRun(t *testing.T) {
 	cases := []expect{
 		{args: []string{"group", "dismiss", "g1", "--dry-run"}, exitCode: 0, stdout: "DRY RUN"},
 		{args: []string{"group", "update-members", "g1", "--remove", "u1", "--dry-run"}, exitCode: 0, stdout: "DRY RUN"},
-		{args: []string{"todo", "delete", "t1", "org1", "--dry-run"}, exitCode: 0, stdout: "DRY RUN"},
 	}
 	for _, c := range cases {
 		code, so, _ := runGate(t, c.args)

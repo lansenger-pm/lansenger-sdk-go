@@ -413,3 +413,40 @@ func TestVideoconferenceValidationGuards(t *testing.T) {
 		t.Errorf("mid guard: %+v", res)
 	}
 }
+
+// 服务端把会议 id 返回为数字，CreateMeeting/detail 必须回填 Mid（回归：曾静默为空串）。
+func TestFillVCDetailNumericID(t *testing.T) {
+	res := &VideoconferenceDetailResult{Success: true}
+	fillVCDetail(res, map[string]interface{}{
+		"id": float64(1380079), "subject": "周会", "meetingNumber": "MN001",
+	})
+	if res.Mid != "1380079" {
+		t.Errorf("expected Mid=1380079, got %q", res.Mid)
+	}
+}
+
+func TestCreateMeetingNumericID(t *testing.T) {
+	server := newMuxBuilder().
+		handleToken("tok1").
+		handle("/xtra/videoconference/openapi/v1/meeting/create", 0, "ok", map[string]interface{}{
+			"id": float64(1380079), "subject": "周会", "meetingNumber": "MN001",
+		}).
+		build()
+	defer server.Close()
+
+	c := newTestClient(server)
+	res, err := c.CreateMeeting(context.Background(), &VideoconferenceCreateParams{
+		Subject:   "周会",
+		StartTime: 1790233200000,
+		OrgID:     "org1",
+		Members: []VideoconferenceMember{
+			{StaffID: "1001", Role: "admin"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !res.Success || res.Mid != "1380079" || res.MeetingNumber != "MN001" {
+		t.Errorf("unexpected result: %#v", res)
+	}
+}

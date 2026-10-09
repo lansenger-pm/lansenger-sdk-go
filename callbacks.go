@@ -55,6 +55,11 @@ func ParseCallbackPayload(input string) ([]CallbackEvent, error) {
 
 	events := []CallbackEvent{}
 	eventTypes := values["eventType"]
+	if len(eventTypes) == 0 {
+		// 既不是 JSON 也没有 eventType —— 输入无法解释为回调负载。
+		// 以前这里静默返回空列表，调用方无法区分「空回调」和「畸形输入」。
+		return nil, fmt.Errorf("no events found in callback payload")
+	}
 	for _, eventType := range eventTypes {
 		category := CallbackEventTypes[eventType]
 		data := map[string]interface{}{}
@@ -290,7 +295,7 @@ binaryFormat:
 	}
 
 	eventsBytes := raw[20+totalAfterHeader-int(eventsLen):]
-	middleBytes := raw[20:20+totalAfterHeader-int(eventsLen)]
+	middleBytes := raw[20 : 20+totalAfterHeader-int(eventsLen)]
 
 	var eventsData []interface{}
 	if err := json.Unmarshal(eventsBytes, &eventsData); err != nil {

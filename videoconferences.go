@@ -200,10 +200,8 @@ func fillVCPage(res *VideoconferenceListResult, result map[string]interface{}) {
 }
 
 func fillVCDetail(res *VideoconferenceDetailResult, data map[string]interface{}) {
-	res.Mid = strFromMap(data, "id")
-	if res.Mid == "" {
-		res.Mid = strFromMap(data, "mid")
-	}
+	// 服务端把会议 id 返回为数字（如 1380079），必须用宽松转换，否则 Mid 会静默为空。
+	res.Mid = strFromMapLoose(data, "id", "mid")
 	res.Subject = strFromMap(data, "subject")
 	res.MeetingNumber = strFromMap(data, "meetingNumber")
 	res.StartTime = int64FromMap(data, "startTime")

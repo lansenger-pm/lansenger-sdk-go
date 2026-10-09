@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.17.0] - 2026-10-09
+
+### Added
+
+- `DownloadMediaToFileResult()`：与 `DownloadMediaToFile()` 相同的下载逻辑，但返回 `*DownloadFileResult`（`Success` / `Path` / `Size` / `Error`），下载或写盘失败在结果中报告；`DownloadMediaToFile()` 保持原有契约（返回裸 `error`）。
+- 新增 `DownloadFileResult` 类型。
+
+### Removed
+
+- 移除 7 个应用域：qingjia（请假 V2）、jiaban（加班 V2）、questionnaire（问卷）、notice（通知）、todo（应用待办）、boardroom（会议室预定 V2）、personalTodo（个人待办）。这些应用与蓝信标准接口不同、且会按交付定制，不属于「交付给谁都不变」的标准版，故从 SDK 中剥离。对应模块（含仅供其使用的 V2 分页解析 `parseV2PageInfo`）、CLI 命令、常量、类型与单元测试均已删除，5 个语言版本的 README 同步删去相应章节。
+
+### Fixed
+
+- **视频会议创建**：`CreateMeeting()` 回填接口返回的会议 `mid`（此前始终返回空字符串）。
+- **部门祖先**：`FetchDepartmentAncestors()` 正确解析祖先部门列表（此前返回空结果）。
+- **回调解析**：`ParseCallback()` 在载荷为空或其中没有事件时返回明确错误，不再静默返回空事件列表。
+
+---
+
+## [0.16.0] - 2026-09-24
+
+### Fixed (media, mirror of python 1.10.1)
+
+- **media.UploadAppMediaV2**: non-string / out-of-enum `mediaType` is rejected locally with guidance (the numeric 1/2/3 convention belongs to the legacy 4.5.1 endpoint) — prevents errCode 50052 缺少上传media类型.
+- **client.SendFile**: when `userToken` is provided (assistant identity) the upload routes through the v2 app-media channel (4.5.5) — the v1 channel rejected the assistant identity with 10005 invalid appCategory; bot identity keeps the v1 path. (The download-side JSON error check already existed in this SDK.)
+
+---
+
+## [0.15.0] - 2026-09-24
+
+### Fixed
+
+- **dynamic-card**: `UpdateDynamicCard` / `DynamicCardUpdateParams` now accept `UserToken` (query) and `UserId` (body) — the update must carry the identity that originally SENT the card. Bot-sent cards update with the app identity alone; human-sent cards (e.g. group messages) require the sender identity; a mismatch fails with 10005 无权限 (LXBUGS-128492, verified live by 李川 lxtest).
+- **videoconferences**: `VCOpCodes` removed `muteall`/`unmuteall` — `/meeting/member/control` is per-member only (backend confirmation 邹治会 2026-09-24); `mute` (per-member mute) verified live errCode=0 (LXBUGS-128490).
+
+---
+
 ## [0.14.1] - 2026-09-23
 
 ### Added
@@ -50,24 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 创建/修改要求成员列表恰好一名 `role="admin"` 主持人；录像下载链接每次最多 3 个；`fetchRange='person'` 必须传 `staffId`；`mids` 不得为空。
 
 ---
-
-## [0.15.0] - 2026-09-24
-
-### Fixed
-
-- **dynamic-card**: `UpdateDynamicCard` / `DynamicCardUpdateParams` now accept `UserToken` (query) and `UserId` (body) — the update must carry the identity that originally SENT the card. Bot-sent cards update with the app identity alone; human-sent cards (e.g. group messages) require the sender identity; a mismatch fails with 10005 无权限 (LXBUGS-128492, verified live by 李川 lxtest).
-- **videoconferences**: `VCOpCodes` removed `muteall`/`unmuteall` — `/meeting/member/control` is per-member only (backend confirmation 邹治会 2026-09-24); `mute` (per-member mute) verified live errCode=0 (LXBUGS-128490).
-
----
-
----
-
-## [0.16.0] - 2026-09-24
-
-### Fixed (media, mirror of python 1.10.1)
-
-- **media.UploadAppMediaV2**: non-string / out-of-enum `mediaType` is rejected locally with guidance (the numeric 1/2/3 convention belongs to the legacy 4.5.1 endpoint) — prevents errCode 50052 缺少上传media类型.
-- **client.SendFile**: when `userToken` is provided (assistant identity) the upload routes through the v2 app-media channel (4.5.5) — the v1 channel rejected the assistant identity with 10005 invalid appCategory; bot identity keeps the v1 path. (The download-side JSON error check already existed in this SDK.)
 
 ## [0.12.1] - 2026-09-20
 
