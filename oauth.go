@@ -75,7 +75,7 @@ func (c *LansengerClient) ExchangeCode(ctx context.Context, code string, redirec
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &UserTokenResult{Success: false, Error: err.Error()}, nil
+		return &UserTokenResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -110,7 +110,7 @@ func (c *LansengerClient) RefreshUserToken(ctx context.Context, refreshToken str
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &UserTokenResult{Success: false, Error: err.Error()}, nil
+		return &UserTokenResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

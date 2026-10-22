@@ -63,7 +63,7 @@ func (c *LansengerClient) FetchPrimaryCalendar(ctx context.Context, userToken, u
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &CalendarPrimaryResult{Success: false, Error: err.Error()}, nil
+		return &CalendarPrimaryResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -147,7 +147,7 @@ func (c *LansengerClient) CreateSchedule(ctx context.Context, calendarID, summar
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleCreateResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleCreateResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -177,7 +177,7 @@ func (c *LansengerClient) FetchSchedule(ctx context.Context, calendarID, schedul
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &ScheduleInfoResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -229,7 +229,7 @@ func (c *LansengerClient) DeleteSchedule(ctx context.Context, calendarID, schedu
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleDeleteResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleDeleteResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -263,7 +263,7 @@ func (c *LansengerClient) FetchScheduleList(ctx context.Context, calendarID stri
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleListResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -302,7 +302,7 @@ func (c *LansengerClient) FetchScheduleAttendees(ctx context.Context, calendarID
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &ScheduleAttendeesResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleAttendeesResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -353,7 +353,7 @@ func (c *LansengerClient) AddScheduleAttendees(ctx context.Context, calendarID, 
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleCreateResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleCreateResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	return &ScheduleCreateResult{
@@ -390,7 +390,7 @@ func (c *LansengerClient) DeleteScheduleAttendees(ctx context.Context, calendarI
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleAttendeesDeleteResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleAttendeesDeleteResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -423,7 +423,7 @@ func (c *LansengerClient) UpdateSchedule(ctx context.Context, calendarID, schedu
 
 	result, err := c.doPost(ctx, url, params)
 	if err != nil {
-		return &ScheduleDeleteResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleDeleteResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -453,7 +453,7 @@ func (c *LansengerClient) UpdateScheduleAttendeeMeta(ctx context.Context, calend
 
 	result, err := c.doPost(ctx, url, params)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 
 	return &SendMessageResult{
@@ -496,7 +496,7 @@ func (c *LansengerClient) UpdateScheduleAttendees(ctx context.Context, calendarI
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &ScheduleAttendeesUpdateResult{Success: false, Error: err.Error()}, nil
+		return &ScheduleAttendeesUpdateResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

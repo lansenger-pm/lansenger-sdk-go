@@ -8,11 +8,15 @@ type SendMessageResult struct {
 	Success     bool                   `json:"success"`
 	MessageID   string                 `json:"message_id"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	Platform    string                 `json:"platform"`
 	MsgType     string                 `json:"msg_type"`
 	Operation   string                 `json:"operation"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 	Retryable   bool                   `json:"retryable"`
+	// SubStatus 逐条撤回结果（4.6.7 data.subStatus），按 messageIds 顺序
+	SubStatus       []map[string]interface{} `json:"sub_status,omitempty"`
+	SubStatusFailed int                      `json:"sub_status_failed,omitempty"`
 }
 
 type StaffBasicInfoResult struct {
@@ -27,6 +31,7 @@ type StaffBasicInfoResult struct {
 	Status      string                   `json:"status"`
 	Departments []map[string]interface{} `json:"departments"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -35,12 +40,14 @@ type ScheduleAttendeesUpdateResult struct {
 	ScheduleIDs     []string               `json:"schedule_ids"`
 	FailedAttendees []string               `json:"failed_attendees"`
 	Error           string                 `json:"error"`
+	ErrCode         int                    `json:"err_code,omitempty"`
 	RawResponse     map[string]interface{} `json:"raw_response"`
 }
 
 type BotCommandResult struct {
 	Success     bool                   `json:"success"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -52,6 +59,7 @@ type BotCommandQueryResult struct {
 	StaffID     string                   `json:"staff_id"`
 	Commands    []map[string]interface{} `json:"commands"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -62,6 +70,7 @@ type PersonalAppCreateResult struct {
 	APIGWAddr    string                 `json:"apigw_addr"`
 	PassportAddr string                 `json:"passport_addr"`
 	Error        string                 `json:"error"`
+	ErrCode      int                    `json:"err_code,omitempty"`
 	RawResponse  map[string]interface{} `json:"raw_response"`
 }
 
@@ -74,6 +83,7 @@ type PersonalAppInfoResult struct {
 	APIGWAddr    string                 `json:"apigw_addr"`
 	PassportAddr string                 `json:"passport_addr"`
 	Error        string                 `json:"error"`
+	ErrCode      int                    `json:"err_code,omitempty"`
 	RawResponse  map[string]interface{} `json:"raw_response"`
 }
 
@@ -81,6 +91,7 @@ type PersonalAppListResult struct {
 	Success     bool                     `json:"success"`
 	AppList     []map[string]interface{} `json:"app_list"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -118,6 +129,7 @@ type StaffDetailResult struct {
 	Leaders                []map[string]interface{} `json:"leaders"`
 	JoinDate               string                   `json:"join_date"`
 	Error                  string                   `json:"error"`
+	ErrCode                int                      `json:"err_code,omitempty"`
 	RawResponse            map[string]interface{}   `json:"raw_response"`
 }
 
@@ -125,6 +137,7 @@ type DepartmentAncestorsResult struct {
 	Success        bool                   `json:"success"`
 	AncestorGroups [][]map[string]string  `json:"ancestor_groups"`
 	Error          string                 `json:"error"`
+	ErrCode        int                    `json:"err_code,omitempty"`
 	RawResponse    map[string]interface{} `json:"raw_response"`
 }
 
@@ -132,6 +145,7 @@ type StaffIdMappingResult struct {
 	Success     bool                   `json:"success"`
 	StaffID     string                 `json:"staff_id"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -145,6 +159,7 @@ type OrgInfoResult struct {
 	OrgDaysLimit      int                    `json:"org_days_limit"`
 	OrgBillingDate    string                 `json:"org_billing_date"`
 	Error             string                 `json:"error"`
+	ErrCode           int                    `json:"err_code,omitempty"`
 	RawResponse       map[string]interface{} `json:"raw_response"`
 }
 
@@ -154,6 +169,7 @@ type ExtraFieldIdsResult struct {
 	Total         int                    `json:"total"`
 	ExtraFieldIDs []string               `json:"extra_field_ids"`
 	Error         string                 `json:"error"`
+	ErrCode       int                    `json:"err_code,omitempty"`
 	RawResponse   map[string]interface{} `json:"raw_response"`
 }
 
@@ -163,6 +179,7 @@ type StaffSearchResult struct {
 	Total       int                      `json:"total"`
 	StaffInfo   []map[string]interface{} `json:"staff_info"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -171,6 +188,7 @@ type QueryGroupsResult struct {
 	TotalGroupIDs int                    `json:"total_group_ids"`
 	GroupIDs      []string               `json:"group_ids"`
 	Error         string                 `json:"error"`
+	ErrCode       int                    `json:"err_code,omitempty"`
 	Platform      string                 `json:"platform"`
 	Operation     string                 `json:"operation"`
 	RawResponse   map[string]interface{} `json:"raw_response"`
@@ -181,18 +199,21 @@ type UploadMediaResult struct {
 	MediaID     string `json:"media_id"`
 	CreatedTime string `json:"created_time"`
 	Error       string `json:"error"`
+	ErrCode     int    `json:"err_code,omitempty"`
 }
 
 type UploadAppMediaResult struct {
 	Success bool   `json:"success"`
 	MediaID string `json:"media_id"`
 	Error   string `json:"error"`
+	ErrCode int    `json:"err_code,omitempty"`
 }
 
 type DownloadMediaResult struct {
 	Success bool   `json:"success"`
 	Data    []byte `json:"data"`
 	Error   string `json:"error"`
+	ErrCode int    `json:"err_code,omitempty"`
 }
 
 type DownloadFileResult struct {
@@ -200,6 +221,7 @@ type DownloadFileResult struct {
 	Path    string `json:"path"`
 	Size    int    `json:"size"`
 	Error   string `json:"error"`
+	ErrCode int    `json:"err_code,omitempty"`
 }
 
 type MediaPathResult struct {
@@ -209,6 +231,7 @@ type MediaPathResult struct {
 	Type        string                 `json:"type"`
 	Size        string                 `json:"size"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -332,6 +355,7 @@ type UserTokenResult struct {
 	Scope            string                 `json:"scope"`
 	State            string                 `json:"state"`
 	Error            string                 `json:"error"`
+	ErrCode          int                    `json:"err_code,omitempty"`
 	RawResponse      map[string]interface{} `json:"raw_response"`
 }
 
@@ -349,6 +373,7 @@ type UserInfoResult struct {
 	ExternalID     string                   `json:"external_id"`
 	Departments    []map[string]interface{} `json:"department"`
 	Error          string                   `json:"error"`
+	ErrCode        int                      `json:"err_code,omitempty"`
 	RawResponse    map[string]interface{}   `json:"raw_response"`
 }
 
@@ -358,6 +383,7 @@ type AccountMessageResult struct {
 	InvalidStaff      []string               `json:"invalid_staff"`
 	InvalidDepartment []string               `json:"invalid_department"`
 	Error             string                 `json:"error"`
+	ErrCode           int                    `json:"err_code,omitempty"`
 	RawResponse       map[string]interface{} `json:"raw_response"`
 }
 
@@ -365,6 +391,7 @@ type UserMessageResult struct {
 	Success     bool                   `json:"success"`
 	MessageID   string                 `json:"message_id"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -374,6 +401,7 @@ type BotMessageResult struct {
 	InvalidStaff      []string               `json:"invalid_staff"`
 	InvalidDepartment []string               `json:"invalid_department"`
 	Error             string                 `json:"error"`
+	ErrCode           int                    `json:"err_code,omitempty"`
 	RawResponse       map[string]interface{} `json:"raw_response"`
 }
 
@@ -381,6 +409,7 @@ type StreamMessageResult struct {
 	Success     bool                   `json:"success"`
 	MessageID   string                 `json:"message_id"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -406,6 +435,7 @@ type CreateGroupResult struct {
 	InvalidStaff      []string               `json:"invalid_staff"`
 	InvalidDepartment []string               `json:"invalid_department"`
 	Error             string                 `json:"error"`
+	ErrCode           int                    `json:"err_code,omitempty"`
 	RawResponse       map[string]interface{} `json:"raw_response"`
 }
 
@@ -430,6 +460,7 @@ type GroupInfoResult struct {
 	RemindAll          bool                   `json:"remind_all"`
 	SendMsgStatus      bool                   `json:"send_msg_status"`
 	Error              string                 `json:"error"`
+	ErrCode            int                    `json:"err_code,omitempty"`
 	RawResponse        map[string]interface{} `json:"raw_response"`
 }
 
@@ -438,12 +469,14 @@ type GroupMemberResult struct {
 	TotalMembers int                      `json:"total_members"`
 	Members      []map[string]interface{} `json:"members"`
 	Error        string                   `json:"error"`
+	ErrCode      int                      `json:"err_code,omitempty"`
 	RawResponse  map[string]interface{}   `json:"raw_response"`
 }
 
 type UpdateGroupResult struct {
 	Success     bool                   `json:"success"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -455,6 +488,7 @@ type UpdateGroupMembersResult struct {
 	InvalidStaff      []string               `json:"invalid_staff"`
 	InvalidDepartment []string               `json:"invalid_department"`
 	Error             string                 `json:"error"`
+	ErrCode           int                    `json:"err_code,omitempty"`
 	RawResponse       map[string]interface{} `json:"raw_response"`
 }
 
@@ -463,6 +497,7 @@ type GroupListResult struct {
 	TotalGroupIDs int                    `json:"total_group_ids"`
 	GroupIDs      []string               `json:"group_ids"`
 	Error         string                 `json:"error"`
+	ErrCode       int                    `json:"err_code,omitempty"`
 	RawResponse   map[string]interface{} `json:"raw_response"`
 }
 
@@ -470,6 +505,7 @@ type IsInGroupResult struct {
 	Success     bool                   `json:"success"`
 	IsInGroup   bool                   `json:"is_in_group"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -498,6 +534,7 @@ type DepartmentDetailResult struct {
 	Introductions         []string                 `json:"introductions"`
 	DeptType              int                      `json:"dept_type"`
 	Error                 string                   `json:"error"`
+	ErrCode               int                      `json:"err_code,omitempty"`
 	RawResponse           map[string]interface{}   `json:"raw_response"`
 }
 
@@ -505,6 +542,7 @@ type DepartmentChildrenResult struct {
 	Success     bool                     `json:"success"`
 	Departments []map[string]interface{} `json:"departments"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -514,6 +552,7 @@ type DepartmentStaffsResult struct {
 	Total       int                      `json:"total"`
 	Staffs      []map[string]interface{} `json:"staffs"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -527,6 +566,7 @@ type CalendarPrimaryResult struct {
 	Type        string                 `json:"type"`
 	Role        string                 `json:"role"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -534,6 +574,7 @@ type ScheduleCreateResult struct {
 	Success     bool                   `json:"success"`
 	ScheduleID  string                 `json:"schedule_id"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -541,6 +582,7 @@ type ScheduleDeleteResult struct {
 	Success     bool                   `json:"success"`
 	ScheduleIDs []string               `json:"schedule_ids"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -548,6 +590,7 @@ type ScheduleAttendeesDeleteResult struct {
 	Success     bool                   `json:"success"`
 	ScheduleIDs []string               `json:"schedule_ids"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -567,6 +610,7 @@ type ScheduleInfoResult struct {
 	AttendeePermissions string                 `json:"attendee_permissions"`
 	Color               string                 `json:"color"`
 	Error               string                 `json:"error"`
+	ErrCode             int                    `json:"err_code,omitempty"`
 	RawResponse         map[string]interface{} `json:"raw_response"`
 }
 
@@ -574,6 +618,7 @@ type ScheduleListResult struct {
 	Success      bool                     `json:"success"`
 	ScheduleList []map[string]interface{} `json:"schedule_list"`
 	Error        string                   `json:"error"`
+	ErrCode      int                      `json:"err_code,omitempty"`
 	RawResponse  map[string]interface{}   `json:"raw_response"`
 }
 
@@ -582,6 +627,7 @@ type ScheduleAttendeesResult struct {
 	Total       int                      `json:"total"`
 	Attendees   []map[string]interface{} `json:"attendees"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -601,6 +647,7 @@ type ChatListResult struct {
 	StaffInfos  []ChatStaffInfo        `json:"staff_infos"`
 	GroupInfos  []ChatGroupInfo        `json:"group_infos"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -737,6 +784,7 @@ type ChatMessagesResult struct {
 	ChatType    string                 `json:"chat_type"`
 	Messages    []ChatMessageInfo      `json:"messages"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -751,6 +799,7 @@ type VideoconferenceDetailResult struct {
 	Status        int                    `json:"status"`
 	Admin         string                 `json:"admin"`
 	Error         string                 `json:"error"`
+	ErrCode       int                    `json:"err_code,omitempty"`
 	RawResponse   map[string]interface{} `json:"raw_response"`
 }
 
@@ -759,6 +808,7 @@ type VideoconferenceOpResult struct {
 	Done        bool                   `json:"done"`
 	Message     string                 `json:"message"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -769,6 +819,7 @@ type VideoconferenceListResult struct {
 	Items       []map[string]interface{} `json:"items"`
 	Scalars     []interface{}            `json:"scalars"`
 	Error       string                   `json:"error"`
+	ErrCode     int                      `json:"err_code,omitempty"`
 	RawResponse map[string]interface{}   `json:"raw_response"`
 }
 
@@ -776,6 +827,7 @@ type VideoconferenceStatusListResult struct {
 	Success     bool                   `json:"success"`
 	Statuses    []interface{}          `json:"statuses"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -783,6 +835,7 @@ type VideoconferenceParamResult struct {
 	Success     bool                   `json:"success"`
 	MeetingInfo map[string]interface{} `json:"meeting_info"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -790,6 +843,7 @@ type VideoconferenceVodListResult struct {
 	Success     bool                   `json:"success"`
 	Items       []interface{}          `json:"items"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -797,6 +851,7 @@ type VideoconferenceVodUrlResult struct {
 	Success     bool                   `json:"success"`
 	Data        map[string]interface{} `json:"data"`
 	Error       string                 `json:"error"`
+	ErrCode     int                    `json:"err_code,omitempty"`
 	RawResponse map[string]interface{} `json:"raw_response"`
 }
 
@@ -808,5 +863,6 @@ type VideoconferenceConfResult struct {
 	ForcePasswdFlag   int                    `json:"force_passwd_flag"`
 	SpaceSize         int64                  `json:"space_size"`
 	Error             string                 `json:"error"`
+	ErrCode           int                    `json:"err_code,omitempty"`
 	RawResponse       map[string]interface{} `json:"raw_response"`
 }

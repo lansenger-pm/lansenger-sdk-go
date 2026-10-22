@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.17.1] - 2026-10-22
+
+### Added
+
+- **结果结构体的结构化错误码**：全部 `*Result` 新增 `ErrCode int`（`json:"err_code,omitempty"`），失败时透传服务端 `errCode`；`errors.ErrCodeOf(err)` 从 `*APIError`（含嵌入类型）取码，本地校验/传输错误返回 0。此前调用方只能解析 `Error` 字符串里的 `(errCode: xxxxx)` 才能分流（LXBUGS-128629）。
+
+### Fixed
+
+- **RevokeMessage**（4.6.7）：
+  - 解析 `data.subStatus` 逐条结果到 `SubStatus` / `SubStatusFailed`：服务端在整体 `errCode=0` 时仍可能逐条失败，此前会被当成撤回成功。任一条失败即 `Success=false`，`ErrCode` 透传首个失败码；
+  - 补齐撤回契约文档：`senderID` 是发送者 **staffId**（人类 openId），群撤回必填；机器人身份没有 staffId，其自身发出的群消息无法通过该接口撤回；对机器人身份的撤回，服务端可能返回 59003「当前组织禁用机器人」，请以 `ErrCode` 为准（LXBUGS-128628）；
+  - `chatType` 非法值本地直接报错（服务端口径 50082 非法的 chatType）；群撤缺少 `senderID` 时补全为可执行说明。
+
 ## [0.17.0] - 2026-10-09
 
 ### Added

@@ -33,7 +33,7 @@ func (c *LansengerClient) SendUserMessage(ctx context.Context, receiverID, msgTy
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &UserMessageResult{Success: false, Error: err.Error()}, nil
+		return &UserMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

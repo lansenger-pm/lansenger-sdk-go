@@ -35,7 +35,7 @@ func (c *LansengerClient) SendGroupMessage(ctx context.Context, groupID, msgType
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 
 	data := extractData(result)

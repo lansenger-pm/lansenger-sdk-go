@@ -17,7 +17,7 @@ func (c *LansengerClient) FetchStaffBasicInfo(ctx context.Context, staffID strin
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &StaffBasicInfoResult{Success: false, Error: err.Error()}, nil
+		return &StaffBasicInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -61,7 +61,7 @@ func (c *LansengerClient) FetchStaffDetail(ctx context.Context, staffID string, 
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &StaffDetailResult{Success: false, Error: err.Error()}, nil
+		return &StaffDetailResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -142,7 +142,7 @@ func (c *LansengerClient) FetchDepartmentAncestors(ctx context.Context, staffID 
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &DepartmentAncestorsResult{Success: false, Error: err.Error()}, nil
+		return &DepartmentAncestorsResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	res := &DepartmentAncestorsResult{
@@ -225,7 +225,7 @@ func (c *LansengerClient) FetchStaffIdMapping(ctx context.Context, orgID, idType
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &StaffIdMappingResult{Success: false, Error: err.Error()}, nil
+		return &StaffIdMappingResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -255,7 +255,7 @@ func (c *LansengerClient) FetchOrgExtraFieldIDs(ctx context.Context, orgID, user
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &ExtraFieldIdsResult{Success: false, Error: err.Error()}, nil
+		return &ExtraFieldIdsResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -315,7 +315,7 @@ func (c *LansengerClient) SearchStaff(ctx context.Context, keyword, userToken, u
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &StaffSearchResult{Success: false, Error: err.Error()}, nil
+		return &StaffSearchResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -353,7 +353,7 @@ func (c *LansengerClient) FetchOrgInfo(ctx context.Context, orgID, userToken str
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &OrgInfoResult{Success: false, Error: err.Error()}, nil
+		return &OrgInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

@@ -27,7 +27,7 @@ func (c *LansengerClient) CreatePersonalApp(ctx context.Context, userToken, name
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &PersonalAppCreateResult{Success: false, Error: err.Error()}, nil
+		return &PersonalAppCreateResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -64,7 +64,7 @@ func (c *LansengerClient) UpdatePersonalApp(ctx context.Context, appID, userToke
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &PersonalAppInfoResult{Success: false, Error: err.Error()}, nil
+		return &PersonalAppInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	return &PersonalAppInfoResult{
@@ -87,7 +87,7 @@ func (c *LansengerClient) FetchPersonalApp(ctx context.Context, appID, userToken
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &PersonalAppInfoResult{Success: false, Error: err.Error()}, nil
+		return &PersonalAppInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -116,7 +116,7 @@ func (c *LansengerClient) DeletePersonalApp(ctx context.Context, appID, userToke
 
 	result, err := c.doPost(ctx, url, map[string]interface{}{})
 	if err != nil {
-		return &PersonalAppInfoResult{Success: false, Error: err.Error()}, nil
+		return &PersonalAppInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	return &PersonalAppInfoResult{
@@ -138,7 +138,7 @@ func (c *LansengerClient) FetchPersonalAppList(ctx context.Context, userToken st
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &PersonalAppListResult{Success: false, Error: err.Error()}, nil
+		return &PersonalAppListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

@@ -35,7 +35,7 @@ func (c *LansengerClient) FetchChatList(ctx context.Context, userToken string, c
 
 	result, err := c.doPost(ctx, apiURL, body)
 	if err != nil {
-		return &ChatListResult{Success: false, Error: err.Error()}, nil
+		return &ChatListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -135,7 +135,7 @@ func (c *LansengerClient) FetchChatMessages(ctx context.Context, userToken strin
 
 	result, err := c.doPost(ctx, apiURL, body)
 	if err != nil {
-		return &ChatMessagesResult{Success: false, Error: err.Error()}, nil
+		return &ChatMessagesResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

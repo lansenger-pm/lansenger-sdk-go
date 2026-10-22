@@ -26,7 +26,7 @@ func (c *LansengerClient) UploadMedia(ctx context.Context, filePath string, medi
 
 	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath)
 	if err != nil {
-		return &UploadMediaResult{Success: false, Error: err.Error()}, nil
+		return &UploadMediaResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -54,7 +54,7 @@ func (c *LansengerClient) UploadAppMedia(ctx context.Context, filePath string, m
 
 	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath)
 	if err != nil {
-		return &UploadAppMediaResult{Success: false, Error: err.Error()}, nil
+		return &UploadAppMediaResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -93,7 +93,7 @@ func (c *LansengerClient) UploadAppMediaV2(ctx context.Context, filePath string,
 
 	result, err := uploadMediaInternal(ctx, c.httpClient, url, filePath)
 	if err != nil {
-		return &UploadAppMediaResult{Success: false, Error: err.Error()}, nil
+		return &UploadAppMediaResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -138,7 +138,7 @@ func (c *LansengerClient) DownloadMedia(ctx context.Context, mediaID string) (*D
 			errCode, _ := result["errCode"].(float64)
 			if errCode != 0 {
 				errMsg, _ := result["errMsg"].(string)
-				return &DownloadMediaResult{Success: false, Error: NewAPIError(errMsg, int(errCode)).Error()}, nil
+				return &DownloadMediaResult{Success: false, Error: NewAPIError(errMsg, int(errCode)).Error(), ErrCode: int(errCode)}, nil
 			}
 		}
 	}
@@ -183,7 +183,7 @@ func (c *LansengerClient) DownloadMediaByShareID(ctx context.Context, shareID st
 			errCode, _ := result["errCode"].(float64)
 			if errCode != 0 {
 				errMsg, _ := result["errMsg"].(string)
-				return &DownloadMediaResult{Success: false, Error: NewAPIError(errMsg, int(errCode)).Error()}, nil
+				return &DownloadMediaResult{Success: false, Error: NewAPIError(errMsg, int(errCode)).Error(), ErrCode: int(errCode)}, nil
 			}
 		}
 	}
@@ -256,7 +256,7 @@ func (c *LansengerClient) FetchMediaPath(ctx context.Context, mediaID string, us
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &MediaPathResult{Success: false, Error: err.Error()}, nil
+		return &MediaPathResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

@@ -2,6 +2,7 @@ package lansenger
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -200,7 +201,7 @@ func (c *LansengerClient) SendImageURL(ctx context.Context, chatID, imageURL, co
 	result, err := c.SendFile(ctx, chatID, tmpPath, content, AppMediaTypeImage, "", isGroup, userToken, senderID)
 	os.Remove(tmpPath)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 	return result, nil
 }
@@ -522,7 +523,7 @@ func (c *LansengerClient) UpdateApproveCard(ctx context.Context, params *Approve
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 
 	data := extractData(result)
@@ -575,7 +576,7 @@ func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *Dynamic
 
 	result, err := c.doPost(ctx, apiURL, body)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 
 	data := extractData(result)
@@ -592,7 +593,48 @@ func (c *LansengerClient) UpdateDynamicCard(ctx context.Context, params *Dynamic
 	return res, nil
 }
 
+// RevokeMessage revokes previously sent messages (4.6.7).
+//
+// Sender contract (4.6.7):
+//   - chatType "bot" revokes messages the bot sent one-to-one.
+//   - chatType "staff"/"group" requires senderID = the sender's staffId (human
+//     open id). A bot identity has no staffId, so a group message sent under the
+//     bot's own identity cannot be revoked through this API — send it with a
+//     userToken/senderID when it has to stay revocable.
+//   - The server answers errCode 59003 (「当前组织禁用机器人」) for some
+//     bot-identity revokes even when the bot is enabled for sending; ErrCode is
+//     the machine-readable truth — do not parse the message text.
+//
+// Per-message outcomes land in SubStatus; if any message failed,
+// SubStatusFailed is greater than zero, Success is false and ErrCode carries
+// the first failing code.
 func (c *LansengerClient) RevokeMessage(ctx context.Context, messageIDs []string, chatType string, senderID string, sysMsg *SysMsgParams) (*SendMessageResult, error) {
+	if len(messageIDs) == 0 {
+		return &SendMessageResult{Success: false, Error: "message_ids is required", Platform: "lansenger", Operation: "revoke_message"}, nil
+	}
+	if chatType == "" {
+		chatType = "bot"
+	}
+	if !validRevokeChatType(chatType) {
+		return &SendMessageResult{
+			Success:   false,
+			Error:     "unsupported chat_type='" + chatType + "': expected staff, group, notification, account or bot",
+			Platform:  "lansenger",
+			Operation: "revoke_message",
+		}, nil
+	}
+	if (chatType == "staff" || chatType == "group") && senderID == "" {
+		return &SendMessageResult{
+			Success: false,
+			Error: "chat_type='" + chatType + "' requires sender_id (the sender's staffId). " +
+				"A bot has no staffId, so group messages sent under the bot's own identity " +
+				"cannot be revoked through this API — send with user_token/sender_id when the " +
+				"message must stay revocable (4.6.7)",
+			Platform:  "lansenger",
+			Operation: "revoke_message",
+		}, nil
+	}
+
 	token, err := c.GetToken(ctx)
 	if err != nil {
 		return nil, err
@@ -620,7 +662,14 @@ func (c *LansengerClient) RevokeMessage(ctx context.Context, messageIDs []string
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger", Operation: "revoke_message"}, nil
+	}
+
+	// 服务端在整体 errCode=0 时仍可能逐条失败，逐条结果在 data.subStatus
+	if data := extractData(result); data != nil {
+		if raw, ok := data["subStatus"].([]interface{}); ok && len(raw) > 0 {
+			return revokeResultFromSubStatus(result, raw), nil
+		}
 	}
 
 	return &SendMessageResult{
@@ -629,6 +678,57 @@ func (c *LansengerClient) RevokeMessage(ctx context.Context, messageIDs []string
 		Operation:   "revoke_message",
 		RawResponse: result,
 	}, nil
+}
+
+func validRevokeChatType(chatType string) bool {
+	switch chatType {
+	case "staff", "group", "notification", "account", "bot":
+		return true
+	}
+	return false
+}
+
+// revokeResultFromSubStatus 把逐条结果归并成一次撤回的结论：任一条失败即整体失败，
+// ErrCode 取首个失败码，SubStatusFailed 记录失败条数。
+func revokeResultFromSubStatus(result map[string]interface{}, raw []interface{}) *SendMessageResult {
+	subStatus := make([]map[string]interface{}, 0, len(raw))
+	failed := 0
+	firstCode := 0
+	var firstErrMsg string
+	for _, item := range raw {
+		entry, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		subStatus = append(subStatus, entry)
+		code, _ := entry["errCode"].(float64)
+		if int(code) != 0 {
+			failed++
+			if firstCode == 0 {
+				firstCode = int(code)
+				firstErrMsg, _ = entry["errMsg"].(string)
+			}
+		}
+	}
+	if failed > 0 {
+		return &SendMessageResult{
+			Success:         false,
+			Error:           fmt.Sprintf("revoke failed for %d/%d message(s): errCode=%d: %s", failed, len(subStatus), firstCode, firstErrMsg),
+			ErrCode:         firstCode,
+			SubStatus:       subStatus,
+			SubStatusFailed: failed,
+			Platform:        "lansenger",
+			Operation:       "revoke_message",
+			RawResponse:     result,
+		}
+	}
+	return &SendMessageResult{
+		Success:     true,
+		SubStatus:   subStatus,
+		Platform:    "lansenger",
+		Operation:   "revoke_message",
+		RawResponse: result,
+	}
 }
 
 // Deprecated: Use FetchGroupList from groups.go instead.
@@ -664,7 +764,7 @@ func (c *LansengerClient) SendReminder(ctx context.Context, msgID string, remind
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 
 	return &SendMessageResult{
@@ -696,7 +796,7 @@ func (c *LansengerClient) sendBotPrivate(ctx context.Context, chatID, msgType st
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 
 	data := extractData(result)

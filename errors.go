@@ -1,6 +1,9 @@
 package lansenger
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 type LansengerError struct {
 	Message   string
@@ -13,6 +16,11 @@ func (e *LansengerError) Error() string {
 		return e.Message + " (errCode: " + strconv.Itoa(e.ErrCode) + ")"
 	}
 	return e.Message
+}
+
+// Code 暴露服务端 errCode，供 ErrCodeOf 通过 errors.As 读取（含嵌入类型）。
+func (e *LansengerError) Code() int {
+	return e.ErrCode
 }
 
 type AuthError struct {
@@ -54,4 +62,20 @@ func NewNetworkError(message string) *NetworkError {
 
 func NewFileError(message string) *FileError {
 	return &FileError{LansengerError{Message: message, Retryable: false}}
+}
+
+// ErrCodeOf returns the server errCode carried by err, or 0 when err carries no
+// server code (local validation, transport failure, request shape errors).
+//
+// Result values already mirror this in their ErrCode field; use this helper when
+// building a result from an error.
+func ErrCodeOf(err error) int {
+	if err == nil {
+		return 0
+	}
+	var coder interface{ Code() int }
+	if errors.As(err, &coder) {
+		return coder.Code()
+	}
+	return 0
 }

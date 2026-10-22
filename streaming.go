@@ -18,7 +18,7 @@ func (c *LansengerClient) CreateStreamMessage(ctx context.Context, receiverID, r
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &StreamMessageResult{Success: false, Error: err.Error()}, nil
+		return &StreamMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -58,7 +58,7 @@ func (c *LansengerClient) FetchStreamMessage(ctx context.Context, msgID string) 
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &StreamMessageResult{Success: false, Error: err.Error()}, nil
+		return &StreamMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

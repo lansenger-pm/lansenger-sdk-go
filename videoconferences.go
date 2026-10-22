@@ -221,7 +221,7 @@ func (c *LansengerClient) CreateMeeting(ctx context.Context, p *VideoconferenceC
 		return &VideoconferenceDetailResult{Success: false, Error: "subject is required"}, nil
 	}
 	if err := vcHostErr(p.Members); err != nil {
-		return &VideoconferenceDetailResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceDetailResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	if p.StartTime == 0 {
 		return &VideoconferenceDetailResult{Success: false, Error: "start_time is required"}, nil
@@ -263,7 +263,7 @@ func (c *LansengerClient) CreateMeeting(ctx context.Context, p *VideoconferenceC
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceDetailResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceDetailResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceDetailResult{Success: true, RawResponse: result}
 	if data := extractData(result); data != nil {
@@ -279,11 +279,11 @@ func (c *LansengerClient) ModifyMeeting(ctx context.Context, p *VideoconferenceM
 		return &VideoconferenceOpResult{Success: false, Error: "params is required"}, nil
 	}
 	if err := vcHostErr(p.Members); err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	mid, err := vcMidValue(p.Mid)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	token, err := c.GetToken(ctx)
@@ -311,7 +311,7 @@ func (c *LansengerClient) ModifyMeeting(ctx context.Context, p *VideoconferenceM
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceOpResult{Success: true, RawResponse: result}
 	fillVCOp(res, result)
@@ -323,7 +323,7 @@ func (c *LansengerClient) ModifyMeeting(ctx context.Context, p *VideoconferenceM
 func (c *LansengerClient) CancelMeeting(ctx context.Context, mid, orgID, operator, userToken string) (*VideoconferenceOpResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -337,7 +337,7 @@ func (c *LansengerClient) CancelMeeting(ctx context.Context, mid, orgID, operato
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceOpResult{Success: true, RawResponse: result}
 	fillVCOp(res, result)
@@ -348,7 +348,7 @@ func (c *LansengerClient) CancelMeeting(ctx context.Context, mid, orgID, operato
 func (c *LansengerClient) StopMeeting(ctx context.Context, mid, orgID, operator, userToken string) (*VideoconferenceOpResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -362,7 +362,7 @@ func (c *LansengerClient) StopMeeting(ctx context.Context, mid, orgID, operator,
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceOpResult{Success: true, RawResponse: result}
 	fillVCOp(res, result)
@@ -373,7 +373,7 @@ func (c *LansengerClient) StopMeeting(ctx context.Context, mid, orgID, operator,
 func (c *LansengerClient) FetchMeetingDetail(ctx context.Context, mid, orgID, operator, userToken string) (*VideoconferenceDetailResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceDetailResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceDetailResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -387,7 +387,7 @@ func (c *LansengerClient) FetchMeetingDetail(ctx context.Context, mid, orgID, op
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceDetailResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceDetailResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceDetailResult{Success: true, RawResponse: result}
 	if data := extractData(result); data != nil {
@@ -418,7 +418,7 @@ func (c *LansengerClient) FetchMeetingList(ctx context.Context, orgID string, st
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceListResult{Success: true, RawResponse: result}
 	fillVCPage(res, result)
@@ -444,7 +444,7 @@ func (c *LansengerClient) FetchMeetingRecordList(ctx context.Context, orgID stri
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceListResult{Success: true, RawResponse: result}
 	fillVCPage(res, result)
@@ -456,7 +456,7 @@ func (c *LansengerClient) FetchMeetingRecordList(ctx context.Context, orgID stri
 func (c *LansengerClient) FetchMemberSimpleRecord(ctx context.Context, mid, orgID, operator, userToken string, limit, offset int) (*VideoconferenceListResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -472,7 +472,7 @@ func (c *LansengerClient) FetchMemberSimpleRecord(ctx context.Context, mid, orgI
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceListResult{Success: true, RawResponse: result}
 	fillVCPage(res, result)
@@ -495,7 +495,7 @@ func (c *LansengerClient) FetchFixroomList(ctx context.Context, orgID, operator,
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceListResult{Success: true, RawResponse: result}
 	fillVCPage(res, result)
@@ -512,7 +512,7 @@ func (c *LansengerClient) FetchMeetingStatus(ctx context.Context, mids []string,
 	for _, mid := range mids {
 		n, err := vcMidValue(mid)
 		if err != nil {
-			return &VideoconferenceStatusListResult{Success: false, Error: err.Error()}, nil
+			return &VideoconferenceStatusListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 		}
 		midVals = append(midVals, n)
 	}
@@ -527,7 +527,7 @@ func (c *LansengerClient) FetchMeetingStatus(ctx context.Context, mids []string,
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceStatusListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceStatusListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceStatusListResult{Success: true, RawResponse: result}
 	if data := extractData(result); data != nil {
@@ -543,7 +543,7 @@ func (c *LansengerClient) FetchMeetingStatus(ctx context.Context, mids []string,
 func (c *LansengerClient) SubscribeMeetingEvents(ctx context.Context, mid, orgID string, events []map[string]interface{}, callBackInfo, userToken string) (*VideoconferenceOpResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -560,7 +560,7 @@ func (c *LansengerClient) SubscribeMeetingEvents(ctx context.Context, mid, orgID
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceOpResult{Success: true, RawResponse: result}
 	fillVCOp(res, result)
@@ -585,7 +585,7 @@ func (c *LansengerClient) FetchMeetingParams(ctx context.Context, meetingNumber,
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceParamResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceParamResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceParamResult{Success: true, RawResponse: result}
 	if data := extractData(result); data != nil {
@@ -612,7 +612,7 @@ func (c *LansengerClient) FetchHistoryMeetings(ctx context.Context, orgID, opera
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceListResult{Success: true, RawResponse: result}
 	fillVCPage(res, result)
@@ -635,7 +635,7 @@ func (c *LansengerClient) FetchActiveMeetings(ctx context.Context, orgID, operat
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceListResult{Success: true, RawResponse: result}
 	fillVCPage(res, result)
@@ -649,7 +649,7 @@ func (c *LansengerClient) FetchActiveMeetings(ctx context.Context, orgID, operat
 func (c *LansengerClient) ControlMember(ctx context.Context, mid, staffID, opCode, operator, orgID, userToken string) (*VideoconferenceOpResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -665,7 +665,7 @@ func (c *LansengerClient) ControlMember(ctx context.Context, mid, staffID, opCod
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceOpResult{Success: true, RawResponse: result}
 	fillVCOp(res, result)
@@ -690,7 +690,7 @@ func (c *LansengerClient) InviteMembers(ctx context.Context, meetingNumber strin
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceOpResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceOpResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceOpResult{Success: true, RawResponse: result}
 	fillVCOp(res, result)
@@ -704,7 +704,7 @@ func (c *LansengerClient) InviteMembers(ctx context.Context, meetingNumber strin
 func (c *LansengerClient) FetchMemberList(ctx context.Context, mid, orgID, operator, userToken string, limit, offset int) (*VideoconferenceListResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -720,7 +720,7 @@ func (c *LansengerClient) FetchMemberList(ctx context.Context, mid, orgID, opera
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceListResult{Success: true, RawResponse: result}
 	fillVCPage(res, result)
@@ -731,7 +731,7 @@ func (c *LansengerClient) FetchMemberList(ctx context.Context, mid, orgID, opera
 func (c *LansengerClient) FetchVodList(ctx context.Context, mid, orgID, operator, userToken string) (*VideoconferenceVodListResult, error) {
 	midVal, err := vcMidValue(mid)
 	if err != nil {
-		return &VideoconferenceVodListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceVodListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	token, err := c.GetToken(ctx)
 	if err != nil {
@@ -745,7 +745,7 @@ func (c *LansengerClient) FetchVodList(ctx context.Context, mid, orgID, operator
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceVodListResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceVodListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceVodListResult{Success: true, RawResponse: result}
 	if data := extractData(result); data != nil {
@@ -774,7 +774,7 @@ func (c *LansengerClient) FetchVodDownloadURLs(ctx context.Context, vods []Video
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceVodUrlResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceVodUrlResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceVodUrlResult{Success: true, RawResponse: result}
 	if data := extractData(result); data != nil {
@@ -803,7 +803,7 @@ func (c *LansengerClient) FetchOrgConf(ctx context.Context, orgID, meetingNumber
 	}
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &VideoconferenceConfResult{Success: false, Error: err.Error()}, nil
+		return &VideoconferenceConfResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 	res := &VideoconferenceConfResult{Success: true, RawResponse: result}
 	if data := extractData(result); data != nil {

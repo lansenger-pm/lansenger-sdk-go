@@ -18,7 +18,7 @@ func (c *LansengerClient) FetchDepartmentDetail(ctx context.Context, departmentI
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &DepartmentDetailResult{Success: false, Error: err.Error()}, nil
+		return &DepartmentDetailResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -87,7 +87,7 @@ func (c *LansengerClient) FetchDepartmentChildren(ctx context.Context, departmen
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &DepartmentChildrenResult{Success: false, Error: err.Error()}, nil
+		return &DepartmentChildrenResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -125,7 +125,7 @@ func (c *LansengerClient) FetchDepartmentStaffs(ctx context.Context, departmentI
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &DepartmentStaffsResult{Success: false, Error: err.Error()}, nil
+		return &DepartmentStaffsResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

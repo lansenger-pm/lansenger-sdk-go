@@ -28,7 +28,7 @@ func (c *LansengerClient) CreateBotCommands(ctx context.Context, scopeType int, 
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &BotCommandResult{Success: false, Error: err.Error()}, nil
+		return &BotCommandResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	return &BotCommandResult{
@@ -60,7 +60,7 @@ func (c *LansengerClient) FetchBotCommands(ctx context.Context, scopeType int, c
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &BotCommandQueryResult{Success: false, Error: err.Error()}, nil
+		return &BotCommandQueryResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -114,7 +114,7 @@ func (c *LansengerClient) DeleteBotCommands(ctx context.Context, scopeType int, 
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &BotCommandResult{Success: false, Error: err.Error()}, nil
+		return &BotCommandResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	return &BotCommandResult{

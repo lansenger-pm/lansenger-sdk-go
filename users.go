@@ -21,7 +21,7 @@ func (c *LansengerClient) FetchUserInfo(ctx context.Context, userToken string) (
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &UserInfoResult{Success: false, Error: err.Error()}, nil
+		return &UserInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)

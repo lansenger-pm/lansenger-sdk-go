@@ -51,7 +51,7 @@ func (c *LansengerClient) CreateGroup(ctx context.Context, info *GroupCreateInfo
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &CreateGroupResult{Success: false, Error: err.Error()}, nil
+		return &CreateGroupResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -83,7 +83,7 @@ func (c *LansengerClient) FetchGroupInfo(ctx context.Context, groupID, userToken
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &GroupInfoResult{Success: false, Error: err.Error()}, nil
+		return &GroupInfoResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -134,7 +134,7 @@ func (c *LansengerClient) FetchGroupMembers(ctx context.Context, groupID, userTo
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &GroupMemberResult{Success: false, Error: err.Error()}, nil
+		return &GroupMemberResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -172,7 +172,7 @@ func (c *LansengerClient) FetchGroupList(ctx context.Context, userToken string, 
 
 	result, err := c.doGet(ctx, url)
 	if err != nil {
-		return &GroupListResult{Success: false, Error: err.Error()}, nil
+		return &GroupListResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -211,7 +211,7 @@ func (c *LansengerClient) CheckIsInGroup(ctx context.Context, groupID, userToken
 		if errors.As(err, &apiErr) && apiErr.ErrCode == 10000 {
 			err = fmt.Errorf("%w (the server returns this code both for query failures and for non-members; membership could not be determined)", err)
 		}
-		return &IsInGroupResult{Success: false, Error: err.Error()}, nil
+		return &IsInGroupResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -239,7 +239,7 @@ func (c *LansengerClient) UpdateGroupInfo(ctx context.Context, groupID string, p
 
 	result, err := c.doPost(ctx, url, params)
 	if err != nil {
-		return &UpdateGroupResult{Success: false, Error: err.Error()}, nil
+		return &UpdateGroupResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	return &UpdateGroupResult{
@@ -272,7 +272,7 @@ func (c *LansengerClient) UpdateGroupMembers(ctx context.Context, groupID string
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &UpdateGroupMembersResult{Success: false, Error: err.Error()}, nil
+		return &UpdateGroupMembersResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	data := extractData(result)
@@ -304,7 +304,7 @@ func (c *LansengerClient) DissolveGroup(ctx context.Context, groupID, userToken 
 
 	result, err := c.doPost(ctx, url, map[string]interface{}{})
 	if err != nil {
-		return &UpdateGroupResult{Success: false, Error: err.Error()}, nil
+		return &UpdateGroupResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err)}, nil
 	}
 
 	return &UpdateGroupResult{
@@ -331,7 +331,7 @@ func (c *LansengerClient) CreateGroupShareID(ctx context.Context, groupID, creat
 
 	result, err := c.doPost(ctx, url, body)
 	if err != nil {
-		return &SendMessageResult{Success: false, Error: err.Error(), Platform: "lansenger"}, nil
+		return &SendMessageResult{Success: false, Error: err.Error(), ErrCode: ErrCodeOf(err), Platform: "lansenger"}, nil
 	}
 
 	data := extractData(result)
